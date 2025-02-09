@@ -1,6 +1,6 @@
 import sys
-import pandas as pd
 
+from excelparser import ExcelParser
 from teamhandler import TeamHandler
 
 all_games_list = []
@@ -16,12 +16,12 @@ def main():
 
     getGames_txt()
 
-    getGames_xlsx()
+    getGames_xlsx(excel_data_games_filename)
 
     # just for checking if all games are read in 
     #printAllGames()
 
-    calculateAndPresentResults()
+    #calculateAndPresentResults()
 
     # code finished
     print("=====================\nDone")
@@ -54,11 +54,15 @@ def getGames_txt():
                     set_two_dict = {}
                 row_counter += 1
 
-def getGames_xlsx():
-    dataframe = pd.read_excel(excel_data_games_filename, skiprows=[0,1])
-    print(dataframe)
-    #TODO extract data from excel
+def getGames_xlsx(excel_data_games_filename):
+    excelParser = ExcelParser(excel_data_games_filename)
+    t_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
+    print(t_name)
 
+    excelParser.getGames()
+
+    print("\n")
+    #TODO extract data from excel
 
 def calculateAndPresentResults():
     teamHandler = TeamHandler(verbose) 
