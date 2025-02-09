@@ -9,7 +9,7 @@ class TeamHandler:
     def addTeam(self, team_name, ELO = 1000):
         temp_existing_teams = []
         for item in self.teams_list:
-            temp_existing_teams.append(repr(item)) #TODO find a better way to handle if team is enterd or not, probably something in the team object to handle it
+            temp_existing_teams.append(repr(item)) #TODO find a better way to handle if team is enterd or not
         if team_name not in temp_existing_teams:
             new_team = Team(team_name, ELO)
             self.teams_list.append(new_team)
@@ -28,7 +28,7 @@ class TeamHandler:
             team_one.victories_count += 1
         elif winner == 2:
             team_two.victories_count += 1
-        skillCalculator = SkillCalc(self.verbose)
+        skillCalculator = SkillCalc(self.verbose) # somewhat basic self built ELO calculator, maybe will replace it with some external library
         skillCalculator.addTeams(team_one, team_two)
         skillCalculator.calculate(winner)
         self.__incrementGameCount(team_one, team_two)

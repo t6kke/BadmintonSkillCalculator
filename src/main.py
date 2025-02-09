@@ -1,14 +1,37 @@
+import sys
+import pandas as pd
+
 from teamhandler import TeamHandler
 
 all_games_list = []
+txt_data_games_filename = "test_data.txt" # in the future it will have some spreadsheet as input so this is just for basic testing
+excel_data_games_filename = "mm_test_data.xlsx" # excel example
+verbose=False
 
 def main():
+    handleLaunchArguments(sys.argv)
+    
     print("\nBadminton Skill Calculator")
     print("prototype v1\n")
-    
-    game_filename = "test_data.txt" # in the future it will have some spreadsheet as input so this is just for basic testing
-    
-    with open(game_filename, "r") as game_data:
+
+    getGames_txt()
+
+    getGames_xlsx()
+
+    # just for checking if all games are read in 
+    #printAllGames()
+
+    calculateAndPresentResults()
+
+    # code finished
+    print("=====================\nDone")
+
+
+def handleLaunchArguments(launch_arguments):
+    pass #TODO do lauch arguments handling
+
+def getGames_txt():
+    with open(txt_data_games_filename, "r") as game_data:
         set_one_dict = {}
         set_two_dict = {}
         row_counter = 1
@@ -31,11 +54,14 @@ def main():
                     set_two_dict = {}
                 row_counter += 1
 
-    # just for checking if all games are read in 
-    #printAllGames()
-    
-    # basic calculator before implementing some external lib soltuion
-    teamHandler = TeamHandler(verbose=True) #TODO make verbose a variable, maybe modifiable with launch parameter
+def getGames_xlsx():
+    dataframe = pd.read_excel(excel_data_games_filename, skiprows=[0,1])
+    print(dataframe)
+    #TODO extract data from excel
+
+
+def calculateAndPresentResults():
+    teamHandler = TeamHandler(verbose) 
     
     # insert content into skill calculator
     for game in all_games_list:
@@ -58,8 +84,6 @@ def main():
     print("Final Calculated data:")
     teamHandler.reportTeamData()
     print("\n")
-    print("=====================\nDone")
-    
 
 def printAllGames():
     print("All games:")
