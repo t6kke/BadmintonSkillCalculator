@@ -51,7 +51,7 @@ class Team():
         self.victories_count = 0
         
     def information(self):
-        return f'Team: \'{self.team_name}\' has played {self.games_played} game(s) and won {self.victories_count} game(s)\n  ELO: {self.ELO}'
+        return f'Team: \'{self.team_name}\' --- ELO: {self.ELO} --- played: {self.games_played} game(s) --- won {self.victories_count} game(s)'
     
     def __str__(self):
         return self.team_name

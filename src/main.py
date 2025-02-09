@@ -3,25 +3,26 @@ import sys
 from excelparser import ExcelParser
 from teamhandler import TeamHandler
 
-all_games_list = []
+
 txt_data_games_filename = "test_data.txt" # in the future it will have some spreadsheet as input so this is just for basic testing
 excel_data_games_filename = "mm_test_data.xlsx" # excel example
 verbose=False
 
 def main():
+    all_games_list = [] #TODO move back to initial variable
     handleLaunchArguments(sys.argv)
     
     print("\nBadminton Skill Calculator")
     print("prototype v1\n")
 
-    getGames_txt()
+    #getGames_txt()
 
-    getGames_xlsx(excel_data_games_filename)
+    all_games_list = getGames_xlsx(excel_data_games_filename) #TODO ability to read multipel sheets
 
     # just for checking if all games are read in 
-    #printAllGames()
+    printAllGames(all_games_list)
 
-    #calculateAndPresentResults()
+    calculateAndPresentResults(all_games_list)
 
     # code finished
     print("=====================\nDone")
@@ -59,12 +60,14 @@ def getGames_xlsx(excel_data_games_filename):
     t_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
     print(t_name)
 
-    excelParser.getGames()
+    excelParser.collectGames()
 
-    print("\n")
-    #TODO extract data from excel
+    all_games_list = excelParser.getGames()
+    return all_games_list
 
-def calculateAndPresentResults():
+def calculateAndPresentResults(all_games_list):
+    if len(all_games_list) == 0:
+        raise Exception("no games found exception")
     teamHandler = TeamHandler(verbose) 
     
     # insert content into skill calculator
@@ -89,7 +92,7 @@ def calculateAndPresentResults():
     teamHandler.reportTeamData()
     print("\n")
 
-def printAllGames():
+def printAllGames(all_games_list):
     print("All games:")
     for game in all_games_list:
         print(game)

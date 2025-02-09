@@ -17,7 +17,7 @@ There is no planned deadline for any of the features. I'll work on it when I hav
 
 ### Near Future
 
-- Import game results(data) from Excel and/or other spreadsheets(eg. Google docs)
+- Import game results(data) from Excel and/or other spreadsheets(eg. Google docs) IN PROGRESS
 - Store data of scanned tournaments in DB and keep track of ELO over time without having to reimport and calculate all data over again.
 - Generate some kind of HTML for static website content in case it's interesting for other compeditors.
 - Add ELO confidence value and use it to handle ELO gain/loss.
