@@ -1,15 +1,16 @@
 import pandas as pd
 
 class ExcelParser():
-    def __init__(self, excel_data_games_filename): #TODO implement verbose
+    def __init__(self, excel_data_games_filename, excel_sheet_name): #TODO implement verbose
         self.excel_data_games_filename = excel_data_games_filename
+        self.excel_sheet_name = excel_sheet_name
         self.dataframe = None
         self.__setDataframe()
         self.games_dataframe_list = []
         self.collected_games_list = []
 
     def getTournamentName(self):
-        dataframe_event_name = pd.read_excel(self.excel_data_games_filename, nrows=1, header=None)
+        dataframe_event_name = pd.read_excel(self.excel_data_games_filename, sheet_name=self.excel_sheet_name, nrows=1, header=None)
         #print("Tournament Name: ", dataframe_event_name.at[0,0], "\n")
         return str(dataframe_event_name.at[0,0])
 
@@ -36,7 +37,8 @@ class ExcelParser():
     
     
     def __setDataframe(self):
-        self.dataframe = pd.read_excel(self.excel_data_games_filename, header=None)
+        self.dataframe = pd.read_excel(self.excel_data_games_filename, sheet_name=self.excel_sheet_name, header=None)
+        #print(self.dataframe)
 
     def __findLastGamesColumn(self):
         for column in range(len(self.dataframe.columns)):
@@ -57,7 +59,7 @@ class ExcelParser():
                 return row
 
     def __getGameDataframe(self, row_index, column_range):
-        dataframe = pd.read_excel(self.excel_data_games_filename, skiprows=row_index, nrows=4, usecols=column_range, header=None)
+        dataframe = pd.read_excel(self.excel_data_games_filename, sheet_name=self.excel_sheet_name, skiprows=row_index, nrows=4, usecols=column_range, header=None)
         self.games_dataframe_list.append(dataframe)
 
     def __getAllGames(self):
@@ -66,6 +68,7 @@ class ExcelParser():
         df_colums = len(self.games_dataframe_list[0].columns)
         for df in self.games_dataframe_list:
             #print("Game: ", df.loc[0].at[0])
+            #print(df)
             for i in range(0,df_colums,2):
                 temp_dict = {}
                 team_one = str(df.loc[2].at[i]).rstrip()

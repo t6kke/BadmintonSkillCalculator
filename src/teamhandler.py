@@ -1,11 +1,12 @@
 from skillcalc import SkillCalc
 
 class TeamHandler:
-    def __init__(self, verbose = False):
+    def __init__(self, all_teams_list, verbose = False):
         self.verbose = verbose #TODO extend verbose information to stuff that might be relevant
-        self.teams_list = []
+        self.teams_list = all_teams_list
 
     #TODO analyze should I make teams here or in the main function and pass them into here
+    #TODO cannot handle teams name swaps over tournaments only here, games data needs to be changed to not be name but actual team object.
     def addTeam(self, team_name, ELO = 1000):
         temp_existing_teams = []
         for item in self.teams_list:
@@ -49,10 +50,18 @@ class Team():
         self.ELO = ELO
         self.games_played = 0
         self.victories_count = 0
+        self.team_member_set = set()
+        self.__createMeberSet()
         
     def information(self):
         return f'Team: \'{self.team_name}\' --- ELO: {self.ELO} --- played: {self.games_played} game(s) --- won {self.victories_count} game(s)'
     
+    def __createMeberSet(self):
+        #normalize
+        names = self.team_name.replace(" ", "").split("+")
+        self.team_member_set.add(names[0])
+        self.team_member_set.add(names[1])
+
     def __str__(self):
         return self.team_name
     
