@@ -87,13 +87,14 @@ def calculateAndPresentResults(all_games_list, all_teams_list):
         raise Exception("no games found exception")
     teamHandler = TeamHandler(all_teams_list, verbose)
     
+    #TODO team entry not needed here anymore, it's done when games are extracted from excel
     # insert content into skill calculator
     #for game in all_games_list:
         #for item in game:
             #teamHandler.addTeam(item)
     
     #print("Base data:")
-    teamHandler.reportTeamData()
+    #teamHandler.reportTeamData()
     
     # run calculations
     for game in all_games_list:

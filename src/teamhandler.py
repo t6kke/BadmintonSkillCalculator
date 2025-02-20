@@ -19,9 +19,9 @@ class TeamHandler:
         team_one = None
         team_two = None
         for team in self.teams_list:
-            if repr(team) == team1:
+            if team == team1:
                 team_one = team
-            elif repr(team) == team2:
+            elif team == team2:
                 team_two = team
         if team_one == None or team_two == None:
             raise Exception("Team(s) missing excpetion")
@@ -38,6 +38,7 @@ class TeamHandler:
         print("List of teams:", self.teams_list, "\n")
         for team in self.teams_list:
             print(team.information())
+        #TODO make the print out list to be in DESC order
 
     def __incrementGameCount(self, team_one, team_two):
         team_one.games_played += 1
