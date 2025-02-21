@@ -24,7 +24,7 @@ List is not just code improvements but also project functionalities
 ### Near Future
 
 - Various minor improvements in codes marked with TODO
-- main.py needs restructuring specifically ´´´convertGameTeamToTeam()´´´ function.
+- main.py needs restructuring specifically `convertGameTeamToTeam()` function.
 - general code restructuring review and changes where it would make sense.
 - Store data of scanned tournaments in DB and keep track of ELO over time without having to reimport and calculate all data over again.
 - Generate some kind of HTML for static website content in case it's interesting for other compeditors.
@@ -48,4 +48,4 @@ Required libraries: pandas, openpyxl
 
 working directory should include the source data files. I provide example txt file.
 
-Run command: ´´´python3 main.py´´´
+Run command: `python3 main.py`
