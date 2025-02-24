@@ -1,21 +1,29 @@
 import sys
+import os.path
 
 from excelparser import ExcelParser
 from teamhandler import TeamHandler, Team
 
-
-txt_data_games_filename = "test_data.txt" # in the future it will have some spreadsheet as input so this is just for basic testing
-excel_data_games_filename = "mm_test_data.xlsx" # excel example
 verbose=False
 
 def main():
-    all_games_list = [] #TODO move back to initial variable
+    #TODO restruction to have class variables
+    all_games_list = []
+    txt_data_games_filename = "test_data.txt" # in the future it will have some spreadsheet as input so this is just for basic testing
+    excel_data_games_filename = "mm_test_data.xlsx" # excel example
+
+
     handleLaunchArguments(sys.argv)
+
     
     print("\nBadminton Skill Calculator")
     print("prototype v1\n")
 
     #getGames_txt()
+
+    #verify if source file exists
+    if os.path.isfile(excel_data_games_filename) == False:
+        excel_data_games_filename = "test_xlsx"
 
     all_games_list_fromExcel = getGames_xlsx(excel_data_games_filename) #TODO ability to read multipel sheets
     all_games_list_withTeams, all_teams_list = convertGameTeamToTeam(all_games_list_fromExcel)
@@ -72,13 +80,13 @@ def getGames_xlsx(excel_data_games_filename):
 
     all_games_list = excelParser.getGames()
 
-    excelParser2 = ExcelParser(excel_data_games_filename, "Sheet2")
+    """excelParser2 = ExcelParser(excel_data_games_filename, "Sheet2")
     t_name2 = excelParser2.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
     print(t_name2)
 
     excelParser2.collectGames()
 
-    all_games_list = all_games_list + excelParser2.getGames()
+    all_games_list = all_games_list + excelParser2.getGames()"""
 
     return all_games_list
 
