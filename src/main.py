@@ -4,76 +4,72 @@ import os.path
 from excelparser import ExcelParser
 from teamhandler import TeamHandler, Team
 
-verbose=False
-
 class Main():
-    def __init__(self, excel_file, verbose=False):
+    def __init__(self, excel_file, verbose=True):
         self.all_games_list = []
         self.all_teams_list = []
         self.txt_data_games_filename = "test_data.txt"
         self.excel_data_games_filename = excel_file
+        self.list_of_sheets = []
         self.verbose = verbose
+        #TODO handle launch arguments here?
         self.__run()
 
     def __run(self):
         print("\nBadminton Skill Calculator")
         print("prototype v1\n")
 
-        all_games_list_fromExcel = getGames_xlsx(self.excel_data_games_filename) #TODO ability to read multipel sheets
+        if self.verbose in ["true", "1", "t", "T", "True", True]:
+            self.verbose = True
+        else:
+            self.verbose = False
+
+        if len(self.list_of_sheets) == 0: #TODO bad implementation, probably have to have it be part of launch aruguments or scan document
+            self.list_of_sheets = ["Sheet1"]
+
+        all_games_list_fromExcel = self.__getGamesFromExcel(self.list_of_sheets) #TODO investigate how to best enter sheet values?
         self.all_games_list, self.all_teams_list = convertGameTeamToTeam(all_games_list_fromExcel)
 
-
-        # just for checking if all games are read in
         #TODO better printout of games list function
-        #printAllGames(all_games_list_fromExcel)
         #for game in all_games_list_withTeams:
             #for k,v in game.items():
                 #print(type(k), k, type(v), v)
 
-        #calculateAndPresentResults(all_games_list)
-        calculateAndPresentResults(self.all_games_list, self.all_teams_list)
+        self.__calculateAndPresentResults()
 
         # code finished
         print("=====================\nDone")
 
+    def __getGamesFromExcel(self, list_of_sheets):
+        list_of_games = []
+        for sheet in list_of_sheets: #TODO should list_of_sheet be part of Main vars?
+            excelParser = ExcelParser(self.excel_data_games_filename, sheet)
+            tournament_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
+            print(tournament_name)
+            excelParser.collectGames()
+            list_of_games = list_of_games + excelParser.getGames()
+        return list_of_games
 
-#TODO likely no longer needed
-"""def main():
-    #TODO restruction to have class variables
-    all_games_list = []
-    txt_data_games_filename = "test_data.txt" # in the future it will have some spreadsheet as input so this is just for basic testing
-    excel_data_games_filename = "mm_test_data.xlsx" # excel example
+    def __calculateAndPresentResults(self):
+        if len(self.all_games_list) == 0:
+            raise Exception("no games found exception")
+        teamHandler = TeamHandler(self.all_teams_list, self.verbose)
 
+        # run calculations
+        for game in self.all_games_list:
+            team1 = list(game)[0]
+            team2 = list(game)[1]
+            if game.get(team1) > game.get(team2):
+                teamHandler.calculateScore(team1, team2, 1)
+            else:
+                teamHandler.calculateScore(team1, team2, 2)
 
-    handleLaunchArguments(sys.argv)
-
-    
-    print("\nBadminton Skill Calculator")
-    print("prototype v1\n")
-
-    #getGames_txt()
-
-    #verify if source file exists
-    if os.path.isfile(excel_data_games_filename) == False:
-        excel_data_games_filename = "test_xlsx"
-
-    all_games_list_fromExcel = getGames_xlsx(excel_data_games_filename) #TODO ability to read multipel sheets
-    all_games_list_withTeams, all_teams_list = convertGameTeamToTeam(all_games_list_fromExcel)
-
-
-    # just for checking if all games are read in
-    #TODO better printout of games list function
-    #printAllGames(all_games_list_fromExcel)
-    #for game in all_games_list_withTeams:
-        #for k,v in game.items():
-            #print(type(k), k, type(v), v)
+        # present results
+        print("Final Calculated data:")
+        teamHandler.reportTeamData()
+        print("\n")
 
 
-    #calculateAndPresentResults(all_games_list)
-    calculateAndPresentResults(all_games_list_withTeams, all_teams_list)
-
-    # code finished
-    print("=====================\nDone")"""
 
 #TODO likely not needed or demo data has to be changed to handle newer logic
 """def getGames_txt():
@@ -100,59 +96,7 @@ class Main():
                     set_two_dict = {}
                 row_counter += 1"""
 
-#TODO all additional functions need to be moved into Main class
-def getGames_xlsx(excel_data_games_filename):
-    excelParser = ExcelParser(excel_data_games_filename, "Sheet1")
-    t_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
-    print(t_name)
 
-    excelParser.collectGames()
-
-    all_games_list = excelParser.getGames()
-
-    """excelParser2 = ExcelParser(excel_data_games_filename, "Sheet2")
-    t_name2 = excelParser2.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
-    print(t_name2)
-
-    excelParser2.collectGames()
-
-    all_games_list = all_games_list + excelParser2.getGames()"""
-
-    return all_games_list
-
-def calculateAndPresentResults(all_games_list, all_teams_list):
-    if len(all_games_list) == 0:
-        raise Exception("no games found exception")
-    teamHandler = TeamHandler(all_teams_list, verbose)
-    
-    #TODO team entry not needed here anymore, it's done when games are extracted from excel
-    # insert content into skill calculator
-    #for game in all_games_list:
-        #for item in game:
-            #teamHandler.addTeam(item)
-    
-    #print("Base data:")
-    #teamHandler.reportTeamData()
-    
-    # run calculations
-    for game in all_games_list:
-        team1 = list(game)[0]
-        team2 = list(game)[1]
-        if game.get(team1) > game.get(team2):
-            teamHandler.calculateScore(team1, team2, 1)
-        else:
-            teamHandler.calculateScore(team1, team2, 2)
-    
-    # present results
-    print("Final Calculated data:")
-    teamHandler.reportTeamData()
-    print("\n")
-
-def printAllGames(all_games_list):
-    print("All games:")
-    for game in all_games_list:
-        print(game)
-    print("\n")
 
 def convertGameTeamToTeam(all_games_list_fromExcel): #TODO this function needs to be broken down and handled somewhere outside of main
     result_games_list = []
@@ -218,4 +162,4 @@ if __name__=="__main__":
     if len(sys.argv) > 2:
         main = Main(sys.argv[1], sys.argv[2])
     else:
-        main = Main("test_xlsx",verbose=False)
+        main = Main("test_xlsx",verbose=True)
