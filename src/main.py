@@ -27,6 +27,9 @@ class Main():
         if len(self.list_of_sheets) == 0: #TODO bad implementation, probably have to have it be part of launch aruguments or scan document
             self.list_of_sheets = ["Sheet1"]
 
+        #initial development using txt file as source
+        #all_games_list_fromTXT = self.__getGamesFromTXT()
+        #self.all_games_list, self.all_teams_list = convertGameTeamToTeam(all_games_list_fromTXT)
         all_games_list_fromExcel = self.__getGamesFromExcel(self.list_of_sheets) #TODO investigate how to best enter sheet values?
         self.all_games_list, self.all_teams_list = convertGameTeamToTeam(all_games_list_fromExcel)
 
@@ -69,32 +72,33 @@ class Main():
         teamHandler.reportTeamData()
         print("\n")
 
+    #for inital development and testing
+    def __getGamesFromTXT(self):
+        result_games_list = []
+        with open(self.txt_data_games_filename, "r") as game_data:
+                set_one_dict = {}
+                set_two_dict = {}
+                row_counter = 1
+                for line in game_data:
+                    if line.startswith("Game"):
+                        pass # used to print out game numbers from source
+                    elif line.startswith("\n"):
+                        pass # ignore empty lines
+                    else:
+                        split_line = line.rstrip().split("\t")
+                        #print(new_game_check_nr, game_number, split_line[0], split_line[1])
+                        set_one_dict[split_line[0].split(" ")[0]] = split_line[0].split(" ")[1]
+                        set_two_dict[split_line[1].split(" ")[0]] = split_line[1].split(" ")[1]
+                        if row_counter % 2 == 0:
+                            set_one_dict[split_line[0].split(" ")[0]] = split_line[0].split(" ")[1]
+                            set_two_dict[split_line[1].split(" ")[0]] = split_line[1].split(" ")[1]
+                            result_games_list.append(set_one_dict)
+                            result_games_list.append(set_two_dict)
+                            set_one_dict = {}
+                            set_two_dict = {}
+                        row_counter += 1
+        return result_games_list
 
-
-#TODO likely not needed or demo data has to be changed to handle newer logic
-"""def getGames_txt():
-    with open(txt_data_games_filename, "r") as game_data:
-        set_one_dict = {}
-        set_two_dict = {}
-        row_counter = 1
-        for line in game_data:
-            if line.startswith("Game"):
-                pass # used to print out game numbers from source
-            elif line.startswith("\n"):
-                pass # ignore empty lines
-            else:
-                split_line = line.rstrip().split("\t")
-                #print(new_game_check_nr, game_number, split_line[0], split_line[1])
-                set_one_dict[split_line[0].split(" ")[0]] = split_line[0].split(" ")[1]
-                set_two_dict[split_line[1].split(" ")[0]] = split_line[1].split(" ")[1]
-                if row_counter % 2 == 0:
-                    set_one_dict[split_line[0].split(" ")[0]] = split_line[0].split(" ")[1]
-                    set_two_dict[split_line[1].split(" ")[0]] = split_line[1].split(" ")[1]
-                    all_games_list.append(set_one_dict)
-                    all_games_list.append(set_two_dict)
-                    set_one_dict = {}
-                    set_two_dict = {}
-                row_counter += 1"""
 
 
 
