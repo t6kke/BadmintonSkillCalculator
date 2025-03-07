@@ -17,7 +17,7 @@ class ExcelParser():
 
     def getGames(self):
         return self.collected_games_list
-    
+
     def collectGames(self):
         #print("\n", self.dataframe, "\n")
         last_column = self.__findLastGamesColumn()
@@ -33,10 +33,10 @@ class ExcelParser():
             column_range.append(i)
         for i in range(first_game_row,last_row+1,5): #TODO range step is hardcoded as 5 since it's standard, it could be extraced dynamically but not relevant for now
             self.__getGameDataframe(i,column_range)
-    
+
         self.__getAllGames()
-    
-    
+
+
     def __setDataframe(self):
         self.dataframe = pd.read_excel(self.excel_data_games_filename, sheet_name=self.excel_sheet_name, header=None)
         #print(self.dataframe)

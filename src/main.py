@@ -24,7 +24,7 @@ class Main():
         else:
             self.verbose = False
 
-        if len(self.list_of_sheets) == 0: #TODO bad implementation, probably have to have it be part of launch aruguments or scan document
+        if len(self.list_of_sheets) == 0: #TODO bad implementation, probably have to have it be part of launch aruguments or scan document, check excelparser.py on how to detect
             self.list_of_sheets = ["Sheet1"]
 
         #initial development using txt file as source
