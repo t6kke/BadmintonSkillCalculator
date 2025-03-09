@@ -7,8 +7,8 @@ from teamhandler import TeamHandler, Team
 #======================================================================
 # new implementation using new packages setup
 #======================================================================
-from BSC.DataExtractor import fromTXT
-from BSC.GameHandler import handler
+from BSC.DataExtractor.fromTXT import getGamesFromTXT
+from BSC.GameHandler.handler import Handler
 
 class Main_new():
     def __init__(self, launch_args_list, verbose=False):
@@ -43,9 +43,9 @@ class Main_new():
     # test execution with sample data from txt file
     def __runTest(self):
         if self.verbose: print(f"Executing test run from file {self.test_data_txt}")
-        raw_games_list = fromTXT.getGamesFromTXT(self.test_data_txt)
+        raw_games_list = getGamesFromTXT(self.test_data_txt)
         if self.verbose: print(f"All games from raw games list:\n{raw_games_list}")
-        gamesHandler = handler.Handler(raw_games_list, self.verbose)
+        gamesHandler = Handler(raw_games_list, self.verbose)
         self.all_games_list = gamesHandler.getGamesList()
         self.all_teams_list = gamesHandler.getTeamsList()
 
