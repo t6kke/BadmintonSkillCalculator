@@ -1,7 +1,7 @@
 import sys
 sys.path.append('../')
 
-from BSC.PlayersAndTeams.teams import Team
+from BSC.PlayersAndTeams.teams import Team, createTeamMembersSet
 
 #TODO this should include function 'convertGameTeamToTeam()' from main.py and part(or all) of the logic from teamhandler.py
 class Handler():
@@ -13,7 +13,6 @@ class Handler():
         self.result_teams_list = []
 
         #temporary object variables, various functions need it after multiple levels and don't want to pass them through fuctions if not needed. They will be reset to base values within function logic.
-        self.temp_existing_teams_list = [] #TODO maybe not needed, it's not never used in validation, only in some debugging prints
         self.temp_existing_teams_sets_list = []
         self.temp_game_from_raw_games = {}
         self.temp_new_team = None
@@ -56,7 +55,7 @@ class Handler():
     def __TeamsFromDictToTeamsObj(self, teams_from_dictionary_list):
         for team_str in teams_from_dictionary_list:
             if self.verbose: print(f"INFO --- Parsing raw team string: '{team_str}'")
-            temp_player_set = self.__cratePlayersSet(team_str)
+            temp_player_set = createTeamMembersSet(team_str, True)
             self.temp_new_team = None
             if len(self.temp_existing_teams_sets_list) == 0:
                 if self.verbose: print(f"DEBUG --- no existing teams yet --- team set being handled: '{temp_player_set}' --- addint team: '{team_str}'")
@@ -65,14 +64,6 @@ class Handler():
             new_game_dict = self.__createNewGameDictWithTeamObj(team_str, temp_player_set)
         if self.verbose: print(f"DEBUG --- new game dictionary for return value: '{new_game_dict}'")
         return new_game_dict
-
-    def __cratePlayersSet(self, team_string):
-        if self.verbose: print(f"DEBUG --- parsing team string: '{team_string}' for creating player set")
-        players_list = team_string.split("+")
-        if self.verbose: print(f"DEBUG --- player one: '{players_list[0].rstrip()}' and player two '{players_list[1].lstrip()}'")
-        players_set = {players_list[0].rstrip(), players_list[1].lstrip()}
-        if self.verbose: print(f"DEBUG --- final set to return: '{players_set}'")
-        return players_set
 
     def __inseringRestOfTeams(self, team_str, temp_player_set):
         for i in range(len(self.temp_existing_teams_sets_list)):
@@ -94,7 +85,6 @@ class Handler():
                     break
         else:
             if self.verbose: print(f"INFO --- team was known: '{self.temp_new_team}', adding the object to dictionary")
-            #print("debug --- current game team and score:", new_team, game[team], self.temp_existing_teams_list)
             new_game_dict[self.temp_new_team] = self.temp_game_from_raw_games[team_str]
         return new_game_dict
 
@@ -103,9 +93,6 @@ class Handler():
     # general purpos internal functions
     #============================================
     def __insertTeamToList(self, team_str):
-        self.temp_new_team = self.__createTeamObject(team_str)
+        self.temp_new_team = Team(team_str, 1000)
         self.result_teams_list.append(self.temp_new_team)
         self.temp_existing_teams_sets_list.append(self.temp_new_team.team_member_set)
-
-    def __createTeamObject(self, team_str):
-        return Team(team_str, 1000)
