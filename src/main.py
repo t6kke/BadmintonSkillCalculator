@@ -4,6 +4,74 @@ import os.path
 from excelparser import ExcelParser
 from teamhandler import TeamHandler, Team
 
+#======================================================================
+# new implementation using new packages setup
+#======================================================================
+from BSC.DataExtractor import fromTXT
+from BSC.GameHandler import handler
+
+class Main_new():
+    def __init__(self, launch_args_list, verbose=False):
+        self.verbose = verbose
+        self.test_execution = False
+        self.test_data_txt = "test_data.txt"
+
+        self.launch_args_list = launch_args_list
+        self.__handleLaunchArgs()#TODO handle launch arguments values
+
+        #TODO additional class variables
+        self.all_games_list = []
+        self.all_teams_list = []
+
+        #final function to run the main functionality
+        self.__execute()
+
+    def __handleLaunchArgs(self):
+        if self.verbose: print(f"Handling lauch arguments\nArguments: {str(self.launch_args_list)}")
+        if len(self.launch_args_list) == 0:
+            self.test_execution = True
+        #TODO code to handle arguments
+
+    def __execute(self):
+        print("\nBadminton Skill Calculator")
+        print("prototype v2\n")
+        if self.test_execution:
+            self.__runTest()
+        else:
+            self.__run()
+
+    # test execution with sample data from txt file
+    def __runTest(self):
+        if self.verbose: print(f"Executing test run from file {self.test_data_txt}")
+        raw_games_list = fromTXT.getGamesFromTXT(self.test_data_txt)
+        if self.verbose: print(f"All games from raw games list:\n{raw_games_list}")
+        gamesHandler = handler.Handler(raw_games_list, self.verbose)
+        self.all_games_list = gamesHandler.getGamesList()
+        self.all_teams_list = gamesHandler.getTeamsList()
+
+        #TODO run the calculation
+        #TODO present the results
+
+        self.__exitSuccess("=====================\nDone")
+
+    # actual execution with valid data
+    def __run(self):
+        pass
+
+    def __exitError(self, message):
+        print(message)
+        sys.exit(1)
+
+    def __exitSuccess(self, message = None):
+        if message == None:
+            sys.exit(0)
+        print(message)
+        sys.exit(0)
+
+#======================================================================
+# old implementation, initial logic
+# when using old setup not packaged classes and functions
+#======================================================================
 class Main():
     def __init__(self, excel_file, verbose=True):
         self.all_games_list = []
@@ -161,9 +229,17 @@ def convertGameTeamToTeam(all_games_list_fromExcel): #TODO this function needs t
     return(result_games_list, teams_list)
 
 
-if __name__=="__main__":
-    #TODO change launch arguments handling
+# old way of starting main
+"""if __name__=="__main__":
     if len(sys.argv) > 2:
         main = Main(sys.argv[1], sys.argv[2])
     else:
-        main = Main("test_xlsx",verbose=True)
+        main = Main("test_xlsx",verbose=True)"""
+
+
+# new way of starting main
+if __name__=="__main__":
+    if len(sys.argv) > 2:
+        main = Main_new(sys.argv[1:])
+    else:
+        main = Main_new(sys.argv[1:], verbose=True)

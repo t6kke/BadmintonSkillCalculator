@@ -1,4 +1,6 @@
 #for inital development and testing, intended for the 'test_data.txt' file parsing and extracting list of games dictionaries.
+#TODO maybe should add verbose option but very low priority.
+#TODO maybe logic should be split into separate functions but very low priority.
 def getGamesFromTXT(txt_data_games_filename):
     result_games_list = []
     with open(txt_data_games_filename, "r") as game_data:

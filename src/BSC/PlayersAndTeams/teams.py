@@ -13,9 +13,9 @@ class Team():
 
     def __createMeberSet(self):
         #normalize
-        names = self.team_name.replace(" ", "").split("+")
-        self.team_member_set.add(names[0])
-        self.team_member_set.add(names[1])
+        names = self.team_name.split("+")
+        self.team_member_set.add(names[0].rstrip())
+        self.team_member_set.add(names[1].lstrip())
 
     def __str__(self):
         return self.team_name
