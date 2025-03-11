@@ -41,25 +41,25 @@ class SkillCalc:
             print("ELO difference:", ELO_diff)
         #TODO investigate can this if else logic be simplified
         if self.winner == self.team_one and ELO_diff > 0:
-            #winner has higher ELO so k_factor has to scale down based on difference
+            # winner has higher ELO so k_factor has to scale down based on difference
             self.__KFactorDOWN(abs(ELO_diff))
         elif self.winner == self.team_one and ELO_diff < 0:
-            #winner has lower ELO so k_factor has to scale up based on the difference
+            # winner has lower ELO so k_factor has to scale up based on the difference
             self.__KFactorUP(abs(ELO_diff))
         elif self.winner == self.team_two and ELO_diff > 0:
-            #winner has lower ELO so k_factor has to scale up based on the difference
+            # winner has lower ELO so k_factor has to scale up based on the difference
             self.__KFactorUP(abs(ELO_diff))
         elif self.winner == self.team_two and ELO_diff < 0:
-            #winner has higher ELO so k_factor has to scale down based on difference
+            # winner has higher ELO so k_factor has to scale down based on difference
             self.__KFactorDOWN(abs(ELO_diff))
         else:
             self.k_factor = 32
             return
 
     #TODO this K-Factor up and down scaling valuse logic should be external, maybe even configuration item.
-    #if it is external configuration calculation and data should be connected to a set of configurations
-    #for situations where this logic is changed and data already exists
-    #then there should be decision to continue with new setup or to do recalculatiosn on old values as well.
+    # if it is external configuration calculation and data should be connected to a set of configurations
+    # for situations where this logic is changed and data already exists
+    # then there should be decision to continue with new setup or to do recalculatiosn on old values as well.
     def __KFactorUP(self, ELO_diff):
         if ELO_diff > 200:
             self.k_factor = 70
@@ -81,8 +81,7 @@ class SkillCalc:
             self.k_factor = 32
 
     def __calculateAndAssignNewRating(self):
-        if self.verbose:
-            print("Using K-Factor value:",self.k_factor)
+        if self.verbose: print(f"Using K-Factor value: '{self.k_factor}'")
         new_ELO_one = int(self.team_one.ELO + self.k_factor*(self.result_for_one - self.expected_for_one))
         new_ELO_two = int(self.team_two.ELO + self.k_factor*(self.result_for_two - self.expected_for_two))
         self.__assignNewRating(new_ELO_one, new_ELO_two)

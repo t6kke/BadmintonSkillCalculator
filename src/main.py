@@ -19,7 +19,7 @@ class Main_new():
         self.launch_args_list = launch_args_list
         self.__handleLaunchArgs()#TODO handle launch arguments values
 
-        #TODO additional class variables
+        #TODO additional class variables if needed
         self.all_games_list = []
         self.all_teams_list = []
 
@@ -46,13 +46,10 @@ class Main_new():
         raw_games_list = getGamesFromTXT(self.test_data_txt)
         if self.verbose: print(f"All games from raw games list:\n{raw_games_list}")
         gamesHandler = Handler(raw_games_list, self.verbose)
-        self.all_games_list = gamesHandler.getGamesList()
-        self.all_teams_list = gamesHandler.getTeamsList()
+        gamesHandler.calculateScore()
+        gamesHandler.reportCalculationsResult()
 
-        #TODO run the calculation
-        #TODO present the results
-
-        self.__exitSuccess("=====================\nDone")
+        self.__exitSuccess("\n=====================\nDone")
 
     # actual execution with valid data
     def __run(self):
