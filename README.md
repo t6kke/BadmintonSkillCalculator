@@ -46,6 +46,26 @@ Python version that was used to develop the application: Python 3.10
 
 Required libraries: pandas, openpyxl
 
-working directory should include the source data files. I provide example txt file.
+working directory should include the source data files. I provide example data both in txt file and also in excel file in how it's in final format.
 
 Run command: `python3 main.py`
+
+## Change Log
+
+### Prototype v2
+
+Secondary PoC, features remain the same as in prototype v1. Changes are mostly about project and code restrucuring.
+
+- functions and classes are moved into packages
+- improved verbosity in various functions and classes
+- basic launch arguments handling logic
+- separated test run using example txt file data and actual code execution that would use real data
+
+### Prototype v1
+
+Initial version as PoC
+
+- able to extract games from exampel txt file and from actual use case excel documents
+- handels teams objects creation
+- goes through each game and calculates each teams ELO change
+- final result is printed out
