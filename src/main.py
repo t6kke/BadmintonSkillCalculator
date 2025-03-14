@@ -9,6 +9,7 @@ from teamhandler import TeamHandler, Team
 #======================================================================
 from BSC.DataExtractor.fromTXT import getGamesFromTXT
 from BSC.GameHandler.handler import Handler
+from BSC.Utils.handleargs import HandleArgs
 
 class Main_new():
     def __init__(self, launch_args_list, verbose=False):
@@ -17,7 +18,8 @@ class Main_new():
         self.test_data_txt = "test_data.txt"
 
         self.launch_args_list = launch_args_list
-        self.__handleLaunchArgs()#TODO handle launch arguments values
+        self.args_handler = None
+        self.__handleLaunchArgs()
 
         #TODO additional class variables if needed
         self.all_games_list = []
@@ -27,10 +29,14 @@ class Main_new():
         self.__execute()
 
     def __handleLaunchArgs(self):
+        if "--verbose" in self.launch_args_list:    # only argument parsed here to know if user wants verbose response
+            self.launch_args_list.remove("--verbose")
+            self.verbose = True
         if self.verbose: print(f"Handling lauch arguments\nArguments: {str(self.launch_args_list)}")
         if len(self.launch_args_list) == 0:
             self.test_execution = True
-        #TODO code to handle arguments
+        self.args_handler = HandleArgs(self.launch_args_list, self.verbose)
+        if self.args_handler.wasHelpRequested(): self.__exitSuccess()   # don't run any longer of user asked for help about arguments/program
 
     def __execute(self):
         print("\nBadminton Skill Calculator")
@@ -48,12 +54,13 @@ class Main_new():
         gamesHandler = Handler(raw_games_list, self.verbose)
         gamesHandler.calculateScore()
         gamesHandler.reportCalculationsResult()
-
         self.__exitSuccess("\n=====================\nDone")
 
     # actual execution with valid data
     def __run(self):
-        pass
+        print(self.args_handler.getSourceExcelFileName())
+        print(self.args_handler.getExcelSheetsList())
+        pass #TODO
 
     def __exitError(self, message):
         print(message)
