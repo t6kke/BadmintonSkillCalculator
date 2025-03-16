@@ -29,9 +29,9 @@ class Main_new():
         self.__execute()
 
     def __handleLaunchArgs(self):
-        if "--verbose" in self.launch_args_list:    # only argument parsed here to know if user wants verbose response
-            self.launch_args_list.remove("--verbose")
+        if "--verbose" in self.launch_args_list and "-h" not in self.launch_args_list and "--help" not in self.launch_args_list: #TODO needs to be changed in a way that verbose can be enalbed while also asking help
             self.verbose = True
+            print(f"INFO --- Verbose outoput is enabled")
         if self.verbose: print(f"Handling lauch arguments\nArguments: {str(self.launch_args_list)}")
         if len(self.launch_args_list) == 0:
             self.test_execution = True
@@ -246,4 +246,4 @@ if __name__=="__main__":
     if len(sys.argv) > 2:
         main = Main_new(sys.argv[1:])
     else:
-        main = Main_new(sys.argv[1:], verbose=True)
+        main = Main_new(sys.argv[1:], verbose=False)
