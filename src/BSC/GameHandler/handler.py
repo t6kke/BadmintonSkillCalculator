@@ -60,9 +60,14 @@ class Handler():
                 if self.verbose: print(f"INFO --- game winner was: '{team2}'")
                 self.__runCalculations(team1, team2, 2)
 
+    def reportFullGamesList(self):
+        print(f"\nAllTeams:\n'{self.result_games_list}'") #TODO make it look better
+
+    def reportFullTeamsList(self):
+        print(f"\nAllTeams:\n'{self.result_teams_list}'") #TODO make it look better
+
     def reportCalculationsResult(self):
-        print(f"\nList of teams: '{self.result_teams_list}'")
-        print("Final resutls:")
+        print("\nFinal resutls:")
         for team in self.result_teams_list:
             print(team.information())
         #TODO make the print out list to be in DESC order
@@ -86,7 +91,7 @@ class Handler():
         self.temp_game_dict = {}
         for team_str in teams_from_dictionary_list:
             if self.verbose: print(f"INFO --- Parsing raw team string: '{team_str}'")
-            temp_player_set = createTeamMembersSet(team_str, True)
+            temp_player_set = createTeamMembersSet(team_str, self.verbose)
             self.temp_new_team = None
             if len(self.temp_existing_teams_sets_list) == 0:
                 if self.verbose: print(f"DEBUG --- no existing teams yet --- team set being handled: '{temp_player_set}' --- addint team: '{team_str}'")

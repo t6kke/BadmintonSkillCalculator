@@ -8,6 +8,7 @@ from teamhandler import TeamHandler, Team
 # new implementation using new packages setup
 #======================================================================
 from BSC.DataExtractor.fromTXT import getGamesFromTXT
+from BSC.DataExtractor.fromExcel import ExcelParser
 from BSC.GameHandler.handler import Handler
 from BSC.Utils.handleargs import HandleArgs
 
@@ -39,12 +40,15 @@ class Main_new():
         if self.args_handler.wasHelpRequested(): self.__exitSuccess()   # don't run any longer of user asked for help about arguments/program
 
     def __execute(self):
-        print("\nBadminton Skill Calculator")
-        print("prototype v2\n")
+        print("\n  Badminton Skill Calculator")
+        print("  prototype v2\n")
         if self.test_execution:
             self.__runTest()
         else:
-            self.__run()
+            try:
+                self.__run()
+            except Exception as e:
+                self.__exitError(str(e)+"\nError exit")
 
     # test execution with sample data from txt file
     def __runTest(self):
@@ -58,9 +62,28 @@ class Main_new():
 
     # actual execution with valid data
     def __run(self):
-        print(self.args_handler.getSourceExcelFileName())
-        print(self.args_handler.getExcelSheetsList())
-        pass #TODO
+        excel_file = self.args_handler.getSourceExcelFileName()
+        sheets_list = self.args_handler.getExcelSheetsList()
+        if excel_file == "" or len(sheets_list) == 0:
+            raise Exception("No valid source data provided exception")
+        raw_games_list_from_excel = self.__getGamesFromExcel(excel_file, sheets_list) #TODO investigate how to best enter sheet values?
+        gamesHandler = Handler(raw_games_list_from_excel, self.verbose)
+        gamesHandler.calculateScore()
+        gamesHandler.reportFullGamesList()
+        gamesHandler.reportFullTeamsList()
+        gamesHandler.reportCalculationsResult()
+        self.__exitSuccess("\n=====================\nDone")
+
+    def __getGamesFromExcel(self, excel_file, list_of_sheets):
+        list_of_games = []
+        for sheet in list_of_sheets:
+            excelParser = ExcelParser(excel_file, sheet)
+            tournament_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
+            print(tournament_name) #TODO better presentation of tournament names that will be parsed
+            excelParser.collectGames()
+            list_of_games = list_of_games + excelParser.getGames()
+        return list_of_games
+
 
     def __exitError(self, message):
         print(message)
@@ -243,7 +266,7 @@ def convertGameTeamToTeam(all_games_list_fromExcel): #TODO this function needs t
 
 # new way of starting main
 if __name__=="__main__":
-    if len(sys.argv) > 2:
-        main = Main_new(sys.argv[1:])
+    if len(sys.argv) <= 1:
+        main = Main_new(sys.argv[1:], verbose=True)     #running the code with no arguments will always be verbose
     else:
-        main = Main_new(sys.argv[1:], verbose=False)
+        main = Main_new(sys.argv[1:])

@@ -1,7 +1,8 @@
 import pandas as pd
 
 class ExcelParser():
-    def __init__(self, excel_data_games_filename, excel_sheet_name): #TODO implement verbose
+    def __init__(self, excel_data_games_filename, excel_sheet_name, verbose=False):
+        self.verbose = verbose #TODO add verbose information throught the class
         self.excel_data_games_filename = excel_data_games_filename
         self.excel_sheet_name = excel_sheet_name
         self.dataframe = None
@@ -12,7 +13,7 @@ class ExcelParser():
     def getTournamentName(self):
         dataframe_event_name = pd.read_excel(self.excel_data_games_filename, sheet_name=self.excel_sheet_name, nrows=1, header=None)
         #print("Tournament Name: ", dataframe_event_name.at[0,0], "\n")
-        print(pd.ExcelFile(self.excel_data_games_filename).sheet_names) #TODO sheets can be found like this
+        #print(pd.ExcelFile(self.excel_data_games_filename).sheet_names)    # sheets can be found like this, not sure if needed
         return str(dataframe_event_name.at[0,0])
 
     def getGames(self):

@@ -18,12 +18,15 @@ class HandleArgs():
     # variable get functions
     #============================================
     def wasHelpRequested(self):
+        if self.verbose: print(f"INFO --- help request status info was requested, returning '{self.was_help_requested}'")
         return self.was_help_requested
 
     def getSourceExcelFileName(self):
+        if self.verbose: print(f"INFO --- excel file name was requested, returning '{self.source_excel}'")
         return self.source_excel
 
     def getExcelSheetsList(self):
+        if self.verbose: print(f"INFO --- list of sheets was requested, returning '{self.source_excel_sheet_list}'")
         return self.source_excel_sheet_list
 
     #============================================
