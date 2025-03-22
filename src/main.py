@@ -66,16 +66,34 @@ class Main():
         gamesHandler.reportFullGamesList()
         gamesHandler.reportFullTeamsList()
         gamesHandler.reportCalculationsResult()
+
+        """for sheet in sheets_list:
+            raw_games_list_from_excel = self.__getGamesFromExcel2(excel_file, sheet)
+            gamesHandler = Handler(raw_games_list_from_excel, self.verbose) #TODO need to be able to initalize Handler without providing games data and then manually calling the run on each data set without having to reinitialize it since teams list is related to it
+            gamesHandler.calculateScore()
+            gamesHandler.reportFullGamesList()
+            gamesHandler.reportFullTeamsList()
+            gamesHandler.reportCalculationsResult()"""
+
         self.__exitSuccess("\n=====================\nDone")
 
     def __getGamesFromExcel(self, excel_file, list_of_sheets):
         list_of_games = []
         for sheet in list_of_sheets:
-            excelParser = ExcelParser(excel_file, sheet)
+            excelParser = ExcelParser(excel_file, sheet, self.verbose)
             tournament_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
             print(tournament_name) #TODO better presentation of tournament names that will be parsed
             excelParser.collectGames()
             list_of_games = list_of_games + excelParser.getGames()
+        return list_of_games
+
+    def __getGamesFromExcel2(self, excel_file, sheet):  #TODO this is the future solution
+        list_of_games = []
+        excelParser = ExcelParser(excel_file, sheet, self.verbose)
+        tournament_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
+        print(tournament_name) #TODO better presentation of tournament names that will be parsed
+        excelParser.collectGames()
+        list_of_games = excelParser.getGames()
         return list_of_games
 
 

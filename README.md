@@ -24,8 +24,6 @@ List is not just code improvements but also project functionalities
 ### Near Future
 
 - Various minor improvements in codes marked with TODO
-- main.py needs restructuring specifically `convertGameTeamToTeam()` function.
-- general code restructuring review and changes where it would make sense.
 - Store data of scanned tournaments in DB and keep track of ELO over time without having to reimport and calculate all data over again.
 - Generate some kind of HTML for static website content in case it's interesting for other compeditors.
 - Add ELO confidence value and use it to handle ELO gain/loss.
@@ -48,7 +46,9 @@ Required libraries: pandas, openpyxl
 
 working directory should include the source data files. I provide example data both in txt file and also in excel file in how it's in final format.
 
-Run command: `python3 main.py`
+For test execution run command: `python3 main.py`
+
+For help information run command: `python3 main.py -h`
 
 ## Change Log
 

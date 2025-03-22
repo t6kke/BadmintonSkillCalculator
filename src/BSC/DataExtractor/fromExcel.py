@@ -2,7 +2,7 @@ import pandas as pd
 
 class ExcelParser():
     def __init__(self, excel_data_games_filename, excel_sheet_name, verbose=False):
-        self.verbose = verbose #TODO add verbose information throught the class
+        self.verbose = verbose
         self.excel_data_games_filename = excel_data_games_filename
         self.excel_sheet_name = excel_sheet_name
         self.dataframe = None
@@ -11,36 +11,37 @@ class ExcelParser():
         self.collected_games_list = []
 
     def getTournamentName(self):
+        if self.verbose: print(f"INFO --- retreiving tournament name")
         dataframe_event_name = pd.read_excel(self.excel_data_games_filename, sheet_name=self.excel_sheet_name, nrows=1, header=None)
-        #print("Tournament Name: ", dataframe_event_name.at[0,0], "\n")
+        event_name = dataframe_event_name.at[0,0]
         #print(pd.ExcelFile(self.excel_data_games_filename).sheet_names)    # sheets can be found like this, not sure if needed
-        return str(dataframe_event_name.at[0,0])
+        if self.verbose: print(f"DEBUG --- returning tournament name: '{event_name}'")
+        return str(event_name)
 
     def getGames(self):
+        if self.verbose: print(f"INFO --- returning all collected games: '{self.collected_games_list}'")
         return self.collected_games_list
 
     def collectGames(self):
-        #print("\n", self.dataframe, "\n")
+        if self.verbose: print(f"INFO --- staring collection of games from dataframe:\n{self.dataframe}")
         last_column = self.__findLastGamesColumn()
         last_row = len(self.dataframe.index)-1
         first_game_row = self.__findFirstGamesRow()
-        #print("last column with data:", last_column)
-        #print("last row:", last_row)
-        #print("games start at row: ", first_game_row)
-        #self.__getGameDataframe_temp()
+        if self.verbose: print(f"DEBUG --- games section limiters -- First game row: '{first_game_row}' -- Last row: '{last_row}' -- Last column: '{last_column}'")
 
         column_range = [] #Used to limit colums for the game dataframes
         for i in range(0,last_column+1):
             column_range.append(i)
-        for i in range(first_game_row,last_row+1,5): #TODO range step is hardcoded as 5 since it's standard, it could be extraced dynamically but not relevant for now
+        for i in range(first_game_row,last_row+1,5):    #TODO range step is hardcoded as 5 since it's standard, it could be extraced dynamically but not relevant for now
             self.__getGameDataframe(i,column_range)
 
         self.__getAllGames()
 
 
     def __setDataframe(self):
+        if self.verbose: print(f"INFO --- getting the full dataframe from excel")
         self.dataframe = pd.read_excel(self.excel_data_games_filename, sheet_name=self.excel_sheet_name, header=None)
-        #print(self.dataframe)
+        if self.verbose: print(f"DEBUG --- got this dataframe:\n{self.dataframe}")
 
     def __findLastGamesColumn(self):
         for column in range(len(self.dataframe.columns)):
@@ -51,7 +52,6 @@ class ExcelParser():
                 else:
                     nan_counter = 0
                 if nan_counter > 9:
-                    #print("found end colum, last data on column:", column)
                     return column-1
 
     def __findFirstGamesRow(self):
@@ -61,16 +61,14 @@ class ExcelParser():
                 return row
 
     def __getGameDataframe(self, row_index, column_range):
+        if self.verbose: print(f"INFO --- getting specific games section dataframe")
         dataframe = pd.read_excel(self.excel_data_games_filename, sheet_name=self.excel_sheet_name, skiprows=row_index, nrows=4, usecols=column_range, header=None)
+        if self.verbose: print(f"DEBUG --- found this dataframe:\n{dataframe}")
         self.games_dataframe_list.append(dataframe)
 
-    def __getAllGames(self):
-        #print(self.gamesDataframe_list)
-        #print("\n", self.gamesDataframe_list[0], "\n")
+    def __getAllGames(self):    #TODO should also add some verbose information to this function
         df_colums = len(self.games_dataframe_list[0].columns)
         for df in self.games_dataframe_list:
-            #print("Game: ", df.loc[0].at[0])
-            #print(df)
             for i in range(0,df_colums,2):
                 temp_dict = {}
                 team_one = str(df.loc[2].at[i]).rstrip()
