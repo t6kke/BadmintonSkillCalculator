@@ -27,6 +27,7 @@ List is not just code improvements but also project functionalities
 - Store data of scanned tournaments in DB and keep track of ELO over time without having to reimport and calculate all data over again.
 - Generate some kind of HTML for static website content in case it's interesting for other compeditors.
 - Add ELO confidence value and use it to handle ELO gain/loss.
+- Rework how commands are built and handled
 
 ### Far Future
 
@@ -51,6 +52,10 @@ For test execution run command: `python3 main.py`
 For help information run command: `python3 main.py -h`
 
 ## Change Log
+
+### Prototype v3
+
+- SQLite as data storage
 
 ### Prototype v2
 

@@ -5,6 +5,7 @@ class HandleArgs():
         #argument values variables to be filled
         self.source_excel = ""
         self.source_excel_sheet_list = []
+        self.database_name = ""
 
         # general class variables
         self.verbose = verbose
@@ -18,16 +19,20 @@ class HandleArgs():
     # variable get functions
     #============================================
     def wasHelpRequested(self):
-        if self.verbose: print(f"INFO --- help request status info was requested, returning '{self.was_help_requested}'")
+        if self.verbose: print(f"INFO --- help request status info was requested, returning: '{self.was_help_requested}'")
         return self.was_help_requested
 
     def getSourceExcelFileName(self):
-        if self.verbose: print(f"INFO --- excel file name was requested, returning '{self.source_excel}'")
+        if self.verbose: print(f"INFO --- excel file name was requested, returning: '{self.source_excel}'")
         return self.source_excel
 
     def getExcelSheetsList(self):
-        if self.verbose: print(f"INFO --- list of sheets was requested, returning '{self.source_excel_sheet_list}'")
+        if self.verbose: print(f"INFO --- list of sheets was requested, returning: '{self.source_excel_sheet_list}'")
         return self.source_excel_sheet_list
+
+    def getDatabaseName(self):
+        if self.verbose: print(f"INFO --- database info was requested, returning: '{self.database_name}'")
+        return self.database_name
 
     #============================================
     # internal functions parsing arguments
@@ -68,5 +73,7 @@ class HandleArgs():
                 self.source_excel = value
             case "--sheet" | "-s":
                 self.source_excel_sheet_list.append(value)
+            case "--db_name":
+                self.database_name = value
             case _:
                 if self.verbose: print(f"DEBUG --- key/value handler ended in default state handing key: '{key}' and value: '{value}'")

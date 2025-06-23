@@ -5,6 +5,7 @@ from BSC.DataExtractor.fromTXT import getGamesFromTXT
 from BSC.DataExtractor.fromExcel import ExcelParser
 from BSC.GameHandler.handler import Handler
 from BSC.Utils.handleargs import HandleArgs
+from BSC.Database.db import DB
 
 class Main():
     def __init__(self, launch_args_list, verbose=False):
@@ -12,6 +13,7 @@ class Main():
         self.test_execution = False
         self.test_data_txt = "test_data.txt"
 
+        self.database_obj = None
         self.launch_args_list = launch_args_list
         self.args_handler = None
         self.__handleLaunchArgs()
@@ -31,11 +33,11 @@ class Main():
         if len(self.launch_args_list) == 0:
             self.test_execution = True
         self.args_handler = HandleArgs(self.launch_args_list, self.verbose)
-        if self.args_handler.wasHelpRequested(): self.__exitSuccess()   # don't run any longer of user asked for help about arguments/program
+        if self.args_handler.wasHelpRequested(): self.__exitSuccess()   # don't run any longer if user asked for help about arguments/program
 
     def __execute(self):
         print("\n  Badminton Skill Calculator")
-        print("  prototype v2\n")
+        print("  prototype v3\n")
         if self.test_execution:
             self.__runTest()
         else:
@@ -46,12 +48,20 @@ class Main():
 
     # test execution with sample data from txt file
     def __runTest(self):
+        # just initial code to explore db usage
+        self.verbose = False
+        #db_name = self.args_handler.getDatabaseName()
+        db_name = "db_test.db"
+        self.database_obj = DB(db_name)
+
+        # orginal test logic continues
         if self.verbose: print(f"Executing test run from file {self.test_data_txt}")
         raw_games_list = getGamesFromTXT(self.test_data_txt)
         if self.verbose: print(f"All games from raw games list:\n{raw_games_list}")
         gamesHandler = Handler(raw_games_list, self.verbose)
         gamesHandler.calculateScore()
         gamesHandler.reportCalculationsResult()
+        self.database_obj.closeConnection()
         self.__exitSuccess("\n=====================\nDone")
 
     # actual execution with data provided through launch arguments
@@ -95,7 +105,6 @@ class Main():
         excelParser.collectGames()
         list_of_games = excelParser.getGames()
         return list_of_games
-
 
     def __exitError(self, message):
         print(message)

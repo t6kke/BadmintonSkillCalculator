@@ -66,6 +66,9 @@ Example:
 -s=[SHEET_1] -s=[SHEET_2] -s=[SHEET_3]
 """
 
+db_argument_info_text = """
+"""
+
 def helpSelector(key):
     match key:
         case "--help" | "-h":
@@ -78,6 +81,8 @@ def helpSelector(key):
             __fileArgumentInfo()
         case "--sheet" | "-s":
             __sheetArgumentInfo()
+        case "--db_name":
+            __dbArgumentInfo()
         case _:
             print(f"argument key '{key}' not found\n")
             __generalAppHelp()
@@ -96,3 +101,7 @@ def __fileArgumentInfo():
 
 def __sheetArgumentInfo():
     print(sheet_argument_info_text)
+
+def __dbArgumentInfo():
+    #TODO add '--db' arugment help info
+    pass
