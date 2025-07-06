@@ -49,7 +49,7 @@ class Main():
     # test execution with sample data from txt file
     def __runTest(self):
         # just initial code to explore db usage
-        self.verbose = False
+        self.verbose = True
         #db_name = self.args_handler.getDatabaseName()
         db_name = "db_test.db"
         self.database_obj = DB(db_name)
@@ -58,7 +58,7 @@ class Main():
         if self.verbose: print(f"Executing test run from file {self.test_data_txt}")
         raw_games_list = getGamesFromTXT(self.test_data_txt)
         if self.verbose: print(f"All games from raw games list:\n{raw_games_list}")
-        gamesHandler = Handler(raw_games_list, self.verbose)
+        gamesHandler = Handler(raw_games_list, self.database_obj, self.verbose)
         gamesHandler.calculateScore()
         gamesHandler.reportCalculationsResult()
         self.database_obj.closeConnection()

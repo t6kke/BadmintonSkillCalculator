@@ -57,3 +57,14 @@ class DB():
     def closeConnection(self):
         self.con.close()
 
+    def GetPlayer(self, name):
+        print("get or create user/player name: " + name)
+        res = self.cur.execute("SELECT * FROM users WHERE name = '" + name +"'")
+        print(res.fetchone())
+        if res.fetchone() is not None:
+            print("no player in db, creating new one")
+            data = (name, 1000)
+            res = self.cur.execute("INSERT INTO users (name, elo) VALUES (?,?)", data)
+            self.con.commit() #TODO commit not working, data is not stored in DB.
+            res = self.cur.execute("SELECT * FROM users WHERE name = '" + name +"'")
+        return res.fetchone()

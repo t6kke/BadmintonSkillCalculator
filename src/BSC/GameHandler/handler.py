@@ -5,10 +5,11 @@ from BSC.PlayersAndTeams.teams import Team, createTeamMembersSet
 from BSC.SkillCalculator.skillCalculator import SkillCalc
 
 class Handler():
-    def __init__(self, raw_games_list, verbose=False):
+    def __init__(self, raw_games_list, database_obj, verbose=False):
         # main object variables
         self.verbose = verbose
         self.raw_games_list = raw_games_list
+        self.database_obj = database_obj
         self.result_games_list = []
         self.result_teams_list = []
 
@@ -91,7 +92,7 @@ class Handler():
         self.temp_game_dict = {}
         for team_str in teams_from_dictionary_list:
             if self.verbose: print(f"INFO --- Parsing raw team string: '{team_str}'")
-            temp_player_set = createTeamMembersSet(team_str, self.verbose)
+            temp_player_set = createTeamMembersSet(team_str, self.database_obj, self.verbose)
             self.temp_new_team = None
             if len(self.temp_existing_teams_sets_list) == 0:
                 if self.verbose: print(f"DEBUG --- no existing teams yet --- team set being handled: '{temp_player_set}' --- addint team: '{team_str}'")
@@ -129,7 +130,7 @@ class Handler():
     #============================================
     def __insertTeamToList(self, team_str):
         if self.verbose: print(f"INFO --- creating team object from string '{team_str}' and adding it to the result teams list")
-        self.temp_new_team = Team(team_str, 1000)
+        self.temp_new_team = Team(team_str, self.database_obj, 1000)
         self.result_teams_list.append(self.temp_new_team)
         self.temp_existing_teams_sets_list.append(self.temp_new_team.team_member_set)
 
