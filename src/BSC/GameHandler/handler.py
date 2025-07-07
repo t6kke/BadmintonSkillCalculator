@@ -90,12 +90,13 @@ class Handler():
 
     def __TeamsFromDictToTeamsObj(self, teams_from_dictionary_list):
         self.temp_game_dict = {}
+        print(teams_from_dictionary_list)
         for team_str in teams_from_dictionary_list:
             if self.verbose: print(f"INFO --- Parsing raw team string: '{team_str}'")
             temp_player_set = createTeamMembersSet(team_str, self.database_obj, self.verbose)
             self.temp_new_team = None
             if len(self.temp_existing_teams_sets_list) == 0:
-                if self.verbose: print(f"DEBUG --- no existing teams yet --- team set being handled: '{temp_player_set}' --- addint team: '{team_str}'")
+                if self.verbose: print(f"DEBUG --- no existing teams yet --- team set being handled: '{temp_player_set}' --- adding team: '{team_str}'")
                 self.__insertTeamToList(team_str)
             self.__inseringRestOfTeams(team_str, temp_player_set)
             self.temp_game_dict = self.__createNewGameDictWithTeamObj(team_str, temp_player_set)

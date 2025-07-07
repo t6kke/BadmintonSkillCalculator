@@ -29,7 +29,7 @@ def createTeamMembersSet(team_str, db_obj, verbose=False):
         user = Player(name.strip())
         user.GetOrCreatePlayerDBobj(db_obj)
         result_set.add(user)
-    print(result_set)
+    print(result_set, type(result_set))
     #result_set = {names[0].rstrip(), names[1].lstrip()}
     if verbose: print(f"DEBUG --- final set to return: '{result_set}'")
     return result_set

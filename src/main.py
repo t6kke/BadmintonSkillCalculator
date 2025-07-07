@@ -52,7 +52,7 @@ class Main():
         self.verbose = True
         #db_name = self.args_handler.getDatabaseName()
         db_name = "db_test.db"
-        self.database_obj = DB(db_name)
+        self.database_obj = DB(db_name, verbose=self.verbose, clear_db=True)
 
         # orginal test logic continues
         if self.verbose: print(f"Executing test run from file {self.test_data_txt}")
@@ -61,7 +61,6 @@ class Main():
         gamesHandler = Handler(raw_games_list, self.database_obj, self.verbose)
         gamesHandler.calculateScore()
         gamesHandler.reportCalculationsResult()
-        self.database_obj.closeConnection()
         self.__exitSuccess("\n=====================\nDone")
 
     # actual execution with data provided through launch arguments
