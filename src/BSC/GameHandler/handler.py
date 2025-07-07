@@ -2,6 +2,7 @@ import sys
 sys.path.append('../')
 
 from BSC.PlayersAndTeams.teams import Team, createTeamMembersSet
+from BSC.PlayersAndTeams.players import Player
 from BSC.SkillCalculator.skillCalculator import SkillCalc
 
 class Handler():
@@ -28,7 +29,8 @@ class Handler():
         # Maybe in the future if games data is extracted multiple times and then added
         # multiple times into this object the __run() function needs to be executed again.
         # But this will create more problems. Something to resolve in the future if needed.
-        self.__run()
+        #self.__run()
+        self.__run_NEW()
 
 
     #============================================
@@ -73,8 +75,54 @@ class Handler():
             print(team.information())
         #TODO make the print out list to be in DESC order
 
+
+    #============================================
+    # new initiation wokflow functions
+    #============================================
+    def __run_NEW(self):
+        players_obj_list_in_tournament = []
+        if self.verbose: print(f"INFO --- Raw games list for parsing: '{self.raw_games_list}'")
+        for game in self.raw_games_list:
+            if self.verbose: print(f"INFO --- Parsing raw game dictionary: '{game}'")
+            print("Working on game:", game)
+            for team, score in game.items():
+                print(team, score)
+                if "+" in team:
+                    print("we have team with multiple members, need to split into multiple players")
+                    player_str_list = team.split("+")
+                    for player in player_str_list:
+                        player_db_entry = self.database_obj.GetPlayer(player.strip())
+                        player_exists = False
+                        for existing_player_obj in players_obj_list_in_tournament:
+                            if existing_player_obj.db_id == player_db_entry[0]:
+                                player_exists = True
+                                break
+                        if player_exists == False:
+                            player_obj = Player(player_db_entry[0], player_db_entry[1], player_db_entry[2])
+                            players_obj_list_in_tournament.append(player_obj)
+                else:
+                    print("singles player, singles tournament")
+                    #TODO do the single player handling as for others
+        for player_obj in players_obj_list_in_tournament:
+            print(player_obj.information())
+
+            #TODO need to parse the teams out form the game
+            #TODO need to extract players from team
+            #TODO create player objects from previoud extraction, player objects need to be unique DB entries, put the player objects of one team into a list
+            #TODO list of players is used to compile a team object to validate new or existing team
+
+            #TODO for next DB entries steps
+            #TODO game(s) needs to be stored into db
+            #TODO players and games relation entrie needs to be done
+            #TODO matches entrie needs to be done but it requires tournament entri and categories entry beforehand.
+
+
+
+
+
     #============================================
     # initiation wokflow functions
+    # outdated from prototype v3
     #============================================
     def __run(self):
         if self.verbose: print(f"INFO --- Raw games list for parsing: '{self.raw_games_list}'")
@@ -92,6 +140,7 @@ class Handler():
         self.temp_game_dict = {}
         print(teams_from_dictionary_list)
         for team_str in teams_from_dictionary_list:
+            print(team_str)
             if self.verbose: print(f"INFO --- Parsing raw team string: '{team_str}'")
             temp_player_set = createTeamMembersSet(team_str, self.database_obj, self.verbose)
             self.temp_new_team = None

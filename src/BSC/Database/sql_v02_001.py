@@ -13,7 +13,8 @@ db_up = {
 )""",
 "categories": """CREATE TABLE "categories" (
 	"id"	INTEGER NOT NULL UNIQUE,
-	"name"	INTEGER NOT NULL,
+	"name"	TEXT NOT NULL,
+	"description"	TEXT NOT NULL,
 	PRIMARY KEY("id" AUTOINCREMENT)
 )""",
 "matches": """CREATE TABLE "matches" (

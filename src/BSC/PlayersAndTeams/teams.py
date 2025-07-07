@@ -33,3 +33,21 @@ def createTeamMembersSet(team_str, db_obj, verbose=False):
     #result_set = {names[0].rstrip(), names[1].lstrip()}
     if verbose: print(f"DEBUG --- final set to return: '{result_set}'")
     return result_set
+
+
+
+#new Team object, just intended for holding list of player objects in set data structure. Set is specifically used since order is not inportant for comparison between teams.
+class Team_v2():
+    def __init__(self, player_obj_list):
+        self.team_members_set = set()
+        self.__fillTeamMebersSet(player_obj_list)
+
+    def __str__(self):
+        return self.team_members_set
+
+    def __repr__(self):
+        return self.team_members_set
+
+    def __fillTeamMebersSet(self, player_obj_list):
+        for player_obj in player_obj_list:
+            self.team_members_set.add(player_obj)

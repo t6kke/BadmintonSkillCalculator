@@ -1,3 +1,4 @@
+import time
 import os.path
 import sqlite3
 
@@ -33,11 +34,18 @@ class DB():
         con.close()
 
     def __createTables(self):
+        categories_data = [("MS", "men singles"),
+                           ("WS", "women singles"),
+                           ("MD", "men double"),
+                           ("WD", "women double"),
+                           ("XD", "mixed double")
+                           ]
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         for table, sql in db_up.items():
             print("DEBUG --- Creating table:", table)
             cur.execute(sql)
+        cur.executemany("INSERT INTO categories (name, description) VALUES(?,?)", categories_data)
         con.commit()
         con.close()
 
@@ -73,17 +81,19 @@ class DB():
         con.close()
 
     def GetPlayer(self, name):
+        result = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         print("get or create user/player name: " + name)
         res = cur.execute("SELECT * FROM users WHERE name = '" + name +"'")
-        print(res.fetchone())
-        if res.fetchone() is None:
+        result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
+        if result is None:
             print("no player in db, creating new one")
             data = (name, 1000)
             res = cur.execute("INSERT INTO users (name, elo) VALUES (?,?)", data)
             con.commit()
             res = cur.execute("SELECT * FROM users WHERE name = '" + name +"'")
-        result = res.fetchone()
+            result = res.fetchone()
         con.close()
+        #time.sleep(5)
         return result

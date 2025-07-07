@@ -56,6 +56,7 @@ For help information run command: `python3 main.py -h`
 ### Prototype v3
 
 - SQLite as data storage
+- db inclusion required rework on how teams, players, games and elo calculations are handled.
 
 ### Prototype v2
 

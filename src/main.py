@@ -49,7 +49,7 @@ class Main():
     # test execution with sample data from txt file
     def __runTest(self):
         # just initial code to explore db usage
-        self.verbose = True
+        self.verbose = False #for testing purpose sometimes I need full debug log for tests sometimes I don't need it
         #db_name = self.args_handler.getDatabaseName()
         db_name = "db_test.db"
         self.database_obj = DB(db_name, verbose=self.verbose, clear_db=True)
