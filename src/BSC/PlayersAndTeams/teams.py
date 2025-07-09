@@ -50,4 +50,4 @@ class Team_v2():
 
     def __fillTeamMebersSet(self, player_obj_list):
         for player_obj in player_obj_list:
-            self.team_members_set.add(player_obj)
+            self.team_members_set.add(player_obj.db_id)

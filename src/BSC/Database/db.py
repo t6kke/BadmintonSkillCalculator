@@ -84,7 +84,7 @@ class DB():
         result = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        print("get or create user/player name: " + name)
+        #print("get or create user/player name: " + name)
         res = cur.execute("SELECT * FROM users WHERE name = '" + name +"'")
         result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
         if result is None:

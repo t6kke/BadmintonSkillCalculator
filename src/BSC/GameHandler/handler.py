@@ -3,6 +3,7 @@ sys.path.append('../')
 
 from BSC.PlayersAndTeams.teams import Team, createTeamMembersSet
 from BSC.PlayersAndTeams.players import Player
+from BSC.PlayersAndTeams.teams import Team_v2
 from BSC.SkillCalculator.skillCalculator import SkillCalc
 
 class Handler():
@@ -80,35 +81,40 @@ class Handler():
     # new initiation wokflow functions
     #============================================
     def __run_NEW(self):
-        players_obj_list_in_tournament = []
+        #TODO print statments here eventually need to be changed to be behind verbose check or if needed actual results.
+        converted_all_games_list = [] #same list of games list of dictionaries but content will be Teams objects that have set of player db_id-s
+
+        players_obj_dict_in_tournament = {} #for not repeat checks of players in tournament. strcutre: 'db_id: player_obj'
         if self.verbose: print(f"INFO --- Raw games list for parsing: '{self.raw_games_list}'")
         for game in self.raw_games_list:
             if self.verbose: print(f"INFO --- Parsing raw game dictionary: '{game}'")
             print("Working on game:", game)
+            new_game_dict_wObjects = {} #same kind of dictionary structure but Teams instead of being just a string is a Team object that consists of Player db_id in a set() data type
             for team, score in game.items():
                 print(team, score)
                 if "+" in team:
                     print("we have team with multiple members, need to split into multiple players")
                     player_str_list = team.split("+")
+                    player_obj_list_for_team = []
                     for player in player_str_list:
                         player_db_entry = self.database_obj.GetPlayer(player.strip())
                         player_exists = False
-                        for existing_player_obj in players_obj_list_in_tournament:
-                            if existing_player_obj.db_id == player_db_entry[0]:
-                                player_exists = True
-                                break
+                        if player_db_entry[0] in players_obj_dict_in_tournament:
+                            player_exists = True
+                            player_obj_list_for_team.append(players_obj_dict_in_tournament.get(player_db_entry[0]))
                         if player_exists == False:
                             player_obj = Player(player_db_entry[0], player_db_entry[1], player_db_entry[2])
-                            players_obj_list_in_tournament.append(player_obj)
+                            players_obj_dict_in_tournament[player_obj.db_id] = player_obj
+                            player_obj_list_for_team.append(player_obj)
+                    for player_obj in player_obj_list_for_team:
+                        print("player in the list for team obj:", player_obj)
+                    #TODO fill the team object and put it into the new game data
                 else:
                     print("singles player, singles tournament")
                     #TODO do the single player handling as for others
-        for player_obj in players_obj_list_in_tournament:
-            print(player_obj.information())
+        for p_id, p_obj in players_obj_dict_in_tournament.items():
+            print(p_id, p_obj.player_name, p_obj.ELO)
 
-            #TODO need to parse the teams out form the game
-            #TODO need to extract players from team
-            #TODO create player objects from previoud extraction, player objects need to be unique DB entries, put the player objects of one team into a list
             #TODO list of players is used to compile a team object to validate new or existing team
 
             #TODO for next DB entries steps
