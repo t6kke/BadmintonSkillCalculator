@@ -87,15 +87,16 @@ class Handler():
         players_obj_dict_in_tournament = {} #for not repeat checks of players in tournament. strcutre: 'db_id: player_obj'
         if self.verbose: print(f"INFO --- Raw games list for parsing: '{self.raw_games_list}'")
         for game in self.raw_games_list:
+            new_game_dict = {}
             if self.verbose: print(f"INFO --- Parsing raw game dictionary: '{game}'")
             print("Working on game:", game)
             new_game_dict_wObjects = {} #same kind of dictionary structure but Teams instead of being just a string is a Team object that consists of Player db_id in a set() data type
             for team, score in game.items():
                 print(team, score)
+                player_obj_list_for_team = []
                 if "+" in team:
                     print("we have team with multiple members, need to split into multiple players")
                     player_str_list = team.split("+")
-                    player_obj_list_for_team = []
                     for player in player_str_list:
                         player_db_entry = self.database_obj.GetPlayer(player.strip())
                         player_exists = False
@@ -112,12 +113,16 @@ class Handler():
                 else:
                     print("singles player, singles tournament")
                     #TODO do the single player handling as for others
+                team_obj = Team_v2(player_obj_list_for_team)
+                print(team_obj)
+                new_game_dict[team_obj] = score
+            converted_all_games_list.append(new_game_dict)
         for p_id, p_obj in players_obj_dict_in_tournament.items():
             print(p_id, p_obj.player_name, p_obj.ELO)
+        for game in converted_all_games_list:
+            for t, s in game.items():
+                print(t, s)
 
-            #TODO list of players is used to compile a team object to validate new or existing team
-
-            #TODO for next DB entries steps
             #TODO game(s) needs to be stored into db
             #TODO players and games relation entrie needs to be done
             #TODO matches entrie needs to be done but it requires tournament entri and categories entry beforehand.

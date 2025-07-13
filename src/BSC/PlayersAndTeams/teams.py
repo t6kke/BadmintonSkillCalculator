@@ -43,7 +43,7 @@ class Team_v2():
         self.__fillTeamMebersSet(player_obj_list)
 
     def __str__(self):
-        return self.team_members_set
+        return f"Team object with '{type(self.team_members_set)}' type and player DB ID values of: '{str(self.team_members_set)}'"
 
     def __repr__(self):
         return self.team_members_set
