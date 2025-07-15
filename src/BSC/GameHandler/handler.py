@@ -82,7 +82,7 @@ class Handler():
     #============================================
     def __run_NEW(self):
         #TODO print statments here eventually need to be changed to be behind verbose check or if needed actual results.
-        converted_all_games_list = [] #same list of games list of dictionaries but content will be Teams objects that have set of player db_id-s
+        converted_all_matches_list = [] #same list of games list of dictionaries but content will be Teams objects that have set of player db_id-s
 
         players_obj_dict_in_tournament = {} #for not repeat checks of players in tournament. strcutre: 'db_id: player_obj'
         if self.verbose: print(f"INFO --- Raw games list for parsing: '{self.raw_games_list}'")
@@ -116,16 +116,39 @@ class Handler():
                 team_obj = Team_v2(player_obj_list_for_team)
                 print(team_obj)
                 new_game_dict[team_obj] = score
-            converted_all_games_list.append(new_game_dict)
-        for p_id, p_obj in players_obj_dict_in_tournament.items():
-            print(p_id, p_obj.player_name, p_obj.ELO)
-        for game in converted_all_games_list:
+            converted_all_matches_list.append(new_game_dict)
+        """for p_id, p_obj in players_obj_dict_in_tournament.items():
+            print(p_id, p_obj.player_name, p_obj.ELO)"""
+        """for game in converted_all_matches_list:
             for t, s in game.items():
-                print(t, s)
+                print(t, s)"""
 
-            #TODO game(s) needs to be stored into db
-            #TODO players and games relation entrie needs to be done
-            #TODO matches entrie needs to be done but it requires tournament entri and categories entry beforehand.
+        for match in converted_all_matches_list:
+            #TODO analyze if matches table needs more data than just the tournament id and category id
+            #TODO in real solution tournament id and categorie id will be part of data set provided for initial setup it's just hardcoded values
+            match_data_to_db = (1, 6,)
+            match_id = self.database_obj.AddMatch(match_data_to_db)
+            #print(match_id, "-- match ID")
+            #print(type(match), list(match.values())[0], list(match.values())[1])
+
+            #in the future score will not be just a value but a list and ammount of scores will indicate how many games were in the match
+            game_nbr = 1 #TODO temp variable until scores are in a list
+            game_data_to_db = (match_id, game_nbr, list(match.values())[0], list(match.values())[1],)
+            game_id = self.database_obj.AddGame(game_data_to_db)
+            #print(game_id, "-- game ID")
+            #print(list(list(match.keys())[0].team_members_set)[0], list(list(match.keys())[0].team_members_set)[1], list(list(match.keys())[1].team_members_set)[0], list(list(match.keys())[1].team_members_set)[1])
+            players_games_rel_to_db = [(list(list(match.keys())[0].team_members_set)[0], game_id, game_nbr),
+                                       (list(list(match.keys())[0].team_members_set)[1], game_id, game_nbr),
+                                       (list(list(match.keys())[1].team_members_set)[0], game_id, game_nbr),
+                                       (list(list(match.keys())[1].team_members_set)[1], game_id, game_nbr)]
+            game_id = self.database_obj.AddPlayerGameRel(players_games_rel_to_db)
+
+            #TODO order of data to be entered
+            #Match, need to use or get existing tournament and category info from DB
+            #Game(s)
+            #player_game relation entry
+            #player_match relation entry, this comes after ELO since this table holds the change value
+            #update Player entry with new current ELO
 
 
 

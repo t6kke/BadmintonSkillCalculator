@@ -48,6 +48,7 @@ class DB():
         cur.executemany("INSERT INTO categories (name, description) VALUES(?,?)", categories_data)
         con.commit()
         con.close()
+        self.__TEST_AddTempTournyAndCategories() #TODO remove in the future
 
     def __validateDatabase(self):
         con = sqlite3.connect(self.db_name)
@@ -80,6 +81,16 @@ class DB():
         con.commit()
         con.close()
 
+    def __TEST_AddTempTournyAndCategories(self): #Just for testing example, this data should be entered when initial tournament information is extracted from source
+        tournament_data = ("Example Tournament From TXT file",)
+        category_example = ("EC", "example category",)
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        cur.execute("INSERT INTO tournaments (name) VALUES(?)", tournament_data)
+        cur.execute("INSERT INTO categories (name, description) VALUES(?,?)", category_example)
+        con.commit()
+        con.close()
+
     def GetPlayer(self, name):
         result = None
         con = sqlite3.connect(self.db_name)
@@ -97,3 +108,34 @@ class DB():
         con.close()
         #time.sleep(5)
         return result
+
+    def AddMatch(self, data_in):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        cur.execute("INSERT INTO matches (tournament_id, category_id) VALUES(?,?)", data_in)
+        con.commit()
+        res = cur.execute("SELECT id FROM matches ORDER BY id DESC LIMIT 1")
+        match_id = res.fetchone()[0]
+        con.close()
+        return match_id
+
+    def AddGame(self, data_in):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        cur.execute("INSERT INTO games (match_id, game_count, player_one_score, player_two_score) VALUES(?,?,?,?)", data_in)
+        con.commit()
+        res = cur.execute("SELECT id FROM games ORDER BY id DESC LIMIT 1")
+        game_id = res.fetchone()[0]
+        con.close()
+        return game_id
+
+    def AddPlayerGameRel(self, data_in_list):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        cur.executemany("INSERT INTO users_games (users_id, games_id, comp_nbr) VALUES(?,?,?)", data_in_list)
+        con.commit()
+        con.close()
+
+    def AddPlayerMatchRel(self,):
+        #TODO code here
+        pass
