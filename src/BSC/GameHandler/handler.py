@@ -136,19 +136,28 @@ class Handler():
             game_data_to_db = (match_id, game_nbr, list(match.values())[0], list(match.values())[1],)
             game_id = self.database_obj.AddGame(game_data_to_db)
             #print(game_id, "-- game ID")
-            #print(list(list(match.keys())[0].team_members_set)[0], list(list(match.keys())[0].team_members_set)[1], list(list(match.keys())[1].team_members_set)[0], list(list(match.keys())[1].team_members_set)[1])
-            players_games_rel_to_db = [(list(list(match.keys())[0].team_members_set)[0], game_id, game_nbr),
-                                       (list(list(match.keys())[0].team_members_set)[1], game_id, game_nbr),
-                                       (list(list(match.keys())[1].team_members_set)[0], game_id, game_nbr),
-                                       (list(list(match.keys())[1].team_members_set)[1], game_id, game_nbr)]
-            game_id = self.database_obj.AddPlayerGameRel(players_games_rel_to_db)
+            #TODO analyze if players would be iterated over for the whole game so varaibles would not be needed
+            t_one_p_one_id = list(list(match.keys())[0].team_members_set)[0]
+            t_one_p_two_id = list(list(match.keys())[0].team_members_set)[1]
+            t_two_p_one_id = list(list(match.keys())[1].team_members_set)[0]
+            t_two_p_two_id = list(list(match.keys())[1].team_members_set)[1]
+            players_games_rel_to_db = [(t_one_p_one_id, game_id, game_nbr),
+                                       (t_one_p_two_id, game_id, game_nbr),
+                                       (t_two_p_one_id, game_id, game_nbr),
+                                       (t_two_p_two_id, game_id, game_nbr)]
+            self.database_obj.AddPlayerGameRel(players_games_rel_to_db)
 
-            #TODO order of data to be entered
-            #Match, need to use or get existing tournament and category info from DB
-            #Game(s)
-            #player_game relation entry
-            #player_match relation entry, this comes after ELO since this table holds the change value
-            #update Player entry with new current ELO
+            #TODO calculate ELO
+            temp_ELO_new = 10 #TODO temp value before actually calculating new value for each player
+            players_matches_rel_wELOupdate_to_db = [(t_one_p_one_id, match_id, players_obj_dict_in_tournament.get(t_one_p_one_id).ELO, temp_ELO_new),
+                                                    (t_one_p_two_id, match_id, players_obj_dict_in_tournament.get(t_one_p_two_id).ELO, temp_ELO_new),
+                                                    (t_two_p_one_id, match_id, players_obj_dict_in_tournament.get(t_two_p_one_id).ELO, temp_ELO_new),
+                                                    (t_two_p_two_id, match_id, players_obj_dict_in_tournament.get(t_two_p_two_id).ELO, temp_ELO_new),]
+            self.database_obj.AddPlayerMatchRel_W_ELOUpdate(players_matches_rel_wELOupdate_to_db)
+
+            #after each match need to make update on player object ELO value for new round of games
+            for player_id, player_obj in players_obj_dict_in_tournament.items():
+                player_obj.ELO = self.database_obj.GetPlayerELO(str(player_id))
 
 
 

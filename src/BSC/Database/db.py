@@ -109,6 +109,14 @@ class DB():
         #time.sleep(5)
         return result
 
+    def GetPlayerELO(self, user_id):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT elo FROM users WHERE id = '" + user_id +"'")
+        user_elo = res.fetchone()[0]
+        con.close()
+        return user_elo
+
     def AddMatch(self, data_in):
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
@@ -136,6 +144,24 @@ class DB():
         con.commit()
         con.close()
 
-    def AddPlayerMatchRel(self,):
-        #TODO code here
-        pass
+    def AddPlayerMatchRel_W_ELOUpdate(self, data_in_list):
+        for data_in in data_in_list:
+            self.__addPlayerMatchRel(data_in)
+            user_id = data_in[0]
+            new_ELO = data_in[2] + data_in[3]
+            data_in_for_users_ELO_update = (new_ELO, user_id)
+            self.__updateUsersELO(data_in_for_users_ELO_update)
+
+    def __addPlayerMatchRel(self, data_in):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        cur.execute("INSERT INTO users_matches_elo_change (users_id, matches_id, user_start_elo, user_elo_change) VALUES(?,?,?,?)", data_in)
+        con.commit()
+        con.close()
+
+    def __updateUsersELO(self, data_in):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        cur.execute("UPDATE users SET elo = ? WHERE id = ?", data_in)
+        con.commit()
+        con.close()

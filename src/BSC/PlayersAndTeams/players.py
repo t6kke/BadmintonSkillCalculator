@@ -14,10 +14,3 @@ class Player():
 
     def __repr__(self):
         return self.db_id
-
-    #TODO likely not needed here, shuld remove
-    def GetOrCreatePlayerDBobj(self, db_obj):
-        db_player = db_obj.GetPlayer(self.player_name)
-        #print(db_player[0], db_player[1], db_player[2])
-        self.db_id = db_player[0]
-        self.ELO = db_player[2]
