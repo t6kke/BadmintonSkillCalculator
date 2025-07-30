@@ -59,8 +59,9 @@ class Main():
         raw_games_list = getGamesFromTXT(self.test_data_txt)
         if self.verbose: print(f"All games from raw games list:\n{raw_games_list}")
         gamesHandler = Handler(raw_games_list, self.database_obj, self.verbose)
-        gamesHandler.calculateScore()
-        gamesHandler.reportCalculationsResult()
+        #TODO print result, needs specific DB reporting queries
+        # 1. one report for results of tournament entered and end results of that
+        # 2. one report for current status of all players, this could be called before and after entering the tournament data
         self.__exitSuccess("\n=====================\nDone")
 
     # actual execution with data provided through launch arguments

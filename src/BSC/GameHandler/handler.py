@@ -5,6 +5,7 @@ from BSC.PlayersAndTeams.teams import Team, createTeamMembersSet
 from BSC.PlayersAndTeams.players import Player
 from BSC.PlayersAndTeams.teams import Team_v2
 from BSC.SkillCalculator.skillCalculator import SkillCalc
+from BSC.SkillCalculator.skillCalculator import SkillCalc_v2
 
 class Handler():
     def __init__(self, raw_games_list, database_obj, verbose=False):
@@ -123,6 +124,7 @@ class Handler():
             for t, s in game.items():
                 print(t, s)"""
 
+        skillCalculator = SkillCalc_v2(players_obj_dict_in_tournament ,self.verbose)
         for match in converted_all_matches_list:
             #TODO analyze if matches table needs more data than just the tournament id and category id
             #TODO in real solution tournament id and categorie id will be part of data set provided for initial setup it's just hardcoded values
@@ -148,11 +150,13 @@ class Handler():
             self.database_obj.AddPlayerGameRel(players_games_rel_to_db)
 
             #TODO calculate ELO
+            elo_results_dict = skillCalculator.calculate(match)
+            print("ELO calc reslult dict:", elo_results_dict)
             temp_ELO_new = 10 #TODO temp value before actually calculating new value for each player
-            players_matches_rel_wELOupdate_to_db = [(t_one_p_one_id, match_id, players_obj_dict_in_tournament.get(t_one_p_one_id).ELO, temp_ELO_new),
-                                                    (t_one_p_two_id, match_id, players_obj_dict_in_tournament.get(t_one_p_two_id).ELO, temp_ELO_new),
-                                                    (t_two_p_one_id, match_id, players_obj_dict_in_tournament.get(t_two_p_one_id).ELO, temp_ELO_new),
-                                                    (t_two_p_two_id, match_id, players_obj_dict_in_tournament.get(t_two_p_two_id).ELO, temp_ELO_new),]
+            players_matches_rel_wELOupdate_to_db = [(t_one_p_one_id, match_id, players_obj_dict_in_tournament.get(t_one_p_one_id).ELO, elo_results_dict.get(t_one_p_one_id)),
+                                                    (t_one_p_two_id, match_id, players_obj_dict_in_tournament.get(t_one_p_two_id).ELO, elo_results_dict.get(t_one_p_two_id)),
+                                                    (t_two_p_one_id, match_id, players_obj_dict_in_tournament.get(t_two_p_one_id).ELO, elo_results_dict.get(t_two_p_one_id)),
+                                                    (t_two_p_two_id, match_id, players_obj_dict_in_tournament.get(t_two_p_two_id).ELO, elo_results_dict.get(t_two_p_two_id)),]
             self.database_obj.AddPlayerMatchRel_W_ELOUpdate(players_matches_rel_wELOupdate_to_db)
 
             #after each match need to make update on player object ELO value for new round of games
