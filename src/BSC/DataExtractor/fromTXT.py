@@ -25,4 +25,4 @@ def getGamesFromTXT(txt_data_games_filename):
                         set_one_dict = {}
                         set_two_dict = {}
                     row_counter += 1
-    return result_games_list
+    return result_games_list, "Example Tournament From TXT file", "EC", "example category"

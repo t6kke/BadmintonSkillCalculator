@@ -8,11 +8,13 @@ from BSC.SkillCalculator.skillCalculator import SkillCalc
 from BSC.SkillCalculator.skillCalculator import SkillCalc_v2
 
 class Handler():
-    def __init__(self, raw_games_list, database_obj, verbose=False):
+    def __init__(self, raw_games_list, database_obj, tournament_id, category_id, verbose=False):
         # main object variables
         self.verbose = verbose
         self.raw_games_list = raw_games_list
         self.database_obj = database_obj
+        self.tournament_id = tournament_id
+        self.category_id = category_id
         self.result_games_list = []
         self.result_teams_list = []
 
@@ -128,7 +130,7 @@ class Handler():
         for match in converted_all_matches_list:
             #TODO analyze if matches table needs more data than just the tournament id and category id
             #TODO in real solution tournament id and categorie id will be part of data set provided for initial setup it's just hardcoded values
-            match_data_to_db = (1, 6,)
+            match_data_to_db = (self.tournament_id, self.category_id,)
             match_id = self.database_obj.AddMatch(match_data_to_db)
             #print(match_id, "-- match ID")
             #print(type(match), list(match.values())[0], list(match.values())[1])

@@ -48,7 +48,6 @@ class DB():
         cur.executemany("INSERT INTO categories (name, description) VALUES(?,?)", categories_data)
         con.commit()
         con.close()
-        self.__TEST_AddTempTournyAndCategories() #TODO remove in the future
 
     def __validateDatabase(self):
         con = sqlite3.connect(self.db_name)
@@ -81,15 +80,31 @@ class DB():
         con.commit()
         con.close()
 
-    def __TEST_AddTempTournyAndCategories(self): #Just for testing example, this data should be entered when initial tournament information is extracted from source
-        tournament_data = ("Example Tournament From TXT file",)
-        category_example = ("EC", "example category",)
+    def AddTournament(self, data_in):
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        cur.execute("INSERT INTO tournaments (name) VALUES(?)", tournament_data)
-        cur.execute("INSERT INTO categories (name, description) VALUES(?,?)", category_example)
+        cur.execute("INSERT INTO tournaments (name) VALUES(?)", data_in)
+        res = cur.execute("SELECT id FROM tournaments ORDER BY id DESC LIMIT 1")
+        tournament_id = res.fetchone()[0]
         con.commit()
         con.close()
+        return tournament_id
+
+    def GetOrAddCategory(self, category_name, category_description):
+        category_id = None
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT id FROM categories WHERE name = '" + category_name +"'")
+        category_id = res.fetchone()
+        if category_id is None:
+            print("category does not exist in db, creating new one")
+            data_in = (category_name, category_description, )
+            cur.execute("INSERT INTO categories (name, description) VALUES(?,?)", data_in)
+            con.commit()
+            res = cur.execute("SELECT id FROM categories WHERE name = '" + category_name +"'")
+            category_id = res.fetchone()
+        con.close()
+        return category_id[0]
 
     def GetPlayer(self, name):
         result = None
@@ -100,13 +115,12 @@ class DB():
         result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
         if result is None:
             print("no player in db, creating new one")
-            data = (name, 1000)
+            data = (name, 1000) #TODO initial elo value of 1000 should be some configuration file, and maybe even modifiable based on what leage new player starts in.
             res = cur.execute("INSERT INTO users (name, elo) VALUES (?,?)", data)
             con.commit()
             res = cur.execute("SELECT * FROM users WHERE name = '" + name +"'")
             result = res.fetchone()
         con.close()
-        #time.sleep(5)
         return result
 
     def GetPlayerELO(self, user_id):
@@ -145,23 +159,25 @@ class DB():
         con.close()
 
     def AddPlayerMatchRel_W_ELOUpdate(self, data_in_list):
+        def addPlayerMatchRel(data_in):
+            con = sqlite3.connect(self.db_name)
+            cur = con.cursor()
+            cur.executemany("INSERT INTO users_matches_elo_change (users_id, matches_id, user_start_elo, user_elo_change) VALUES(?,?,?,?)", data_in)
+            con.commit()
+            con.close()
+
+        def updateUsersELO(data_in):
+            con = sqlite3.connect(self.db_name)
+            cur = con.cursor()
+            cur.executemany("UPDATE users SET elo = ? WHERE id = ?", data_in)
+            con.commit()
+            con.close()
+
+        data_in_list_for_users_ELO_update = []
         for data_in in data_in_list:
-            self.__addPlayerMatchRel(data_in)
             user_id = data_in[0]
             new_ELO = data_in[2] + data_in[3]
-            data_in_for_users_ELO_update = (new_ELO, user_id)
-            self.__updateUsersELO(data_in_for_users_ELO_update)
+            data_in_list_for_users_ELO_update.append((new_ELO, user_id,))
 
-    def __addPlayerMatchRel(self, data_in):
-        con = sqlite3.connect(self.db_name)
-        cur = con.cursor()
-        cur.execute("INSERT INTO users_matches_elo_change (users_id, matches_id, user_start_elo, user_elo_change) VALUES(?,?,?,?)", data_in)
-        con.commit()
-        con.close()
-
-    def __updateUsersELO(self, data_in):
-        con = sqlite3.connect(self.db_name)
-        cur = con.cursor()
-        cur.execute("UPDATE users SET elo = ? WHERE id = ?", data_in)
-        con.commit()
-        con.close()
+        addPlayerMatchRel(data_in_list)
+        updateUsersELO(data_in_list_for_users_ELO_update)

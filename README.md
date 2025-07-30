@@ -72,6 +72,10 @@ List is not just code improvements but also project functionalities
 - Generate some kind of HTML for static website content in case it's interesting for other compeditors.
 - Build self service capability for someone else to work with their own tournaments, upload excel files or data and get status reports.
 
+### Out of this application scope
+
+- Build self service capability for someone else to work with their own tournaments, upload excel files or data and get status reports. Plan is to build separate web application that executes this code as needed.
+
 ## For Learning
 
 I might also write this project, with potentially limited scope, in other languages for learing purpose.

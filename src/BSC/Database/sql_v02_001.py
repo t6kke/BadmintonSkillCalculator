@@ -13,7 +13,7 @@ db_up = {
 )""",
 "categories": """CREATE TABLE "categories" (
 	"id"	INTEGER NOT NULL UNIQUE,
-	"name"	TEXT NOT NULL,
+	"name"	TEXT NOT NULL UNIQUE,
 	"description"	TEXT NOT NULL,
 	PRIMARY KEY("id" AUTOINCREMENT)
 )""",

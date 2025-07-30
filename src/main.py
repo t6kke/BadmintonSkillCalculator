@@ -54,11 +54,12 @@ class Main():
         db_name = "db_test.db"
         self.database_obj = DB(db_name, verbose=self.verbose, clear_db=True)
 
-        # orginal test logic continues
         if self.verbose: print(f"Executing test run from file {self.test_data_txt}")
-        raw_games_list = getGamesFromTXT(self.test_data_txt)
+        raw_games_list, tournament_name, tournament_category_name, tournament_category_description = getGamesFromTXT(self.test_data_txt)
+        tournament_id = self.database_obj.AddTournament((tournament_name,))
+        category_id = self.database_obj.GetOrAddCategory(tournament_category_name, tournament_category_description)
         if self.verbose: print(f"All games from raw games list:\n{raw_games_list}")
-        gamesHandler = Handler(raw_games_list, self.database_obj, self.verbose)
+        gamesHandler = Handler(raw_games_list, self.database_obj, tournament_id, category_id, self.verbose)
         #TODO print result, needs specific DB reporting queries
         # 1. one report for results of tournament entered and end results of that
         # 2. one report for current status of all players, this could be called before and after entering the tournament data
