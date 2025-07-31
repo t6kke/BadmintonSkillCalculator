@@ -225,11 +225,11 @@ count(g.id) as nbr_matches,
 SUM(IIF(CASE ug.comp_nbr WHEN '1' THEN g.player_one_score ELSE g.player_two_score END > CASE ug.comp_nbr WHEN '1' THEN g.player_two_score ELSE g.player_one_score END, 1, 0)) victories
 FROM users u
 JOIN users_games ug ON u.id = ug.users_id
-join games g on ug.games_id = g.id
-join matches m on m.id = g.match_id
-group by u.name
-) statistics on statistics.id = u.id
-WHERE m.tournament_id = """ + str(tournament_id) + " ORDER BY u.elo DESC"
+JOIN games g ON ug.games_id = g.id
+JOIN matches m ON m.id = g.match_id
+WHERE m.tournament_id = """ + str(tournament_id) + """ group by u.name
+) statistics ON statistics.id = u.id
+ORDER BY u.elo DESC"""
         res = cur.execute(query)
         data_list = res.fetchall()
         con.close()

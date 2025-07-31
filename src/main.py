@@ -68,43 +68,38 @@ class Main():
     def __run(self):
         excel_file = self.args_handler.getSourceExcelFileName()
         sheets_list = self.args_handler.getExcelSheetsList()
+        db_name = self.args_handler.getDatabaseName()
         if excel_file == "" or len(sheets_list) == 0:
             raise Exception("No valid source data provided exception")
-        raw_games_list_from_excel = self.__getGamesFromExcel(excel_file, sheets_list) #TODO investigate how to best enter sheet values?
-        gamesHandler = Handler(raw_games_list_from_excel, self.verbose)
-        gamesHandler.calculateScore()
-        gamesHandler.reportFullGamesList()
-        gamesHandler.reportFullTeamsList()
-        gamesHandler.reportCalculationsResult()
+        if db_name == "":
+            raise Exception("No valid database name provided")
+        self.database_obj = DB(db_name, verbose=self.verbose)
+        raw_games_list_from_excel, tournament_name = self.__getGamesFromExcel(excel_file, sheets_list) #TODO investigate how to best enter sheet values?
 
-        """for sheet in sheets_list:
-            raw_games_list_from_excel = self.__getGamesFromExcel2(excel_file, sheet)
-            gamesHandler = Handler(raw_games_list_from_excel, self.verbose) #TODO need to be able to initalize Handler without providing games data and then manually calling the run on each data set without having to reinitialize it since teams list is related to it
-            gamesHandler.calculateScore()
-            gamesHandler.reportFullGamesList()
-            gamesHandler.reportFullTeamsList()
-            gamesHandler.reportCalculationsResult()"""
+        if self.verbose: print(f"Adding tournament: '{tournament_name[0]}' to the database")
+        tournament_id = self.database_obj.AddTournament((tournament_name[0],))
+        if self.verbose: print(f"Getting or adding new category to the database")
+        category_id = self.database_obj.GetOrAddCategory("TMMD", "TEST madminton category")
+
+        if self.verbose: print(f"Running games handler functionality...")
+        gamesHandler = Handler(raw_games_list_from_excel, self.database_obj, tournament_id, category_id, self.verbose)
+
+        if self.verbose: print(f"Final reports")
+        self.database_obj.report_TournamentResult(tournament_id)
+        self.database_obj.report_AllUsersELOrank()
 
         self.__exitSuccess("\n=====================\nDone")
 
     def __getGamesFromExcel(self, excel_file, list_of_sheets):
         list_of_games = []
+        list_of_tournaments = []
         for sheet in list_of_sheets:
             excelParser = ExcelParser(excel_file, sheet, self.verbose)
             tournament_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
-            print(tournament_name) #TODO better presentation of tournament names that will be parsed
+            list_of_tournaments.append(tournament_name)
             excelParser.collectGames()
             list_of_games = list_of_games + excelParser.getGames()
-        return list_of_games
-
-    def __getGamesFromExcel2(self, excel_file, sheet):  #TODO this is the future solution
-        list_of_games = []
-        excelParser = ExcelParser(excel_file, sheet, self.verbose)
-        tournament_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
-        print(tournament_name) #TODO better presentation of tournament names that will be parsed
-        excelParser.collectGames()
-        list_of_games = excelParser.getGames()
-        return list_of_games
+        return list_of_games, list_of_tournaments
 
     def __exitError(self, message):
         print(message)
