@@ -12,6 +12,11 @@ class DB():
         self.db_name = db_name
         self.__validateAndInitalize()
 
+
+    #============================================
+    # initialization functions
+    #============================================
+
     def __validateAndInitalize(self):
         new_db = False
         if self.verbose: print("INFO --- database file name: ", self.db_name)
@@ -79,6 +84,11 @@ class DB():
             cur.execute(sql)
         con.commit()
         con.close()
+
+
+    #============================================
+    # functions for adding data to database
+    #============================================
 
     def AddTournament(self, data_in):
         con = sqlite3.connect(self.db_name)
@@ -181,3 +191,47 @@ class DB():
 
         addPlayerMatchRel(data_in_list)
         updateUsersELO(data_in_list_for_users_ELO_update)
+
+
+    #============================================
+    # results reports printing to terminal
+    #============================================
+
+    def report_AllUsersELOrank(self):
+        print("\nFull list of players and their ELO ranked from highest to lowest rank:")
+        query = "SELECT name, elo FROM users ORDER BY elo DESC"
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute(query)
+        data_list = res.fetchall()
+        con.close()
+        for item in data_list:
+            print(f"Player: '{item[0]}' with ELO: '{item[1]}'")
+
+    def report_TournamentResult(self, tournament_id):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT name FROM tournaments where id = "+str(tournament_id))
+        print(f"\nEnd statistics and final ELO ranking from tournament: '{res.fetchone()[0]}'")
+        query = """SELECT DISTINCT u.name, u.elo, statistics.nbr_matches, statistics.victories
+FROM matches m
+JOIN users_matches_elo_change um ON m.id = um.matches_id
+JOIN users u ON u.id = um.users_id
+JOIN (
+SELECT
+u.id,
+u.name,
+count(g.id) as nbr_matches,
+SUM(IIF(CASE ug.comp_nbr WHEN '1' THEN g.player_one_score ELSE g.player_two_score END > CASE ug.comp_nbr WHEN '1' THEN g.player_two_score ELSE g.player_one_score END, 1, 0)) victories
+FROM users u
+JOIN users_games ug ON u.id = ug.users_id
+join games g on ug.games_id = g.id
+join matches m on m.id = g.match_id
+group by u.name
+) statistics on statistics.id = u.id
+WHERE m.tournament_id = """ + str(tournament_id) + " ORDER BY u.elo DESC"
+        res = cur.execute(query)
+        data_list = res.fetchall()
+        con.close()
+        for item in data_list:
+            print(f"Player: '{item[0]}' with final ELO: '{item[1]}' played '{item[2]}' games and won: '{item[3]} games'")

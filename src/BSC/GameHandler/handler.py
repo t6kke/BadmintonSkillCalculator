@@ -145,15 +145,15 @@ class Handler():
             t_one_p_two_id = list(list(match.keys())[0].team_members_set)[1]
             t_two_p_one_id = list(list(match.keys())[1].team_members_set)[0]
             t_two_p_two_id = list(list(match.keys())[1].team_members_set)[1]
-            players_games_rel_to_db = [(t_one_p_one_id, game_id, game_nbr),
-                                       (t_one_p_two_id, game_id, game_nbr),
-                                       (t_two_p_one_id, game_id, game_nbr),
-                                       (t_two_p_two_id, game_id, game_nbr)]
+            players_games_rel_to_db = [(t_one_p_one_id, game_id, "1"),
+                                       (t_one_p_two_id, game_id, "1"),
+                                       (t_two_p_one_id, game_id, "2"),
+                                       (t_two_p_two_id, game_id, "2")]
             self.database_obj.AddPlayerGameRel(players_games_rel_to_db)
 
             #TODO calculate ELO
             elo_results_dict = skillCalculator.calculate(match)
-            print("ELO calc reslult dict:", elo_results_dict)
+            #print("ELO calc reslult dict:", elo_results_dict)
             temp_ELO_new = 10 #TODO temp value before actually calculating new value for each player
             players_matches_rel_wELOupdate_to_db = [(t_one_p_one_id, match_id, players_obj_dict_in_tournament.get(t_one_p_one_id).ELO, elo_results_dict.get(t_one_p_one_id)),
                                                     (t_one_p_two_id, match_id, players_obj_dict_in_tournament.get(t_one_p_two_id).ELO, elo_results_dict.get(t_one_p_two_id)),

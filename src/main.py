@@ -60,9 +60,8 @@ class Main():
         category_id = self.database_obj.GetOrAddCategory(tournament_category_name, tournament_category_description)
         if self.verbose: print(f"All games from raw games list:\n{raw_games_list}")
         gamesHandler = Handler(raw_games_list, self.database_obj, tournament_id, category_id, self.verbose)
-        #TODO print result, needs specific DB reporting queries
-        # 1. one report for results of tournament entered and end results of that
-        # 2. one report for current status of all players, this could be called before and after entering the tournament data
+        self.database_obj.report_TournamentResult(tournament_id)
+        self.database_obj.report_AllUsersELOrank()
         self.__exitSuccess("\n=====================\nDone")
 
     # actual execution with data provided through launch arguments

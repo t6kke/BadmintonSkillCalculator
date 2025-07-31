@@ -62,8 +62,10 @@ List is not just code improvements but also project functionalities
 
 - Various minor improvements in codes marked with TODO
 - Store data of scanned tournaments in DB and keep track of ELO over time without having to reimport and calculate all data over again.
+- Mixed naming usage of user/player needs to be all migrated to use player
 - Add ELO confidence value and use it to handle ELO gain/loss.
 - Handle players ranks through different competiontion categories.
+- Tournament results statistics report users games count, this has to change when matches consist of multiple games
 - Rework how commands are built and handled.
 
 ### Far Future
@@ -84,7 +86,7 @@ I might also write this project, with potentially limited scope, in other langua
 
 Python version that was used to develop the application: Python 3.10
 
-Required libraries: pandas, openpyxl
+Required libraries: pandas, openpyxl, sqlite3
 
 working directory should include the source data files. I provide example data both in txt file and also in excel file in how it's in final format.
 
