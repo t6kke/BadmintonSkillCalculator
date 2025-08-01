@@ -50,7 +50,9 @@ This is just prototype calculation logic. Various elements can change in the fut
 
 - reads in excel file in specific tournament format that it's developed for.
 - creates team objects and does not create duplicates if the team members order changes from tournament to tournament.
-- does ELO calculation game by game basis from first game of first tournament to last game of last tournament in scanned scope.
+- does ELO calculation game by game basis from first game of first tournament to last game of last tournament in scanned scope for each individiual player
+- saves all data to SQLite database
+- has few status reports for output from database
 
 ## Future Development
 
@@ -63,7 +65,6 @@ List is not just code improvements but also project functionalities
 - Various minor improvements in codes marked with TODO
 - Store data of scanned tournaments in DB and keep track of ELO over time without having to reimport and calculate all data over again.
 - Mixed naming usage of user/player needs to be all migrated to use player
-- Find a correct way to handle Excel files with multiple sheets, different tournament on separate sheet.
 - Add ELO confidence value and use it to handle ELO gain/loss.
 - Handle players ranks through different competiontion categories.
 - Tournament results statistics report users games count, this has to change when matches consist of multiple games

@@ -48,9 +48,7 @@ class Main():
 
     # test execution with sample data from txt file
     def __runTest(self):
-        # just initial code to explore db usage
         self.verbose = False #for testing purpose sometimes I need full debug log for tests sometimes I don't need it
-        #db_name = self.args_handler.getDatabaseName()
         db_name = "db_test.db"
         self.database_obj = DB(db_name, verbose=self.verbose, clear_db=True)
 
@@ -69,37 +67,37 @@ class Main():
         excel_file = self.args_handler.getSourceExcelFileName()
         sheets_list = self.args_handler.getExcelSheetsList()
         db_name = self.args_handler.getDatabaseName()
+
         if excel_file == "" or len(sheets_list) == 0:
             raise Exception("No valid source data provided exception")
         if db_name == "":
             raise Exception("No valid database name provided")
+
         self.database_obj = DB(db_name, verbose=self.verbose)
-        raw_games_list_from_excel, tournament_name = self.__getGamesFromExcel(excel_file, sheets_list) #TODO investigate how to best enter sheet values?
 
-        if self.verbose: print(f"Adding tournament: '{tournament_name[0]}' to the database")
-        tournament_id = self.database_obj.AddTournament((tournament_name[0],))
-        if self.verbose: print(f"Getting or adding new category to the database")
-        category_id = self.database_obj.GetOrAddCategory("TMMD", "TEST madminton category")
+        raw_tournaments_from_excel = self.__getGamesFromExcel(excel_file, sheets_list)
 
-        if self.verbose: print(f"Running games handler functionality...")
-        gamesHandler = Handler(raw_games_list_from_excel, self.database_obj, tournament_id, category_id, self.verbose)
+        for tournament_name, raw_games_list_from_excel in raw_tournaments_from_excel.items():
+            if self.verbose: print(f"Adding tournament: '{tournament_name}' to the database")
+            tournament_id = self.database_obj.AddTournament((tournament_name,))
+            if self.verbose: print(f"Getting or adding new category to the database")
+            category_id = self.database_obj.GetOrAddCategory("TMMD", "TEST madminton category") #TODO figure out a best way to enter a custom category
+            if self.verbose: print(f"Running games handler functionality...")
+            gamesHandler = Handler(raw_games_list_from_excel, self.database_obj, tournament_id, category_id, self.verbose)
+            if self.verbose: print(f"Post game data entry status report")
+            self.database_obj.report_TournamentResult(tournament_id)
 
         if self.verbose: print(f"Final reports")
-        self.database_obj.report_TournamentResult(tournament_id)
         self.database_obj.report_AllUsersELOrank()
-
         self.__exitSuccess("\n=====================\nDone")
 
     def __getGamesFromExcel(self, excel_file, list_of_sheets):
-        list_of_games = []
-        list_of_tournaments = []
+        result_dict = {}
         for sheet in list_of_sheets:
             excelParser = ExcelParser(excel_file, sheet, self.verbose)
             tournament_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
-            list_of_tournaments.append(tournament_name)
-            excelParser.collectGames()
-            list_of_games = list_of_games + excelParser.getGames()
-        return list_of_games, list_of_tournaments
+            result_dict[tournament_name] = excelParser.getGames()
+        return result_dict
 
     def __exitError(self, message):
         print(message)
