@@ -28,7 +28,7 @@ class Main():
     def __handleLaunchArgs(self):
         if "--verbose" in self.launch_args_list and "-h" not in self.launch_args_list and "--help" not in self.launch_args_list: #TODO needs to be changed in a way that verbose can be enalbed while also asking help
             self.verbose = True
-            print(f"INFO --- Verbose outoput is enabled")
+            print(f"INFO --- Verbose output is enabled")
         if self.verbose: print(f"Handling lauch arguments\nArguments: {str(self.launch_args_list)}")
         if len(self.launch_args_list) == 0:
             self.test_execution = True
@@ -82,8 +82,8 @@ class Main():
             tournament_id = self.database_obj.AddTournament((tournament_name,))
             if self.verbose: print(f"Getting or adding new category to the database")
             category_id = self.database_obj.GetOrAddCategory("TMMD", "TEST madminton category") #TODO figure out a best way to enter a custom category
-            if self.verbose: print(f"Running games handler functionality...")
-            gamesHandler = Handler(raw_games_list_from_excel, self.database_obj, tournament_id, category_id, self.verbose)
+            print(f"Running games handler functionality...")
+            gamesHandler = Handler(raw_games_list_from_excel, self.database_obj, tournament_id, category_id, verbose=self.verbose)
             if self.verbose: print(f"Post game data entry status report")
             self.database_obj.report_TournamentResult(tournament_id)
 
@@ -96,6 +96,7 @@ class Main():
         for sheet in list_of_sheets:
             excelParser = ExcelParser(excel_file, sheet, self.verbose)
             tournament_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
+            excelParser.collectGames()
             result_dict[tournament_name] = excelParser.getGames()
         return result_dict
 

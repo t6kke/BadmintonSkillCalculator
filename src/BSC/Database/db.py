@@ -21,14 +21,14 @@ class DB():
         new_db = False
         if self.verbose: print("INFO --- database file name: ", self.db_name)
         if os.path.isfile("./"+self.db_name) == False:
-            print("INFO --- DB file does not exists, creating new one")
+            if self.verbose: print("INFO --- DB --- DB file does not exists, creating new one")
             new_db = True
 
         self.__createDB()
         if new_db:
             self.__createTables()
         elif self.clear_db:
-            if self.verbose: print("INFO --- 'clear_db' flag is set so first dropping all tables and creating them again")
+            if self.verbose: print("INFO --- DB --- 'clear_db' flag is set so first dropping all tables and creating them again")
             self.__DEV_ClearDB()
             self.__createTables()
 
@@ -48,8 +48,9 @@ class DB():
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         for table, sql in db_up.items():
-            print("DEBUG --- Creating table:", table)
+            if self.verbose: print(f"DEBUG --- DB --- Creating table: '{table}'")
             cur.execute(sql)
+        if self.verbose: print(f"DEBUG --- DB --- adding default categories to db: '{categories_data}'")
         cur.executemany("INSERT INTO categories (name, description) VALUES(?,?)", categories_data)
         con.commit()
         con.close()
@@ -60,14 +61,14 @@ class DB():
         res = cur.execute("SELECT * FROM sqlite_master")
         for item in res.fetchall():
             if item[0] == "table":
-                if item[1] not in db_up.keys() and item[1] != "sqlite_sequence": print("DEBUG --- found table that is not not part of ERD") #TODO maybe handle this somehow if extra table is found
+                if item[1] not in db_up.keys() and item[1] != "sqlite_sequence": print("WARNING --- DB --- found table that is not not part of ERD") #TODO maybe handle this somehow if extra table is found
 
                 #TODO not sure if content check is actually needed
                 has_content = self.__checkTableContent(cur, item[1])
                 if has_content:
-                    print("DEBUG --- found table: '"+item[1]+"' that has content")
+                    if self.verbose: print("DEBUG --- DB --- found table: '"+item[1]+"' that has content")
                 else:
-                    print("DEBUG --- found table: '"+item[1]+"' that is empty")
+                    if self.verbose: print("DEBUG --- DB --- found table: '"+item[1]+"' with no data")
         con.close()
 
     def __checkTableContent(self, cur, table_name):
@@ -80,7 +81,7 @@ class DB():
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         for table, sql in db_down.items():
-            print("DEBUG --- Dropping table:", table)
+            if self.verbose: print(f"DEBUG --- DB --- Dropping table: '{table}'")
             cur.execute(sql)
         con.commit()
         con.close()
@@ -107,7 +108,7 @@ class DB():
         res = cur.execute("SELECT id FROM categories WHERE name = '" + category_name +"'")
         category_id = res.fetchone()
         if category_id is None:
-            print("category does not exist in db, creating new one")
+            if self.verbose: print("INFO --- DB:GetOrAddCategory --- category does not exist in db, creating new one")
             data_in = (category_name, category_description, )
             cur.execute("INSERT INTO categories (name, description) VALUES(?,?)", data_in)
             con.commit()
@@ -117,31 +118,35 @@ class DB():
         return category_id[0]
 
     def GetPlayer(self, name):
+        if self.verbose: print(f"INFO --- DB:GetPlayer --- getting or adding player '{name}' to DB")
         result = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        #print("get or create user/player name: " + name)
         res = cur.execute("SELECT * FROM users WHERE name = '" + name +"'")
         result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
         if result is None:
-            print("no player in db, creating new one")
+            if self.verbose: print(f"INFO --- DB:GetPlayer --- player name not found in db, creating a new entry with base ELO: 1000")
             data = (name, 1000) #TODO initial elo value of 1000 should be some configuration file, and maybe even modifiable based on what leage new player starts in.
             res = cur.execute("INSERT INTO users (name, elo) VALUES (?,?)", data)
             con.commit()
             res = cur.execute("SELECT * FROM users WHERE name = '" + name +"'")
             result = res.fetchone()
         con.close()
+        if self.verbose: print(f"INFO --- DB:GetPlayer --- returning db player entry: '{result}'")
         return result
 
     def GetPlayerELO(self, user_id):
+        if self.verbose: print(f"INFO --- DB:GetPlayerELO --- getting ELO value for player id: '{user_id}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         res = cur.execute("SELECT elo FROM users WHERE id = '" + user_id +"'")
         user_elo = res.fetchone()[0]
         con.close()
+        if self.verbose: print(f"INFO --- DB:GetPlayerELO --- returning ELO value: '{user_elo}'")
         return user_elo
 
     def AddMatch(self, data_in):
+        if self.verbose: print(f"INFO --- DB:AddMatch --- adding match to DB with data: '{data_in}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         cur.execute("INSERT INTO matches (tournament_id, category_id) VALUES(?,?)", data_in)
@@ -149,9 +154,11 @@ class DB():
         res = cur.execute("SELECT id FROM matches ORDER BY id DESC LIMIT 1")
         match_id = res.fetchone()[0]
         con.close()
+        if self.verbose: print(f"INFO --- DB:AddMatch --- returning match id: '{match_id}'")
         return match_id
 
     def AddGame(self, data_in):
+        if self.verbose: print(f"INFO --- DB:AddGame --- adding game to DB with data: '{data_in}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         cur.execute("INSERT INTO games (match_id, game_count, player_one_score, player_two_score) VALUES(?,?,?,?)", data_in)
@@ -159,9 +166,11 @@ class DB():
         res = cur.execute("SELECT id FROM games ORDER BY id DESC LIMIT 1")
         game_id = res.fetchone()[0]
         con.close()
+        if self.verbose: print(f"INFO --- DB:AddGame --- returning game id: '{game_id}'")
         return game_id
 
     def AddPlayerGameRel(self, data_in_list):
+        if self.verbose: print(f"INFO --- DB:AddPlayerGameRel --- adding player game relation for the whole match for all players with data: '{data_in_list}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         cur.executemany("INSERT INTO users_games (users_id, games_id, comp_nbr) VALUES(?,?,?)", data_in_list)
@@ -170,6 +179,7 @@ class DB():
 
     def AddPlayerMatchRel_W_ELOUpdate(self, data_in_list):
         def addPlayerMatchRel(data_in):
+            if self.verbose: print(f"INFO --- DB:AddPlayerMatchRel_W_ELOUpdate:addPlayerMatchRel --- adding player match relation to DB with ELO data: '{data_in}'")
             con = sqlite3.connect(self.db_name)
             cur = con.cursor()
             cur.executemany("INSERT INTO users_matches_elo_change (users_id, matches_id, user_start_elo, user_elo_change) VALUES(?,?,?,?)", data_in)
@@ -177,6 +187,7 @@ class DB():
             con.close()
 
         def updateUsersELO(data_in):
+            if self.verbose: print(f"INFO --- DB:AddPlayerMatchRel_W_ELOUpdate:updateUsersELO --- updating users ELO value with following data: '{data_in}'")
             con = sqlite3.connect(self.db_name)
             cur = con.cursor()
             cur.executemany("UPDATE users SET elo = ? WHERE id = ?", data_in)

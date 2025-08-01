@@ -62,9 +62,10 @@ List is not just code improvements but also project functionalities
 
 ### Near Future
 
-- Various minor improvements in codes marked with TODO
+- Various minor improvements in codes marked with TODO.
 - Store data of scanned tournaments in DB and keep track of ELO over time without having to reimport and calculate all data over again.
-- Mixed naming usage of user/player needs to be all migrated to use player
+- Mixed naming usage of user/player needs to be all migrated to use player.
+- Fix variable naming clarity in Game Handler for games and matches to represent the correct data being worked with.
 - Add ELO confidence value and use it to handle ELO gain/loss.
 - Handle players ranks through different competiontion categories.
 - Tournament results statistics report users games count, this has to change when matches consist of multiple games
