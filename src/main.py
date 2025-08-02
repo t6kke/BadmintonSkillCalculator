@@ -18,10 +18,6 @@ class Main():
         self.args_handler = None
         self.__handleLaunchArgs()
 
-        #TODO additional class variables if needed
-        self.all_games_list = []
-        self.all_teams_list = []
-
         #final function to run the main functionality
         self.__execute()
 
@@ -74,16 +70,17 @@ class Main():
             raise Exception("No valid database name provided")
 
         self.database_obj = DB(db_name, verbose=self.verbose)
-
         raw_tournaments_from_excel = self.__getGamesFromExcel(excel_file, sheets_list)
+        gamesHandler = Handler(self.database_obj, self.verbose)
 
         for tournament_name, raw_games_list_from_excel in raw_tournaments_from_excel.items():
-            if self.verbose: print(f"Adding tournament: '{tournament_name}' to the database")
+            print(f"\nStarting handle tournament: '{tournament_name}' information...")
+            if self.verbose: print(f"INFO --- Adding tournament: '{tournament_name}' to the database")
             tournament_id = self.database_obj.AddTournament((tournament_name,))
-            if self.verbose: print(f"Getting or adding new category to the database")
+            if self.verbose: print(f"INFO --- Getting or adding new category to the database")
             category_id = self.database_obj.GetOrAddCategory("TMMD", "TEST madminton category") #TODO figure out a best way to enter a custom category
             print(f"Running games handler functionality...")
-            gamesHandler = Handler(raw_games_list_from_excel, self.database_obj, tournament_id, category_id, verbose=self.verbose)
+            gamesHandler.runGamesParser(raw_games_list_from_excel, tournament_id, category_id)
             if self.verbose: print(f"Post game data entry status report")
             self.database_obj.report_TournamentResult(tournament_id)
 

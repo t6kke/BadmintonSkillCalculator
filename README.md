@@ -5,6 +5,8 @@ Not specifical meant for Badminton but I will use it to handle various badminton
 
 I'm using some basic ELO calculations setup to learn more about how ELO raking works and how best to implement it for my situation.
 
+I might also write this project, with potentially limited scope, in other languages for learing purpose.
+
 ## ELO Ranking Logic
 
 This is just prototype calculation logic. Various elements can change in the future.
@@ -63,6 +65,7 @@ List is not just code improvements but also project functionalities
 ### Near Future
 
 - Various minor improvements in codes marked with TODO.
+- Extract details from Tournament name and store them in DB.
 - Store data of scanned tournaments in DB and keep track of ELO over time without having to reimport and calculate all data over again.
 - Mixed naming usage of user/player needs to be all migrated to use player.
 - Fix variable naming clarity in Game Handler for games and matches to represent the correct data being worked with.
@@ -81,10 +84,6 @@ List is not just code improvements but also project functionalities
 
 - Build self service capability for someone else to work with their own tournaments, upload excel files or data and get status reports. Plan is to build separate web application that executes this code as needed.
 
-## For Learning
-
-I might also write this project, with potentially limited scope, in other languages for learing purpose.
-
 ## How to Use
 
 Python version that was used to develop the application: Python 3.10
@@ -97,12 +96,21 @@ For test execution run command: `python3 main.py`
 
 For help information run command: `python3 main.py -h`
 
+## ERD of the Tournament and players ELO
+
+![ERD](BSC_ERD.png)
+
+NOTE: the namings currently don't match and there is development taks to align all user/player naming convention
+
 ## Change Log
 
 ### Prototype v3
 
+This is the final Prototype version. What and how this application works is more or less figured out so after this it will be moved to Alpha status.
+
 - SQLite as data storage
 - DB inclusion required rework on how teams, players, games and elo calculations are handled. Ultimately all players are with their own ELO score, no team based ELO.
+- Cleanup of older version of functions that are no longer used and needed.
 
 ### Prototype v2
 
