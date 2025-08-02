@@ -8,6 +8,8 @@ general_help_text = """Usage: python main.py [OPTION] [OPTION] ...
       --verbose         enables verbose information from the code,
                         prints out a lot of information during execution
 
+      --db_name         defines the SQLite database used for storage
+
   -f, --file            define the excel file for the scope of
                         the scan, only one is allowed
 
@@ -16,17 +18,17 @@ general_help_text = """Usage: python main.py [OPTION] [OPTION] ...
                         arguments can be used
 
 Examples:
-  python main.py -f=file.xlsx -s=Sheet1 --verbose       file.xlsx and Sheet1 is attempted to be scanned
-                                                        for results and results calculated while the whole
-                                                        workflow is printing out what it's doing
+  python main.py --db_name=file.db -f=file.xlsx -s=Sheet1 --verbose     file.xlsx and Sheet1 is attempted to be scanned
+                                                                        for results and results calculated while the whole
+                                                                        workflow is printing out what it's doing
 
-  python main.py -f=file.xlsx -s=Sheet1 -s=Sheet2       file.xlsx and Sheet1, Sheet2, Sheet3 are attempted
-                                                        to be scanned for results and results calculated
+  python main.py --db_name=file.db -f=file.xlsx -s=Sheet1 -s=Sheet2     file.xlsx and Sheet1, Sheet2, Sheet3 are attempted
+                                                                        to be scanned for results and results calculated
 
-  pytion main.py -f -h                                  shows specific help information about -f argument
+  pytion main.py -f -h                                                  shows specific help information about -f argument
 
-  python main.py                                        just runs example execution of the code with example
-                                                        data from .txt file.
+  python main.py                                                        just runs example execution of the code with example
+                                                                        data from .txt file.
 
 GIT repo: https://github.com/t6kke/BadmintonSkillCalculator
 """
@@ -66,6 +68,16 @@ Example:
 -s=[SHEET_1] -s=[SHEET_2] -s=[SHEET_3]
 """
 
+db_argument_info_text = """Use case:
+--db_name=[DB_NAME]
+
+SQLite is used for database and new one is created if one is not found.
+Name should include the '.db' file name extension.
+
+Example:
+--db_name=example_database.db
+"""
+
 def helpSelector(key):
     match key:
         case "--help" | "-h":
@@ -78,6 +90,8 @@ def helpSelector(key):
             __fileArgumentInfo()
         case "--sheet" | "-s":
             __sheetArgumentInfo()
+        case "--db_name":
+            __dbArgumentInfo()
         case _:
             print(f"argument key '{key}' not found\n")
             __generalAppHelp()
@@ -96,3 +110,6 @@ def __fileArgumentInfo():
 
 def __sheetArgumentInfo():
     print(sheet_argument_info_text)
+
+def __dbArgumentInfo():
+    print(db_argument_info_text)
