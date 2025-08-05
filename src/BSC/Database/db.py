@@ -122,28 +122,28 @@ class DB():
         result = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        res = cur.execute("SELECT * FROM users WHERE name = '" + name +"'")
+        res = cur.execute("SELECT * FROM players WHERE name = '" + name +"'")
         result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
         if result is None:
             if self.verbose: print(f"INFO --- DB:GetPlayer --- player name not found in db, creating a new entry with base ELO: 1000")
             data = (name, 1000) #TODO initial elo value of 1000 should be some configuration file, and maybe even modifiable based on what leage new player starts in.
-            res = cur.execute("INSERT INTO users (name, elo) VALUES (?,?)", data)
+            res = cur.execute("INSERT INTO players (name, elo) VALUES (?,?)", data)
             con.commit()
-            res = cur.execute("SELECT * FROM users WHERE name = '" + name +"'")
+            res = cur.execute("SELECT * FROM players WHERE name = '" + name +"'")
             result = res.fetchone()
         con.close()
         if self.verbose: print(f"INFO --- DB:GetPlayer --- returning db player entry: '{result}'")
         return result
 
-    def GetPlayerELO(self, user_id):
-        if self.verbose: print(f"INFO --- DB:GetPlayerELO --- getting ELO value for player id: '{user_id}'")
+    def GetPlayerELO(self, player_id):
+        if self.verbose: print(f"INFO --- DB:GetPlayerELO --- getting ELO value for player id: '{player_id}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        res = cur.execute("SELECT elo FROM users WHERE id = '" + user_id +"'")
-        user_elo = res.fetchone()[0]
+        res = cur.execute("SELECT elo FROM players WHERE id = '" + player_id +"'")
+        player_elo = res.fetchone()[0]
         con.close()
-        if self.verbose: print(f"INFO --- DB:GetPlayerELO --- returning ELO value: '{user_elo}'")
-        return user_elo
+        if self.verbose: print(f"INFO --- DB:GetPlayerELO --- returning ELO value: '{player_elo}'")
+        return player_elo
 
     def AddMatch(self, data_in):
         if self.verbose: print(f"INFO --- DB:AddMatch --- adding match to DB with data: '{data_in}'")
@@ -161,7 +161,7 @@ class DB():
         if self.verbose: print(f"INFO --- DB:AddGame --- adding game to DB with data: '{data_in}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        cur.execute("INSERT INTO games (match_id, game_count, player_one_score, player_two_score) VALUES(?,?,?,?)", data_in)
+        cur.execute("INSERT INTO games (match_id, game_count, compeditor_one_score, compeditor_two_score) VALUES(?,?,?,?)", data_in)
         con.commit()
         res = cur.execute("SELECT id FROM games ORDER BY id DESC LIMIT 1")
         game_id = res.fetchone()[0]
@@ -173,7 +173,7 @@ class DB():
         if self.verbose: print(f"INFO --- DB:AddPlayerGameRel --- adding player game relation for the whole match for all players with data: '{data_in_list}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        cur.executemany("INSERT INTO users_games (users_id, games_id, comp_nbr) VALUES(?,?,?)", data_in_list)
+        cur.executemany("INSERT INTO players_games (player_id, game_id, compeditor_nbr) VALUES(?,?,?)", data_in_list)
         con.commit()
         con.close()
 
@@ -182,35 +182,35 @@ class DB():
             if self.verbose: print(f"INFO --- DB:AddPlayerMatchRel_W_ELOUpdate:addPlayerMatchRel --- adding player match relation to DB with ELO data: '{data_in}'")
             con = sqlite3.connect(self.db_name)
             cur = con.cursor()
-            cur.executemany("INSERT INTO users_matches_elo_change (users_id, matches_id, user_start_elo, user_elo_change) VALUES(?,?,?,?)", data_in)
+            cur.executemany("INSERT INTO players_matches_elo_change (player_id, match_id, player_start_elo, player_elo_change) VALUES(?,?,?,?)", data_in)
             con.commit()
             con.close()
 
-        def updateUsersELO(data_in):
-            if self.verbose: print(f"INFO --- DB:AddPlayerMatchRel_W_ELOUpdate:updateUsersELO --- updating users ELO value with following data: '{data_in}'")
+        def updatePlayersELO(data_in):
+            if self.verbose: print(f"INFO --- DB:AddPlayerMatchRel_W_ELOUpdate:updatePlayersELO --- updating player ELO value with following data: '{data_in}'")
             con = sqlite3.connect(self.db_name)
             cur = con.cursor()
-            cur.executemany("UPDATE users SET elo = ? WHERE id = ?", data_in)
+            cur.executemany("UPDATE players SET elo = ? WHERE id = ?", data_in)
             con.commit()
             con.close()
 
-        data_in_list_for_users_ELO_update = []
+        data_in_list_for_players_ELO_update = []
         for data_in in data_in_list:
-            user_id = data_in[0]
+            player_id = data_in[0]
             new_ELO = data_in[2] + data_in[3]
-            data_in_list_for_users_ELO_update.append((new_ELO, user_id,))
+            data_in_list_for_players_ELO_update.append((new_ELO, player_id,))
 
         addPlayerMatchRel(data_in_list)
-        updateUsersELO(data_in_list_for_users_ELO_update)
+        updatePlayersELO(data_in_list_for_players_ELO_update)
 
 
     #============================================
     # results reports printing to terminal
     #============================================
 
-    def report_AllUsersELOrank(self):
+    def report_AllPlayersELOrank(self):
         print("\nFull list of players and their ELO ranked from highest to lowest rank:")
-        query = "SELECT name, elo FROM users ORDER BY elo DESC"
+        query = "SELECT name, elo FROM players ORDER BY elo DESC"
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         res = cur.execute(query)
@@ -226,17 +226,17 @@ class DB():
         print(f"\nEnd statistics and final ELO ranking from tournament: '{res.fetchone()[0]}'")
         query = """SELECT DISTINCT u.name, u.elo, statistics.nbr_matches, statistics.victories
 FROM matches m
-JOIN users_matches_elo_change um ON m.id = um.matches_id
-JOIN users u ON u.id = um.users_id
+JOIN players_matches_elo_change um ON m.id = um.match_id
+JOIN players u ON u.id = um.player_id
 JOIN (
 SELECT
 u.id,
 u.name,
 count(g.id) as nbr_matches,
-SUM(IIF(CASE ug.comp_nbr WHEN '1' THEN g.player_one_score ELSE g.player_two_score END > CASE ug.comp_nbr WHEN '1' THEN g.player_two_score ELSE g.player_one_score END, 1, 0)) victories
-FROM users u
-JOIN users_games ug ON u.id = ug.users_id
-JOIN games g ON ug.games_id = g.id
+SUM(IIF(CASE ug.compeditor_nbr WHEN '1' THEN g.compeditor_one_score ELSE g.compeditor_two_score END > CASE ug.compeditor_nbr WHEN '1' THEN g.compeditor_two_score ELSE g.compeditor_one_score END, 1, 0)) victories
+FROM players u
+JOIN players_games ug ON u.id = ug.player_id
+JOIN games g ON ug.game_id = g.id
 JOIN matches m ON m.id = g.match_id
 WHERE m.tournament_id = """ + str(tournament_id) + """ group by u.name
 ) statistics ON statistics.id = u.id

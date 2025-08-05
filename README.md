@@ -66,12 +66,10 @@ List is not just code improvements but also project functionalities
 
 - Various minor improvements in codes marked with TODO.
 - Extract details from Tournament name and store them in DB.
-- Store data of scanned tournaments in DB and keep track of ELO over time without having to reimport and calculate all data over again.
-- Mixed naming usage of user/player needs to be all migrated to use player.
-- Fix variable naming clarity in Game Handler for games and matches to represent the correct data being worked with.
-- Add ELO confidence value and use it to handle ELO gain/loss.
 - Handle players ranks through different competiontion categories.
-- Tournament results statistics report users games count, this has to change when matches consist of multiple games
+- Find a good method for adding custom categories.
+- Add ELO confidence value and use it to handle ELO gain/loss.
+- Tournament results statistics report users games count. Further change in the future since this has to change when matches consist of multiple games.
 - Rework how commands are built and handled.
 
 ### Far Future
@@ -103,6 +101,12 @@ For help information run command: `python3 main.py -h`
 NOTE: the namings currently don't match and there is development taks to align all user/player naming convention
 
 ## Change Log
+
+### Alpha 1
+
+- user to player variable naming fixed
+- various game and match variable naming convetion fixed
+- fixed test execution workflow to use GameHandler package correctly
 
 ### Prototype v3
 
