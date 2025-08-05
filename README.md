@@ -98,8 +98,6 @@ For help information run command: `python3 main.py -h`
 
 ![ERD](BSC_ERD.png)
 
-NOTE: the namings currently don't match and there is development taks to align all user/player naming convention
-
 ## Change Log
 
 ### Alpha 1
