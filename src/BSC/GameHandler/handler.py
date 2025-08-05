@@ -10,23 +10,22 @@ class Handler():
         self.verbose = verbose
         self.database_obj = database_obj
 
-    def runGamesParser(self, raw_games_list, tournament_id, category_id):
-        converted_all_matches_list = [] #same list of games list of dictionaries but content will be Teams objects that have set of player db_id-s
+    def runGamesParser(self, raw_matches_list, tournament_id, category_id):
+        converted_all_matches_list = [] #same list of matches list of dictionaries but content will be Teams objects that have set of player db_id-s
 
         players_obj_dict_in_tournament = {} #for not repeat checks of players in tournament. strcutre: 'db_id: player_obj'
-        if self.verbose: print(f"INFO --- All games list for parsing: '{raw_games_list}'")
-        if self.verbose: print(f"INFO --- Total nr of games to parse: '{len(raw_games_list)}'")
+        if self.verbose: print(f"INFO --- All matches list for parsing: '{raw_matches_list}'")
+        if self.verbose: print(f"INFO --- Total nr of matches to parse: '{len(raw_matches_list)}'")
         i = 0
-        for game in raw_games_list:
+        for match in raw_matches_list:
             i = i + 1
-            new_game_dict = {}
-            if self.verbose: print(f"INFO --- Game nr: '{i}' --- Parsing raw game dictionary: '{game}'")
-            new_game_dict_wObjects = {} #same kind of dictionary structure but Teams instead of being just a string is a Team object that consists of Player db_id in a set() data type
-            for team, score in game.items():
+            new_match_dict = {}
+            if self.verbose: print(f"INFO --- Match nr: '{i}' --- Parsing raw match dictionary: '{match}'")
+            for team, score in match.items():
                 if self.verbose: print(f"INFO --- working on team: '{team}' that got '{score}' points")
                 player_obj_list_for_team = []
                 if "+" in team:
-                    if self.verbose: print(f"DEBUG --- Detected '+' in the name, this is a team game and we need to split the players from the full team name")
+                    if self.verbose: print(f"DEBUG --- Detected '+' in the name, this is a team match and we need to split the players from the full team name")
                     player_str_list = team.split("+")
                     for player in player_str_list:
                         #TODO content of this for loop likely can be separate function since this should be reusable for single player tournaments
@@ -50,22 +49,22 @@ class Handler():
                 #if self.verbose: print(f"INFO --- creating new Team object with players: '{player_obj_list_for_team}'") #TODO fix printing problem
                 team_obj = Team(player_obj_list_for_team)
                 if self.verbose: print(f"INFO --- Team object: '{team_obj}' created")
-                new_game_dict[team_obj] = score
+                new_match_dict[team_obj] = score
 
-            if self.verbose: print(f"INFO --- adding new game dictionary to converted games list")
-            converted_all_matches_list.append(new_game_dict)
+            if self.verbose: print(f"INFO --- adding new match dictionary to converted matches list")
+            converted_all_matches_list.append(new_match_dict)
 
-        if self.verbose: print(f"INFO --- all games are parsed, function midpoint before skill calculation and rest of DB entries")
+        if self.verbose: print(f"INFO --- all matches are parsed, function midpoint before skill calculation and rest of DB entries")
         if self.verbose:
             print(f"INFO --- list of players in the tournament:")
             for p_id, p_obj in players_obj_dict_in_tournament.items():
                 print(f"INFO --- player db id: '{p_id}', name: '{p_obj.player_name}', and ELO: '{p_obj.ELO}'")
             print(f"INFO --- list of converted games in the tournament with teams and scores:")
             i = 0
-            for game in converted_all_matches_list:
+            for match in converted_all_matches_list:
                 i = i + 1
-                print(f"INFO --- game number: '{i}'")
-                for team, score in game.items():
+                print(f"INFO --- match number: '{i}'")
+                for team, score in match.items():
                     print(f"INFO --- team: '{team}' with score: '{score}'")
 
         print(f"Running ELO calculations...")
@@ -80,7 +79,7 @@ class Handler():
             game_data_to_db = (match_id, game_nbr, list(match.values())[0], list(match.values())[1],)
             game_id = self.database_obj.AddGame(game_data_to_db)
 
-            #TODO analyze if players would be iterated over for the whole game so varaibles would not be needed
+            #TODO analyze if players would be iterated over for the whole match so varaibles would not be needed
             t_one_p_one_id = list(list(match.keys())[0].team_members_set)[0]
             t_one_p_two_id = list(list(match.keys())[0].team_members_set)[1]
             t_two_p_one_id = list(list(match.keys())[1].team_members_set)[0]

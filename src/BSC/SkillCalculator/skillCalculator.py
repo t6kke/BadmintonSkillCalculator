@@ -1,7 +1,7 @@
 class SkillCalc():
     def __init__(self, players_obj_dict, verbose=False):
         self.verbose = verbose #TODO extend verbose information to stuff that might be relevant
-        self.k_factor = 32 #TODO there should be 2 K-Factor variables, one for winner and one loser. when we have implemented ELO confidence value. example high ELO user will not lose a lot of points if new team with base/low ELO beats them
+        self.k_factor = 32 #TODO there should be 2 K-Factor variables, one for winner and one loser. when we have implemented ELO confidence value. example high ELO player will not lose a lot of points if new team with base/low ELO beats them
         self.players_obj_dict = players_obj_dict
 
     def calculate(self, match):

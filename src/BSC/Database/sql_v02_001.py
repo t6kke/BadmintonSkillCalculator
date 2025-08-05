@@ -3,9 +3,10 @@ db_up = {
 	"id"	INTEGER NOT NULL UNIQUE,
 	"name"	TEXT NOT NULL,
 	"date"	TEXT,
+	"location"	TEXT,
 	PRIMARY KEY("id" AUTOINCREMENT)
 )""",
-"users": """CREATE TABLE "users" (
+"players": """CREATE TABLE "players" (
 	"id"	INTEGER NOT NULL UNIQUE,
 	"name"	TEXT NOT NULL,
 	"elo"	INTEGER NOT NULL,
@@ -29,32 +30,32 @@ db_up = {
 	"id"	INTEGER NOT NULL UNIQUE,
 	"match_id"	INTEGER NOT NULL,
 	"game_count"	INTEGER NOT NULL,
-	"player_one_score"	INTEGER NOT NULL,
-	"player_two_score"	INTEGER NOT NULL,
+	"compeditor_one_score"	INTEGER NOT NULL,
+	"compeditor_two_score"	INTEGER NOT NULL,
 	FOREIGN KEY("match_id") REFERENCES "matches"("id"),
 	PRIMARY KEY("id" AUTOINCREMENT)
 )""",
-"users_games": """CREATE TABLE "users_games" (
-	"users_id"	INTEGER NOT NULL,
-	"games_id"	INTEGER NOT NULL,
-	"comp_nbr"	INTEGER NOT NULL,
-	UNIQUE("users_id","games_id")
+"players_games": """CREATE TABLE "players_games" (
+	"player_id"	INTEGER NOT NULL,
+	"game_id"	INTEGER NOT NULL,
+	"compeditor_nbr"	INTEGER NOT NULL,
+	UNIQUE("player_id","game_id")
 )""",
-"users_matches_elo_change": """CREATE TABLE "users_matches_elo_change" (
-	"users_id"	INTEGER NOT NULL,
-	"matches_id"	INTEGER NOT NULL,
-	"user_start_elo"	INTEGER NOT NULL,
-	"user_elo_change"	INTEGER NOT NULL,
-	UNIQUE("users_id","matches_id")
+"players_matches_elo_change": """CREATE TABLE "players_matches_elo_change" (
+	"player_id"	INTEGER NOT NULL,
+	"match_id"	INTEGER NOT NULL,
+	"player_start_elo"	INTEGER NOT NULL,
+	"player_elo_change"	INTEGER NOT NULL,
+	UNIQUE("player_id","match_id")
 )"""
 }
 
 db_down = {
 "tournaments": """DROP TABLE tournaments""",
-"users": """DROP TABLE users""",
+"players": """DROP TABLE players""",
 "categories": """DROP TABLE categories""",
 "matches": """DROP TABLE matches""",
 "games": """DROP TABLE games""",
-"users_games": """DROP TABLE users_games""",
-"users_matches_elo_change": """DROP TABLE users_matches_elo_change"""
+"players_games": """DROP TABLE players_games""",
+"players_matches_elo_change": """DROP TABLE players_matches_elo_change"""
 }
