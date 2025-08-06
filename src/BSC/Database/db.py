@@ -117,29 +117,34 @@ class DB():
         con.close()
         return category_id[0]
 
-    def GetPlayer(self, name):
+    def GetPlayerWithELO(self, name, category_id):
         if self.verbose: print(f"INFO --- DB:GetPlayer --- getting or adding player '{name}' to DB")
         result = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        res = cur.execute("SELECT * FROM players WHERE name = '" + name +"'")
+        res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
         result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
         if result is None:
             if self.verbose: print(f"INFO --- DB:GetPlayer --- player name not found in db, creating a new entry with base ELO: 1000")
-            data = (name, 1000) #TODO initial elo value of 1000 should be some configuration file, and maybe even modifiable based on what leage new player starts in.
-            res = cur.execute("INSERT INTO players (name, elo) VALUES (?,?)", data)
+            player_data = (name,)
+            res = cur.execute("INSERT INTO players (name) VALUES (?)", player_data)
+            res = cur.execute("SELECT id FROM players ORDER BY id DESC LIMIT 1")
+            player_id = res.fetchone()[0]
+            elo_data = (player_id, category_id, 1000,) #TODO initial elo value of 1000 should be some configuration file, and maybe even modifiable based on what leage new player starts in.
+            cur.execute("INSERT INTO players_categories_elo (player_id, category_id, elo) VALUES (?,?,?)", elo_data)
             con.commit()
-            res = cur.execute("SELECT * FROM players WHERE name = '" + name +"'")
+            #res = cur.execute("SELECT * FROM players WHERE name = '" + name +"'")
+            res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
             result = res.fetchone()
         con.close()
         if self.verbose: print(f"INFO --- DB:GetPlayer --- returning db player entry: '{result}'")
         return result
 
-    def GetPlayerELO(self, player_id):
+    def GetPlayerELO(self, player_id, category_id):
         if self.verbose: print(f"INFO --- DB:GetPlayerELO --- getting ELO value for player id: '{player_id}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        res = cur.execute("SELECT elo FROM players WHERE id = '" + player_id +"'")
+        res = cur.execute("SELECT elo FROM players_categories_elo WHERE category_id = " + category_id + " AND player_id = '" + player_id + "'")
         player_elo = res.fetchone()[0]
         con.close()
         if self.verbose: print(f"INFO --- DB:GetPlayerELO --- returning ELO value: '{player_elo}'")
@@ -177,7 +182,7 @@ class DB():
         con.commit()
         con.close()
 
-    def AddPlayerMatchRel_W_ELOUpdate(self, data_in_list):
+    def AddPlayerMatchRel_W_ELOUpdate(self, data_in_list, category_id):
         def addPlayerMatchRel(data_in):
             if self.verbose: print(f"INFO --- DB:AddPlayerMatchRel_W_ELOUpdate:addPlayerMatchRel --- adding player match relation to DB with ELO data: '{data_in}'")
             con = sqlite3.connect(self.db_name)
@@ -190,7 +195,7 @@ class DB():
             if self.verbose: print(f"INFO --- DB:AddPlayerMatchRel_W_ELOUpdate:updatePlayersELO --- updating player ELO value with following data: '{data_in}'")
             con = sqlite3.connect(self.db_name)
             cur = con.cursor()
-            cur.executemany("UPDATE players SET elo = ? WHERE id = ?", data_in)
+            cur.executemany("UPDATE players_categories_elo SET elo = ? WHERE category_id = ? AND player_id = ?", data_in)
             con.commit()
             con.close()
 
@@ -198,7 +203,7 @@ class DB():
         for data_in in data_in_list:
             player_id = data_in[0]
             new_ELO = data_in[2] + data_in[3]
-            data_in_list_for_players_ELO_update.append((new_ELO, player_id,))
+            data_in_list_for_players_ELO_update.append((new_ELO, category_id, player_id,))
 
         addPlayerMatchRel(data_in_list)
         updatePlayersELO(data_in_list_for_players_ELO_update)
@@ -208,9 +213,12 @@ class DB():
     # results reports printing to terminal
     #============================================
 
-    def report_AllPlayersELOrank(self):
+    def report_AllPlayersELOrankOnCategory(self, category_id):
         print("\nFull list of players and their ELO ranked from highest to lowest rank:")
-        query = "SELECT name, elo FROM players ORDER BY elo DESC"
+        query = """SELECT p.name, pce.elo
+FROM players p
+JOIN players_categories_elo pce ON p.id = pce.player_id
+WHERE category_id = """ + str(category_id) + " ORDER BY pce.elo DESC"
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         res = cur.execute(query)
@@ -219,28 +227,28 @@ class DB():
         for item in data_list:
             print(f"Player: '{item[0]}' with ELO: '{item[1]}'")
 
-    def report_TournamentResult(self, tournament_id):
+    def report_TournamentCategoryResult(self, tournament_id, category_id):
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         res = cur.execute("SELECT name FROM tournaments where id = "+str(tournament_id))
         print(f"\nEnd statistics and final ELO ranking from tournament: '{res.fetchone()[0]}'")
-        query = """SELECT DISTINCT u.name, u.elo, statistics.nbr_matches, statistics.victories
+        query = """SELECT DISTINCT p.name, pce.elo, statistics.nbr_matches, statistics.victories
 FROM matches m
-JOIN players_matches_elo_change um ON m.id = um.match_id
-JOIN players u ON u.id = um.player_id
-JOIN (
-SELECT
-u.id,
-u.name,
-count(g.id) as nbr_matches,
-SUM(IIF(CASE ug.compeditor_nbr WHEN '1' THEN g.compeditor_one_score ELSE g.compeditor_two_score END > CASE ug.compeditor_nbr WHEN '1' THEN g.compeditor_two_score ELSE g.compeditor_one_score END, 1, 0)) victories
-FROM players u
-JOIN players_games ug ON u.id = ug.player_id
-JOIN games g ON ug.game_id = g.id
-JOIN matches m ON m.id = g.match_id
-WHERE m.tournament_id = """ + str(tournament_id) + """ group by u.name
-) statistics ON statistics.id = u.id
-ORDER BY u.elo DESC"""
+JOIN players_matches_elo_change pm ON m.id = pm.match_id
+JOIN players p ON p.id = pm.player_id
+JOIN players_categories_elo pce ON p.id = pce.player_id AND pce.category_id = """ + str(category_id) + """ JOIN (
+	SELECT
+	p.id,
+	p.name,
+	count(g.id) as nbr_matches,
+	SUM(IIF(CASE pg.compeditor_nbr WHEN '1' THEN g.compeditor_one_score ELSE g.compeditor_two_score END > CASE pg.compeditor_nbr WHEN '1' THEN g.compeditor_two_score ELSE g.compeditor_one_score END, 1, 0)) victories
+	FROM players p
+	JOIN players_games pg ON p.id = pg.player_id
+	JOIN games g ON pg.game_id = g.id
+	JOIN matches m ON m.id = g.match_id
+	WHERE m.tournament_id = """ + str(tournament_id) + """ group by p.name
+) statistics ON statistics.id = p.id
+ORDER BY pce.elo DESC"""
         res = cur.execute(query)
         data_list = res.fetchall()
         con.close()
