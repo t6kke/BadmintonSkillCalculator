@@ -66,8 +66,8 @@ List is not just code improvements but also project functionalities
 
 - Various minor improvements in codes marked with TODO.
 - Extract details from Tournament name and store them in DB.
-- Handle players ranks through different competiontion categories.
 - Find a good method for adding custom categories.
+- Handle singles tournament data in GameHandler.
 - Add ELO confidence value and use it to handle ELO gain/loss.
 - Tournament results statistics report users games count. Further change in the future since this has to change when matches consist of multiple games.
 - Rework how commands are built and handled.
@@ -99,6 +99,10 @@ For help information run command: `python3 main.py -h`
 ![ERD](BSC_ERD.png)
 
 ## Change Log
+
+### Alpha 2
+
+- player ELO moved to separate table with category relation so player can have separate ELO per category. Querys and functions updated to support this change.
 
 ### Alpha 1
 

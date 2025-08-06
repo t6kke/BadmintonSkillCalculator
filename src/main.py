@@ -55,8 +55,8 @@ class Main():
         if self.verbose: print(f"All matches from raw matches list:\n{raw_matches_list}")
         gamesHandler = Handler(self.database_obj, self.verbose)
         gamesHandler.runGamesParser(raw_matches_list, tournament_id, category_id)
-        self.database_obj.report_TournamentResult(tournament_id)
-        self.database_obj.report_AllPlayersELOrank()
+        self.database_obj.report_TournamentCategoryResult(tournament_id, category_id)
+        self.database_obj.report_AllPlayersELOrankOnCategory(category_id)
         self.__exitSuccess("\n=====================\nDone")
 
     # actual execution with data provided through launch arguments
@@ -73,20 +73,20 @@ class Main():
         self.database_obj = DB(db_name, verbose=self.verbose)
         raw_tournaments_from_excel = self.__getGamesFromExcel(excel_file, sheets_list)
         gamesHandler = Handler(self.database_obj, self.verbose)
+        category_id = self.database_obj.GetOrAddCategory("TMMD", "TEST madminton category") #TODO figure out a best way to enter a custom category
 
         for tournament_name, raw_matches_list_from_excel in raw_tournaments_from_excel.items():
             print(f"\nStarting handle tournament: '{tournament_name}' information...")
             if self.verbose: print(f"INFO --- Adding tournament: '{tournament_name}' to the database")
             tournament_id = self.database_obj.AddTournament((tournament_name,))
             if self.verbose: print(f"INFO --- Getting or adding new category to the database")
-            category_id = self.database_obj.GetOrAddCategory("TMMD", "TEST madminton category") #TODO figure out a best way to enter a custom category
             print(f"Running games handler functionality...")
             gamesHandler.runGamesParser(raw_matches_list_from_excel, tournament_id, category_id)
             if self.verbose: print(f"Post matches data entry status report")
-            self.database_obj.report_TournamentResult(tournament_id)
+            self.database_obj.report_TournamentCategoryResult(tournament_id, category_id)
 
         if self.verbose: print(f"Final reports")
-        self.database_obj.report_AllPlayersELOrank()
+        self.database_obj.report_AllPlayersELOrankOnCategory(category_id)
         self.__exitSuccess("\n=====================\nDone")
 
     def __getGamesFromExcel(self, excel_file, list_of_sheets):

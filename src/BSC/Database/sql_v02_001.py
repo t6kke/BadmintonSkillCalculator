@@ -9,7 +9,6 @@ db_up = {
 "players": """CREATE TABLE "players" (
 	"id"	INTEGER NOT NULL UNIQUE,
 	"name"	TEXT NOT NULL,
-	"elo"	INTEGER NOT NULL,
 	PRIMARY KEY("id" AUTOINCREMENT)
 )""",
 "categories": """CREATE TABLE "categories" (
@@ -35,6 +34,12 @@ db_up = {
 	FOREIGN KEY("match_id") REFERENCES "matches"("id"),
 	PRIMARY KEY("id" AUTOINCREMENT)
 )""",
+"players_categories_elo": """CREATE TABLE "players_categories_elo" (
+	"player_id"	INTEGER NOT NULL,
+	"category_id"	INTEGER NOT NULL,
+	"elo"	INTEGER NOT NULL,
+	UNIQUE("player_id","category_id")
+)""",
 "players_games": """CREATE TABLE "players_games" (
 	"player_id"	INTEGER NOT NULL,
 	"game_id"	INTEGER NOT NULL,
@@ -56,6 +61,7 @@ db_down = {
 "categories": """DROP TABLE categories""",
 "matches": """DROP TABLE matches""",
 "games": """DROP TABLE games""",
+"players_categories_elo": """DROP TABLE players_categories_elo""",
 "players_games": """DROP TABLE players_games""",
 "players_matches_elo_change": """DROP TABLE players_matches_elo_change"""
 }

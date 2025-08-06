@@ -30,7 +30,8 @@ class Handler():
                     for player in player_str_list:
                         #TODO content of this for loop likely can be separate function since this should be reusable for single player tournaments
                         if self.verbose: print(f"DEBUG --- team is split into players: '{player_str_list}' and working on player '{player}'")
-                        player_db_entry = self.database_obj.GetPlayer(player.strip())
+                        #player_db_entry = self.database_obj.GetPlayer(player.strip())
+                        player_db_entry = self.database_obj.GetPlayerWithELO(player.strip(), str(category_id))
                         player_exists = False
                         if player_db_entry[0] in players_obj_dict_in_tournament:
                             if self.verbose: print(f"INFO --- player exists in the tournament players list, using entry there to add to the team list for Team object")
@@ -97,9 +98,9 @@ class Handler():
                                                     (t_one_p_two_id, match_id, players_obj_dict_in_tournament.get(t_one_p_two_id).ELO, elo_results_dict.get(t_one_p_two_id)),
                                                     (t_two_p_one_id, match_id, players_obj_dict_in_tournament.get(t_two_p_one_id).ELO, elo_results_dict.get(t_two_p_one_id)),
                                                     (t_two_p_two_id, match_id, players_obj_dict_in_tournament.get(t_two_p_two_id).ELO, elo_results_dict.get(t_two_p_two_id)),]
-            self.database_obj.AddPlayerMatchRel_W_ELOUpdate(players_matches_rel_wELOupdate_to_db)
+            self.database_obj.AddPlayerMatchRel_W_ELOUpdate(players_matches_rel_wELOupdate_to_db, category_id)
 
             if self.verbose: print(f"INFO --- updating player object ELO value with updated data")
             for player_id, player_obj in players_obj_dict_in_tournament.items():
                 if self.verbose: print(f"INFO --- updating ELO for player: '{player_obj}'")
-                player_obj.ELO = self.database_obj.GetPlayerELO(str(player_id))
+                player_obj.ELO = self.database_obj.GetPlayerELO(str(player_id), str(category_id))
