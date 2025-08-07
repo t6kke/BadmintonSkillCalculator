@@ -1,11 +1,10 @@
 # Badminton Skill Calculator
 
-This is for learing purpose for my own software development skills.
-Not specifical meant for Badminton but I will use it to handle various badminton tournaments and competitions I take part in.
+This is personal project that is meant to collect tournament results information. Parse the players results and calculate ELO for each player for skill ranking. Currently developed for small tournaments where each player/team plays agains every other player/team one game. This code does not directly care about the tournament results, it just calculates ELO ranking after each match/round. It supports singles and doubles tournaments since these are two of the more common badminton tournament types(some regions of the world also have somewhat active 3v3 scene but not for me). This project does not specifically need to be used for Badminton, tehnically any kind of tournament with games and scores can use this project for ELO calculations. Only additinal challenges in this case is that data entry currently works only on specific formated tournaments so it's likely that you need to build your own custom tournament data parser.
 
-I'm using some basic ELO calculations setup to learn more about how ELO raking works and how best to implement it for my situation.
+I'm using some basic ELO calculations setup to learn more about how ELO raking works and how best to implement it for my situation. More details in the next chapter.
 
-I might also write this project, with potentially limited scope, in other languages for learing purpose.
+This started out as a personal development project. At this point it's been refined enought that it could be used as a standalone CLI application or even as a back-end tool that has some UI wrapper for it's usage. At some point the future I might also rewrite this project is some other language but will still keep it as CLI tool. Any additional usability changes should be separate wrapper projects on top of this tool.
 
 ## ELO Ranking Logic
 
@@ -52,9 +51,10 @@ This is just prototype calculation logic. Various elements can change in the fut
 
 - reads in excel file in specific tournament format that it's developed for.
 - creates team objects and does not create duplicates if the team members order changes from tournament to tournament.
-- does ELO calculation game by game basis from first game of first tournament to last game of last tournament in scanned scope for each individiual player
-- saves all data to SQLite database
-- has few status reports for output from database
+- does ELO calculation game by game basis from first game of first tournament to last game of last tournament in scanned scope for each individiual player.
+- saves all data to SQLite database.
+- has few status reports for output from database.
+- handles any number of players in team, regular 1v1 and 2v2 but tehnically works with 3v3 or 11v11 if other type of competition is used.
 
 ## Future Development
 
@@ -65,18 +65,22 @@ List is not just code improvements but also project functionalities
 ### Near Future
 
 - Various minor improvements in codes marked with TODO.
+- GetOrAddPlayer function in Database package is a mess and needs some work.
 - Extract details from Tournament name and store them in DB.
-- Find a good method for adding custom categories.
-- Handle singles tournament data in GameHandler.
+- Improve functionality to define category of the tournament.
 - Add ELO confidence value and use it to handle ELO gain/loss.
 - Tournament results statistics report users games count. Further change in the future since this has to change when matches consist of multiple games.
-- Rework how commands are built and handled.
+- Rework how commands/launch arguments are built and handled.
 
 ### Far Future
 
 - Import game results(data) from Tournamentsoftare.com competition results, some webscraping probably needed.
 - Generate some kind of HTML for static website content in case it's interesting for other compeditors.
-- Build self service capability for someone else to work with their own tournaments, upload excel files or data and get status reports.
+- Support universal team sizes.
+
+### Maybe
+
+- Replace internal data entry parsing or provide some additional external mean to have data entered(eg. through CLI) so the poject would be more universal in terms of what structured data it can use. This would mean that data extraction from whatever source is on the users resposibility but will make this code more universally usable and can be plugged into other tools.
 
 ### Out of this application scope
 
@@ -94,11 +98,25 @@ For test execution run command: `python3 main.py`
 
 For help information run command: `python3 main.py -h`
 
+More detailed how to commands will be provided once the launch arguments setup is finalized. Currently -h is the best option to check how the given version can be used.
+
 ## ERD of the Tournament and players ELO
 
 ![ERD](BSC_ERD.png)
 
 ## Change Log
+
+### Alpha 3
+
+- GameHandler package now handles both singles and doubles tournament data.
+- Initial version of defining category details through lauch arguments, this likely will change in the future.
+- Help details updated to give information on usage of category information.
+- Ranamed example excel data for doubles tournament: `test_xlsx_d`
+- Added example data for singles tournament: `test_xlsx_s`
+- Fixed image for the ERD, one to many relation lines towards `players_categories_elo` table were in incorrect orientation.
+- Fixed verbose info formatting in SkillCalc where it gives ELO difference value.
+- Added category detail to the final report output of the given tournament entry.
+- Addititional final report for all users ELO on all their categories.
 
 ### Alpha 2
 

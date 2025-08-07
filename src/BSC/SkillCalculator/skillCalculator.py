@@ -23,7 +23,7 @@ class SkillCalc():
         return resut_ELO_changes_dict
 
     def __scaleKFactor(self, win_status, ELO_diff):
-        if self.verbose: print("ELO difference:", ELO_diff)
+        if self.verbose: print(f"DEBUG --- SkillCalc:__scaleKFactor --- ELO difference: {ELO_diff}")
         #TODO investigate can this if else logic be simplified
         if win_status == 1 and ELO_diff > 0:
             # I win and have higher ELO so k_factor has to scale down based on difference
