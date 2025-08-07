@@ -6,6 +6,8 @@ class HandleArgs():
         self.source_excel = ""
         self.source_excel_sheet_list = []
         self.database_name = ""
+        self.category_name = ""
+        self.category_desc = ""
 
         # general class variables
         self.verbose = verbose
@@ -33,6 +35,14 @@ class HandleArgs():
     def getDatabaseName(self):
         if self.verbose: print(f"INFO --- database info was requested, returning: '{self.database_name}'")
         return self.database_name
+
+    def getCategoryName(self):
+        if self.verbose: print(f"INFO --- category name was requested, returning: '{self.category_name}'")
+        return self.category_name
+
+    def getCategoryDescription(self):
+        if self.verbose: print(f"INFO --- category description was requested, returning: '{self.category_desc}'")
+        return self.category_desc
 
     #============================================
     # internal functions parsing arguments
@@ -68,12 +78,18 @@ class HandleArgs():
     def __assignVariables(self, key, value):
         match key:
             case "--file" | "-f":
-                if self.source_excel != "":
-                    raise Exception(f"One file name already provided, only one value for '{key}' is expected")
+                if self.source_excel != "": raise Exception(f"One file name already provided, only one value for '{key}' is expected")
                 self.source_excel = value
             case "--sheet" | "-s":
                 self.source_excel_sheet_list.append(value)
             case "--db_name":
+                if self.database_name != "": raise Exception(f"One file name already provided, only one value for '{key}' is expected")
                 self.database_name = value
+            case "--c_name":
+                if self.category_name != "": raise Exception(f"One value for '{key}' is expected")
+                self.category_name = value
+            case "--c_desc":
+                if self.category_desc != "": raise Exception(f"One value for '{key}' is expected")
+                self.category_desc = value
             case _:
                 if self.verbose: print(f"DEBUG --- key/value handler ended in default state handing key: '{key}' and value: '{value}'")

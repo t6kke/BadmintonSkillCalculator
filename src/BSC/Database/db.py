@@ -43,8 +43,7 @@ class DB():
                            ("WS", "women singles"),
                            ("MD", "men double"),
                            ("WD", "women double"),
-                           ("XD", "mixed double")
-                           ]
+                           ("XD", "mixed double")]
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         for table, sql in db_up.items():
@@ -117,15 +116,16 @@ class DB():
         con.close()
         return category_id[0]
 
-    def GetPlayerWithELO(self, name, category_id):
-        if self.verbose: print(f"INFO --- DB:GetPlayer --- getting or adding player '{name}' to DB")
+    def GetOrAddPlayer(self, name, category_id):
+        #TODO this function is a mess and needs to be cleaned up
+        if self.verbose: print(f"INFO --- DB:GetOrAddPlayer --- getting or adding player '{name}' to DB")
         result = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
+        res = cur.execute("SELECT * FROM players WHERE name = '" + name + "'")
         result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
         if result is None:
-            if self.verbose: print(f"INFO --- DB:GetPlayer --- player name not found in db, creating a new entry with base ELO: 1000")
+            if self.verbose: print(f"INFO --- DB:GetOrAddPlayer --- player not found in db, creating a new entry")
             player_data = (name,)
             res = cur.execute("INSERT INTO players (name) VALUES (?)", player_data)
             res = cur.execute("SELECT id FROM players ORDER BY id DESC LIMIT 1")
@@ -133,11 +133,50 @@ class DB():
             elo_data = (player_id, category_id, 1000,) #TODO initial elo value of 1000 should be some configuration file, and maybe even modifiable based on what leage new player starts in.
             cur.execute("INSERT INTO players_categories_elo (player_id, category_id, elo) VALUES (?,?,?)", elo_data)
             con.commit()
-            #res = cur.execute("SELECT * FROM players WHERE name = '" + name +"'")
+            res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
+            result = res.fetchone()
+            con.close()
+            if self.verbose: print(f"INFO --- DB:GetOrAddPlayer --- returning db player entry: '{result}'")
+            return result
+        player_id = str(result[0])
+        res = cur.execute("SELECT * FROM players_categories_elo WHERE category_id = " + category_id + " AND player_id = " + player_id)
+        result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
+        if result is None:
+            if self.verbose: print(f"INFO --- DB:GetOrAddPlayer --- player found in db but no ELO for category id {category_id}, creating a new entry")
+            elo_data = (player_id, category_id, 1000,) #TODO initial elo value of 1000 should be some configuration file, and maybe even modifiable based on what leage new player starts in.
+            cur.execute("INSERT INTO players_categories_elo (player_id, category_id, elo) VALUES (?,?,?)", elo_data)
+            con.commit()
+            res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
+            result = res.fetchone()
+            con.close()
+            if self.verbose: print(f"INFO --- DB:GetOrAddPlayer --- returning db player entry: '{result}'")
+            return result
+        res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
+        result = res.fetchone()
+        con.close()
+        if self.verbose: print(f"INFO --- DB:GetOrAddPlayer --- returning db player entry: '{result}'")
+        return result
+
+    def GetPlayerWithELO(self, name, category_id):
+        if self.verbose: print(f"INFO --- DB:GetPlayerWithELO --- getting or adding player '{name}' to DB")
+        result = None
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
+        result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
+        if result is None:
+            if self.verbose: print(f"INFO --- DB:GetPlayerWithELO --- player name not found in db, creating a new entry with base ELO: 1000")
+            player_data = (name,)
+            res = cur.execute("INSERT INTO players (name) VALUES (?)", player_data)
+            res = cur.execute("SELECT id FROM players ORDER BY id DESC LIMIT 1")
+            player_id = res.fetchone()[0]
+            elo_data = (player_id, category_id, 1000,) #TODO initial elo value of 1000 should be some configuration file, and maybe even modifiable based on what leage new player starts in.
+            cur.execute("INSERT INTO players_categories_elo (player_id, category_id, elo) VALUES (?,?,?)", elo_data)
+            con.commit()
             res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
             result = res.fetchone()
         con.close()
-        if self.verbose: print(f"INFO --- DB:GetPlayer --- returning db player entry: '{result}'")
+        if self.verbose: print(f"INFO --- DB:GetPlayerWithELO --- returning db player entry: '{result}'")
         return result
 
     def GetPlayerELO(self, player_id, category_id):
@@ -213,8 +252,33 @@ class DB():
     # results reports printing to terminal
     #============================================
 
+    def report_AllPlayersELOrank(self):
+        print("\nFull list of players and their ELO ranked from highest to lowest rank per category:")
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        query = """SELECT p.name, pce.elo, c.name, c.description
+FROM players p
+JOIN players_categories_elo pce ON p.id = pce.player_id
+JOIN categories c ON c.id = pce.category_id
+ORDER BY c.name, pce.elo DESC"""
+        res = cur.execute(query)
+        data_list = res.fetchall()
+        con.close()
+        category_name = ""
+        category_desc = ""
+        for item in data_list:
+            if item[2] != category_name:
+                category_name = item[2]
+                category_desc = item[3]
+                print(f"\tRanking on category '{category_name}', '{category_desc}':")
+            print(f"Player: '{item[0]}' with ELO: '{item[1]}'")
+
     def report_AllPlayersELOrankOnCategory(self, category_id):
-        print("\nFull list of players and their ELO ranked from highest to lowest rank:")
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT name, description FROM categories where id = "+str(category_id))
+        category_data = res.fetchone()
+        print(f"\nFull list of players and their ELO ranked from highest to lowest rank in category: '{category_data[0]}', '{category_data[1]}'")
         query = """SELECT p.name, pce.elo
 FROM players p
 JOIN players_categories_elo pce ON p.id = pce.player_id

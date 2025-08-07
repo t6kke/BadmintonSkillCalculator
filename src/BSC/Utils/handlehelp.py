@@ -10,6 +10,11 @@ general_help_text = """Usage: python main.py [OPTION] [OPTION] ...
 
       --db_name         defines the SQLite database used for storage
 
+      --c_name          Acronym of the category, eg. MD
+
+      --c_desc          Description of the category, eg. "mens double"
+                        Must be between quotes for it to be handled as single value
+
   -f, --file            define the excel file for the scope of
                         the scan, only one is allowed
 
@@ -18,17 +23,17 @@ general_help_text = """Usage: python main.py [OPTION] [OPTION] ...
                         arguments can be used
 
 Examples:
-  python main.py --db_name=file.db -f=file.xlsx -s=Sheet1 --verbose     file.xlsx and Sheet1 is attempted to be scanned
-                                                                        for results and results calculated while the whole
-                                                                        workflow is printing out what it's doing
+  python main.py --db_name=file.db -f=file.xlsx -s=Sheet1 --verbose --c_name=EC --c_desc="example"      file.xlsx and Sheet1 is attempted to be scanned
+                                                                                                        for results and results calculated while the whole
+                                                                                                        workflow is printing out what it's doing
 
-  python main.py --db_name=file.db -f=file.xlsx -s=Sheet1 -s=Sheet2     file.xlsx and Sheet1, Sheet2, Sheet3 are attempted
-                                                                        to be scanned for results and results calculated
+  python main.py --db_name=file.db -f=file.xlsx -s=Sheet1 -s=Sheet2 --c_name=EC --c_desc="example"      file.xlsx and Sheet1, Sheet2 are attempted
+                                                                                                        to be scanned for results and results calculated
 
-  pytion main.py -f -h                                                  shows specific help information about -f argument
+  pytion main.py -f -h                                                                                  shows specific help information about -f argument
 
-  python main.py                                                        just runs example execution of the code with example
-                                                                        data from .txt file.
+  python main.py                                                                                        just runs example execution of the code with example
+                                                                                                        data from .txt file.
 
 GIT repo: https://github.com/t6kke/BadmintonSkillCalculator
 """
@@ -78,6 +83,18 @@ Example:
 --db_name=example_database.db
 """
 
+category_argument_info_text = """Use case:
+--c_name=[acronym of the category] --c_desc=[long description of the category]
+
+This has to be a unique value, if it exists in database it's used and no new entry is added.
+Uniqness is based on the name acronym.
+Descriptions has be between quotation marks for it to register as one value.
+
+Example:
+--c_name=XD --c_desc="mixed doubles"
+--c_name=WD --c_desc="women singles"
+"""
+
 def helpSelector(key):
     match key:
         case "--help" | "-h":
@@ -92,6 +109,10 @@ def helpSelector(key):
             __sheetArgumentInfo()
         case "--db_name":
             __dbArgumentInfo()
+        case "--c_name":
+            __categoryArgumentInfo()
+        case "--c_desc":
+            __categoryArgumentInfo()
         case _:
             print(f"argument key '{key}' not found\n")
             __generalAppHelp()
@@ -113,3 +134,6 @@ def __sheetArgumentInfo():
 
 def __dbArgumentInfo():
     print(db_argument_info_text)
+
+def __categoryArgumentInfo():
+    print(category_argument_info_text)

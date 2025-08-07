@@ -64,16 +64,21 @@ class Main():
         excel_file = self.args_handler.getSourceExcelFileName()
         sheets_list = self.args_handler.getExcelSheetsList()
         db_name = self.args_handler.getDatabaseName()
+        category_name = self.args_handler.getCategoryName()
+        category_desc = self.args_handler.getCategoryDescription()
 
         if excel_file == "" or len(sheets_list) == 0:
             raise Exception("No valid source data provided exception")
         if db_name == "":
             raise Exception("No valid database name provided")
+        if category_name == "" or category_desc == "":
+            #TODO maybe instead of exception user should be prompted for values, and maybe even given options from DB for selection
+            raise Exception("No category details provoided")
 
         self.database_obj = DB(db_name, verbose=self.verbose)
         raw_tournaments_from_excel = self.__getGamesFromExcel(excel_file, sheets_list)
         gamesHandler = Handler(self.database_obj, self.verbose)
-        category_id = self.database_obj.GetOrAddCategory("TMMD", "TEST madminton category") #TODO figure out a best way to enter a custom category
+        category_id = self.database_obj.GetOrAddCategory(category_name, category_desc)
 
         for tournament_name, raw_matches_list_from_excel in raw_tournaments_from_excel.items():
             print(f"\nStarting handle tournament: '{tournament_name}' information...")
@@ -87,6 +92,7 @@ class Main():
 
         if self.verbose: print(f"Final reports")
         self.database_obj.report_AllPlayersELOrankOnCategory(category_id)
+        self.database_obj.report_AllPlayersELOrank()
         self.__exitSuccess("\n=====================\nDone")
 
     def __getGamesFromExcel(self, excel_file, list_of_sheets):
