@@ -55,6 +55,7 @@ This is just prototype calculation logic. Various elements can change in the fut
 - saves all data to SQLite database.
 - has few status reports for output from database.
 - handles any number of players in team, regular 1v1 and 2v2 but tehnically works with 3v3 or 11v11 if other type of competition is used.
+- static site table generation for full raking on all categories
 
 ## Future Development
 
@@ -75,8 +76,8 @@ List is not just code improvements but also project functionalities
 ### Far Future
 
 - Import game results(data) from Tournamentsoftare.com competition results, some webscraping probably needed.
-- Generate some kind of HTML for static website content in case it's interesting for other compeditors.
 - Support universal team sizes.
+- Large scale testing suit to validate end to end functionality of the application
 
 ### Maybe
 
@@ -105,6 +106,10 @@ More detailed how to commands will be provided once the launch arguments setup i
 ![ERD](BSC_ERD.png)
 
 ## Change Log
+
+### Alpha 3.1
+
+- Initial exploration of static site table generation of full ranking results
 
 ### Alpha 3
 

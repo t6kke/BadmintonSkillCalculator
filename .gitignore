@@ -1,6 +1,7 @@
 # my customs
 *.xlsx
 *.db
+*.html
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

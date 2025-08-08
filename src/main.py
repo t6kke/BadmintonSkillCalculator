@@ -57,6 +57,7 @@ class Main():
         gamesHandler.runGamesParser(raw_matches_list, tournament_id, category_id)
         self.database_obj.report_TournamentCategoryResult(tournament_id, category_id)
         self.database_obj.report_AllPlayersELOrankOnCategory(category_id)
+        self.database_obj.ss_AllPlayersELOrank()
         self.__exitSuccess("\n=====================\nDone")
 
     # actual execution with data provided through launch arguments
@@ -93,6 +94,7 @@ class Main():
         if self.verbose: print(f"Final reports")
         self.database_obj.report_AllPlayersELOrankOnCategory(category_id)
         self.database_obj.report_AllPlayersELOrank()
+        self.database_obj.ss_AllPlayersELOrank()
         self.__exitSuccess("\n=====================\nDone")
 
     def __getGamesFromExcel(self, excel_file, list_of_sheets):

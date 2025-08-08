@@ -318,3 +318,38 @@ ORDER BY pce.elo DESC"""
         con.close()
         for item in data_list:
             print(f"Player: '{item[0]}' with final ELO: '{item[1]}' played '{item[2]}' games and won: '{item[3]} games'")
+
+
+    #============================================
+    # static site generators
+    #============================================
+
+    def ss_AllPlayersELOrank(self):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        query = """SELECT p.name, pce.elo, c.name, c.description
+FROM players p
+JOIN players_categories_elo pce ON p.id = pce.player_id
+JOIN categories c ON c.id = pce.category_id
+ORDER BY c.name, pce.elo DESC"""
+        res = cur.execute(query)
+        data_list = res.fetchall()
+        con.close()
+
+        category_name = ""
+        category_desc = ""
+
+        with open("table.html", "w") as out_file:
+            for item in data_list:
+                if item[2] != category_name:
+                    if category_name != "":
+                        out_file.write("\t</tbody>\n</table>\n")
+                    category_name = item[2]
+                    category_desc = item[3]
+                    out_file.write(f"<p>Rankings for category: '{category_desc}'</p>\n")
+                    out_file.write("<table class=\"table table-bordered table-striped\">\n")
+                    out_file.write("\t<thead>\n\t\t<tr>\n\t\t\t<th>Player</th>\n\t\t\t<th>ELO</th>\n\t\t</tr>\n\t</thead>\n")
+                    out_file.write("\t<tbody>\n")
+                out_file.write(f"\t\t<tr>\n\t\t\t<td>{item[0]}</td>\n\t\t\t<td>{item[1]}</td>\n\t\t</tr>\n")
+            out_file.write("\t</tbody>\n</table>\n")
+            out_file.close()
