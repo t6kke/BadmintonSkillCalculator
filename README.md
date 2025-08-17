@@ -68,9 +68,13 @@ List is not just code improvements but also project functionalities
 - Various minor improvements in codes marked with TODO.
 - GetOrAddPlayer function in Database package is a mess and needs some work.
 - Extract details from Tournament name and store them in DB.
+- application version metadata(db logic version, skill calculator version) in database for initial validation.
+- SQL of the reports should be views in the database.
+- created_at and updated_at fields into varios database tables where they make sense.
 - Improve functionality to define category of the tournament.
 - Add ELO confidence value and use it to handle ELO gain/loss.
-- Tournament results statistics report users games count. Further change in the future since this has to change when matches consist of multiple games.
+- More example test data in the excel files, both for singles and doubles tournaments. And include mixing team mates in doubles and introduce new strong and weak players after several tournaments have happened.
+- Tournament results statistics report users games count. This change will be in the future since this has to change when matches consist of multiple games.
 - Rework how commands/launch arguments are built and handled.
 
 ### Far Future
