@@ -9,6 +9,7 @@ from BSC.Database.db import DB
 
 class Main():
     def __init__(self, launch_args_list, verbose=False):
+        self.app_version = "alpha 3.1.1"
         self.verbose = verbose
         self.test_execution = False
         self.test_data_txt = "test_data.txt"
@@ -33,7 +34,7 @@ class Main():
 
     def __execute(self):
         print("\n  Badminton Skill Calculator")
-        print("  prototype v3\n")
+        print(f"  version: {self.app_version}\n")
         if self.test_execution:
             self.__runTest()
         else:
@@ -80,7 +81,6 @@ class Main():
         raw_tournaments_from_excel = self.__getGamesFromExcel(excel_file, sheets_list)
         gamesHandler = Handler(self.database_obj, self.verbose)
         category_id = self.database_obj.GetOrAddCategory(category_name, category_desc)
-
         for tournament_name, raw_matches_list_from_excel in raw_tournaments_from_excel.items():
             print(f"\nStarting handle tournament: '{tournament_name}' information...")
             if self.verbose: print(f"INFO --- Adding tournament: '{tournament_name}' to the database")

@@ -73,7 +73,7 @@ List is not just code improvements but also project functionalities
 - created_at and updated_at fields into varios database tables where they make sense.
 - Improve functionality to define category of the tournament.
 - Add ELO confidence value and use it to handle ELO gain/loss.
-- More example test data in the excel files, both for singles and doubles tournaments. And include mixing team mates in doubles and introduce new strong and weak players after several tournaments have happened.
+- Fix excel parser being dependant on results information.
 - Tournament results statistics report users games count. This change will be in the future since this has to change when matches consist of multiple games.
 - Rework how commands/launch arguments are built and handled.
 
@@ -110,6 +110,12 @@ More detailed how to commands will be provided once the launch arguments setup i
 ![ERD](BSC_ERD.png)
 
 ## Change Log
+
+### Alpha 3.1.1
+
+- Fixed application version number value. Changed on how it's handled and printed
+- More example data for both singles and doubles tournaments
+- Fixed example data in singles tournament table
 
 ### Alpha 3.1
 
