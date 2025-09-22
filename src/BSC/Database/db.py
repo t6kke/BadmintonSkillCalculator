@@ -3,7 +3,7 @@ import os.path
 import sqlite3
 
 #from BSC.Database.sql_v01_001 import db_up
-from BSC.Database.sql_v02_001 import db_up, db_down
+from BSC.Database.sql_001 import db_up, db_down
 
 class DB():
     def __init__(self, db_name, verbose=False, clear_db=False):

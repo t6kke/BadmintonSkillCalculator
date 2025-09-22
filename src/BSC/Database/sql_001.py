@@ -52,7 +52,38 @@ db_up = {
 	"player_start_elo"	INTEGER NOT NULL,
 	"player_elo_change"	INTEGER NOT NULL,
 	UNIQUE("player_id","match_id")
-)"""
+)""",
+"report_ELOStandings": """CREATE VIEW "report_EloStandings" AS
+	SELECT p.name, pce.elo, c.name, c.description
+	FROM players p
+	JOIN players_categories_elo pce ON p.id = pce.player_id
+	JOIN categories c ON c.id = pce.category_id
+	ORDER BY c.name, pce.elo DESC
+""",
+"report_TournamentResults": """CREATE VIEW "report_TournamentResults" AS
+	SELECT DISTINCT p.name, pce.elo, c.name, c.description ,statistics.nbr_matches, statistics.victories, statistics.TournamentName
+	FROM matches m
+	JOIN players_matches_elo_change pm ON m.id = pm.match_id
+	JOIN players p ON p.id = pm.player_id
+	JOIN players_categories_elo pce ON p.id = pce.player_id
+	JOIN (
+		SELECT
+		p.id,
+		p.name,
+		t.id as TournamentID,
+		t.name as TournamentName,
+		count(g.id) as nbr_matches,
+		SUM(IIF(CASE pg.compeditor_nbr WHEN '1' THEN g.compeditor_one_score ELSE g.compeditor_two_score END > CASE pg.compeditor_nbr WHEN '1' THEN g.compeditor_two_score ELSE g.compeditor_one_score END, 1, 0)) victories
+		FROM players p
+		JOIN players_games pg ON p.id = pg.player_id
+		JOIN games g ON pg.game_id = g.id
+		JOIN matches m ON m.id = g.match_id
+		JOIN tournaments t ON t.id = m.tournament_id
+		group by p.name, TournamentID
+	) statistics ON statistics.id = p.id
+	JOIN categories c ON c.id = pce.category_id
+	ORDER BY statistics.victories DESC
+"""
 }
 
 db_down = {

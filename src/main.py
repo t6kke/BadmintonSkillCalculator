@@ -9,7 +9,7 @@ from BSC.Database.db import DB
 
 class Main():
     def __init__(self, launch_args_list, verbose=False):
-        self.app_version = "alpha 3.1.1"
+        self.app_version = "alpha 4"
         self.verbose = verbose
         self.test_execution = False
         self.test_data_txt = "test_data.txt"

@@ -111,6 +111,15 @@ More detailed how to commands will be provided once the launch arguments setup i
 
 ## Change Log
 
+### Alpha 4
+
+- Launch first launch argument is operation, options: insert, report, category
+- 
+- Information output functionality separated with option to just print human readable CLI output or to output json formatted data for machine interactions
+- 
+- Report functionality SQL-s moved to be views in DB on DB intilization
+- Version metadata table to database
+
 ### Alpha 3.1.1
 
 - Fixed application version number value. Changed on how it's handled and printed
