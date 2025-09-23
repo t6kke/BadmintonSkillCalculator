@@ -256,22 +256,23 @@ class DB():
         print("\nFull list of players and their ELO ranked from highest to lowest rank per category:")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        query = """SELECT p.name, pce.elo, c.name, c.description
-FROM players p
-JOIN players_categories_elo pce ON p.id = pce.player_id
-JOIN categories c ON c.id = pce.category_id
-ORDER BY c.name, pce.elo DESC"""
+        #query = """SELECT p.name, pce.elo, c.name, c.description
+#FROM players p
+#JOIN players_categories_elo pce ON p.id = pce.player_id
+#JOIN categories c ON c.id = pce.category_id
+#ORDER BY c.name, pce.elo DESC"""
+        query = """SELECT * FROM report_EloStandings"""
         res = cur.execute(query)
         data_list = res.fetchall()
         con.close()
         category_name = ""
         category_desc = ""
         for item in data_list:
-            if item[2] != category_name:
-                category_name = item[2]
-                category_desc = item[3]
+            if item[4] != category_name:
+                category_name = item[4]
+                category_desc = item[5]
                 print(f"\tRanking on category '{category_name}', '{category_desc}':")
-            print(f"Player: '{item[0]}' with ELO: '{item[1]}'")
+            print(f"Player: '{item[1]}' with ELO: '{item[2]}'")
 
     def report_AllPlayersELOrankOnCategory(self, category_id):
         con = sqlite3.connect(self.db_name)
@@ -279,10 +280,9 @@ ORDER BY c.name, pce.elo DESC"""
         res = cur.execute("SELECT name, description FROM categories where id = "+str(category_id))
         category_data = res.fetchone()
         print(f"\nFull list of players and their ELO ranked from highest to lowest rank in category: '{category_data[0]}', '{category_data[1]}'")
-        query = """SELECT p.name, pce.elo
-FROM players p
-JOIN players_categories_elo pce ON p.id = pce.player_id
-WHERE category_id = """ + str(category_id) + " ORDER BY pce.elo DESC"
+        query = """SELECT player_name, ELO
+FROM report_EloStandings
+WHERE category_id = """ + str(category_id)
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         res = cur.execute(query)
@@ -291,33 +291,20 @@ WHERE category_id = """ + str(category_id) + " ORDER BY pce.elo DESC"
         for item in data_list:
             print(f"Player: '{item[0]}' with ELO: '{item[1]}'")
 
-    def report_TournamentCategoryResult(self, tournament_id, category_id):
+    def report_TournamentResult(self, tournament_id):
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         res = cur.execute("SELECT name FROM tournaments where id = "+str(tournament_id))
         print(f"\nEnd statistics and final ELO ranking from tournament: '{res.fetchone()[0]}'")
-        query = """SELECT DISTINCT p.name, pce.elo, statistics.nbr_matches, statistics.victories
-FROM matches m
-JOIN players_matches_elo_change pm ON m.id = pm.match_id
-JOIN players p ON p.id = pm.player_id
-JOIN players_categories_elo pce ON p.id = pce.player_id AND pce.category_id = """ + str(category_id) + """ JOIN (
-	SELECT
-	p.id,
-	p.name,
-	count(g.id) as nbr_matches,
-	SUM(IIF(CASE pg.compeditor_nbr WHEN '1' THEN g.compeditor_one_score ELSE g.compeditor_two_score END > CASE pg.compeditor_nbr WHEN '1' THEN g.compeditor_two_score ELSE g.compeditor_one_score END, 1, 0)) victories
-	FROM players p
-	JOIN players_games pg ON p.id = pg.player_id
-	JOIN games g ON pg.game_id = g.id
-	JOIN matches m ON m.id = g.match_id
-	WHERE m.tournament_id = """ + str(tournament_id) + """ group by p.name
-) statistics ON statistics.id = p.id
-ORDER BY pce.elo DESC"""
+        query = """SELECT * FROM report_TournamentResults
+WHERE tournament_id = """ + str(tournament_id)
         res = cur.execute(query)
         data_list = res.fetchall()
         con.close()
+        position = 0
         for item in data_list:
-            print(f"Player: '{item[0]}' with final ELO: '{item[1]}' played '{item[2]}' games and won: '{item[3]} games'")
+            position += 1
+            print(f"'Position: '{position}': '{item[4]}' played '{item[5]}' games and won: '{item[6]} games'. Points For: '{item[7]}'; Points Against: '{item[8]}'; Points Difference: '{item[9]}'")
 
 
     #============================================

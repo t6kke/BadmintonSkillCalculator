@@ -89,7 +89,7 @@ class Main():
             print(f"Running games handler functionality...")
             gamesHandler.runGamesParser(raw_matches_list_from_excel, tournament_id, category_id)
             if self.verbose: print(f"Post matches data entry status report")
-            self.database_obj.report_TournamentCategoryResult(tournament_id, category_id)
+            self.database_obj.report_TournamentResult(tournament_id)
 
         if self.verbose: print(f"Final reports")
         self.database_obj.report_AllPlayersELOrankOnCategory(category_id)

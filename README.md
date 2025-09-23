@@ -117,7 +117,7 @@ More detailed how to commands will be provided once the launch arguments setup i
 - 
 - Information output functionality separated with option to just print human readable CLI output or to output json formatted data for machine interactions
 - 
-- Report functionality SQL-s moved to be views in DB on DB intilization
+- Report functionality SQL-s moved to be views in DB, will be created on new DB on initialization.
 - Version metadata table to database
 
 ### Alpha 3.1.1

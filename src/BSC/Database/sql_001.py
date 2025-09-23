@@ -54,35 +54,61 @@ db_up = {
 	UNIQUE("player_id","match_id")
 )""",
 "report_ELOStandings": """CREATE VIEW "report_EloStandings" AS
-	SELECT p.name, pce.elo, c.name, c.description
+	SELECT
+	p.id as player_id,
+	p.name AS player_name,
+	pce.elo AS ELO,
+	c.id AS category_id,
+	c.name AS category_name,
+	c.description AS category_description
 	FROM players p
 	JOIN players_categories_elo pce ON p.id = pce.player_id
 	JOIN categories c ON c.id = pce.category_id
 	ORDER BY c.name, pce.elo DESC
 """,
 "report_TournamentResults": """CREATE VIEW "report_TournamentResults" AS
-	SELECT DISTINCT p.name, pce.elo, c.name, c.description ,statistics.nbr_matches, statistics.victories, statistics.TournamentName
-	FROM matches m
-	JOIN players_matches_elo_change pm ON m.id = pm.match_id
-	JOIN players p ON p.id = pm.player_id
-	JOIN players_categories_elo pce ON p.id = pce.player_id
-	JOIN (
+	SELECT
+	t.id AS tournament_id,
+	t.name AS tournament_name,
+	c.name AS category_name,
+	c.description AS category_description,
+	teams.team_name,
+	count(g.id) AS nbr_of_matches,
+	SUM(IIF(CASE WHEN teams.team_nbr = 1 THEN g.compeditor_one_score ELSE g.compeditor_two_score END > CASE WHEN teams.team_nbr = 1 THEN g.compeditor_two_score ELSE g.compeditor_one_score END, 1, 0)) AS victories,
+	SUM(teams.points_for) AS points_for,
+	SUM(teams.points_against) AS points_against,
+	SUM(teams.points_for - teams.points_against) AS point_difference
+	FROM (
 		SELECT
-		p.id,
-		p.name,
-		t.id as TournamentID,
-		t.name as TournamentName,
-		count(g.id) as nbr_matches,
-		SUM(IIF(CASE pg.compeditor_nbr WHEN '1' THEN g.compeditor_one_score ELSE g.compeditor_two_score END > CASE pg.compeditor_nbr WHEN '1' THEN g.compeditor_two_score ELSE g.compeditor_one_score END, 1, 0)) victories
-		FROM players p
-		JOIN players_games pg ON p.id = pg.player_id
-		JOIN games g ON pg.game_id = g.id
-		JOIN matches m ON m.id = g.match_id
-		JOIN tournaments t ON t.id = m.tournament_id
-		group by p.name, TournamentID
-	) statistics ON statistics.id = p.id
-	JOIN categories c ON c.id = pce.category_id
-	ORDER BY statistics.victories DESC
+		g.id,
+		g.match_id,
+		1 AS team_nbr,
+		GROUP_CONCAT(p.name, ' + ') AS team_name,
+		g.compeditor_one_score AS points_for,
+		g.compeditor_two_score AS points_against
+		FROM games g
+		JOIN players_games pg ON g.id = pg.game_id AND pg.compeditor_nbr = 1
+		JOIN players p ON p.id = pg.player_id
+		GROUP BY g.id
+		UNION ALL
+		SELECT
+		g.id,
+		g.match_id,
+		2 AS team_nbr,
+		GROUP_CONCAT(p.name, ' + ') AS team_name,
+		g.compeditor_two_score AS points_for,
+		g.compeditor_one_score AS points_against
+		FROM games g
+		JOIN players_games pg ON g.id = pg.game_id AND pg.compeditor_nbr = 2
+		JOIN players p ON p.id = pg.player_id
+		GROUP BY g.id
+	) teams
+	JOIN games g ON g.id = teams.id
+	JOIN matches m ON m.id = teams.match_id
+	JOIN tournaments t ON t.id = m.tournament_id
+	JOIN categories c ON c.id = m.category_id
+	GROUP BY teams.team_name, t.id
+	ORDER BY victories DESC, point_difference DESC
 """
 }
 
