@@ -5,6 +5,7 @@ from BSC.DataExtractor.fromTXT import getGamesFromTXT
 from BSC.DataExtractor.fromExcel import ExcelParser
 from BSC.GameHandler.handler import Handler
 from BSC.Utils.handleargs import HandleArgs
+from BSC.Utils.commands import Commands
 from BSC.Database.db import DB
 
 class Main():
@@ -23,6 +24,13 @@ class Main():
         self.__execute()
 
     def __handleLaunchArgs(self):
+        print("testing new commands logic, any further fucntionality of app is not executed")
+        commands = Commands()
+        for k,v in commands.items():
+            print(k, v.name, v.info, type(v.run), v.arguments)
+            v.run()
+        self.__exitSuccess()
+
         if "--verbose" in self.launch_args_list and "-h" not in self.launch_args_list and "--help" not in self.launch_args_list: #TODO needs to be changed in a way that verbose can be enalbed while also asking help
             self.verbose = True
             print(f"INFO --- Verbose output is enabled")

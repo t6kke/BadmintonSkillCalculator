@@ -113,7 +113,7 @@ More detailed how to commands will be provided once the launch arguments setup i
 
 ### Alpha 4
 
-- Launch first launch argument is operation, options: insert, report, category
+- Launch first launch argument is operation, options: insert, report, category, version
 - 
 - Information output functionality separated with option to just print human readable CLI output or to output json formatted data for machine interactions
 - 
