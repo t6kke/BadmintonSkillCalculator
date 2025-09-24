@@ -1,12 +1,11 @@
 import sys
 import os.path
 
-from registerCommands import registerCommands
-
 from BSC.DataExtractor.fromTXT import getGamesFromTXT
 from BSC.DataExtractor.fromExcel import ExcelParser
 from BSC.GameHandler.handler import Handler
 from BSC.Utils.handleargs import HandleArgs
+from BSC.Utils.commands import Argument, Command, arguments_info, commands_info
 from BSC.Database.db import DB
 
 class Main():
@@ -19,21 +18,39 @@ class Main():
         self.database_obj = None
         self.launch_args_list = launch_args_list
         self.args_handler = None
-        self.commands = None
+        self.commands = {}
+        self.__registerCommands()
         self.__handleLaunchArgs()
 
         #final function to run the main functionality
         self.__execute()
 
+
+    def __registerCommands(self):
+        db_name = Argument("--db_name", arguments_info.get("--db_name"), is_mandatory=True)
+        excel_file = Argument("--file", arguments_info.get("--file"), "-f", is_mandatory=True)
+        excel_sheet = Argument("--sheet", arguments_info.get("--sheet"), "-s", is_mandatory=True)
+        c_name = Argument("--c_name", arguments_info.get("--c_name"), is_mandatory=True)
+        c_desc = Argument("--c_desc", arguments_info.get("--c_desc"), is_mandatory=True)
+        output_type = Argument("--out", arguments_info.get("--out"), "-o")
+        verbose = Argument("--verbose", arguments_info.get("--verbose"), "-v")
+        help_arg = Argument("--help", arguments_info.get("--help"), "-h")
+        list_options = Argument("--list", arguments_info.get("--list"), "-l")
+        report_name = Argument("--name", arguments_info.get("--name"), "-n")
+
+        self.commands["version"] = Command("version", commands_info.get("version"), self.commandVersion)
+        self.commands["help"] = Command("help", commands_info.get("help"), self.commandHelp) #TODO initial help should also be both '-h' and '--help'
+        self.commands["insert"] = Command("insert", commands_info.get("insert"), self.commandInsert, db_name, excel_file, excel_sheet, c_name, c_desc, output_type, verbose, help_arg)
+        self.commands["report"] = Command("report", commands_info.get("report"), self.commandReport, db_name, list_options, report_name, help_arg)
+        self.commands["category"] = Command("category", commands_info.get("category"), self.commandCategory, db_name, list_options, c_name, c_desc, help_arg)
+
     def __handleLaunchArgs(self):
         print("testing new commands logic, any further fucntionality of app is not executed")
-        self.commands = registerCommands()
         print("arguments on execution: " + str(self.launch_args_list))
-
         launch_command = self.commands.get(self.launch_args_list[0])
-        launch_command.run(self.commands)
-
+        launch_command.run()
         self.__exitSuccess()
+
 
 
         if "--verbose" in self.launch_args_list and "-h" not in self.launch_args_list and "--help" not in self.launch_args_list: #TODO needs to be changed in a way that verbose can be enalbed while also asking help
@@ -119,7 +136,31 @@ class Main():
             result_dict[tournament_name] = excelParser.getGames()
         return result_dict
 
+    def commandVersion(self):
+        print("\n  Badminton Skill Calculator")
+        print(f"  version: {self.app_version}\n")
 
+    def commandHelp(self):
+        for k,v in self.commands.items():
+            print(v)
+            for arg in v.arguments:
+                print(arg)
+            print("")
+
+    def commandInsert(self):
+        #TODO code here
+        pass
+
+    def commandReport(self):
+        #TODO code here
+        pass
+
+    def commandCategory(self):
+        #TODO code here
+        pass
+
+    def commandTest(self):
+        print("hello from command")
 
     def __exitError(self, message):
         print(message)
