@@ -113,7 +113,9 @@ More detailed how to commands will be provided once the launch arguments setup i
 
 ### Alpha 4
 
-- Launch first launch argument is operation, options: insert, report, category, version
+- Under utils new launch arguments registration system created for commands and arguments
+- First launch argument is command; options: insert, report, category, version, help
+- Each command is registered and can take anything betwee 0 to many arguments
 - 
 - Information output functionality separated with option to just print human readable CLI output or to output json formatted data for machine interactions
 - 

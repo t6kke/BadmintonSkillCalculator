@@ -1,11 +1,12 @@
 import sys
 import os.path
 
+from registerCommands import registerCommands
+
 from BSC.DataExtractor.fromTXT import getGamesFromTXT
 from BSC.DataExtractor.fromExcel import ExcelParser
 from BSC.GameHandler.handler import Handler
 from BSC.Utils.handleargs import HandleArgs
-from BSC.Utils.commands import Commands
 from BSC.Database.db import DB
 
 class Main():
@@ -18,6 +19,7 @@ class Main():
         self.database_obj = None
         self.launch_args_list = launch_args_list
         self.args_handler = None
+        self.commands = None
         self.__handleLaunchArgs()
 
         #final function to run the main functionality
@@ -25,11 +27,14 @@ class Main():
 
     def __handleLaunchArgs(self):
         print("testing new commands logic, any further fucntionality of app is not executed")
-        commands = Commands()
-        for k,v in commands.items():
-            print(k, v.name, v.info, type(v.run), v.arguments)
-            v.run()
+        self.commands = registerCommands()
+        print("arguments on execution: " + str(self.launch_args_list))
+
+        launch_command = self.commands.get(self.launch_args_list[0])
+        launch_command.run(self.commands)
+
         self.__exitSuccess()
+
 
         if "--verbose" in self.launch_args_list and "-h" not in self.launch_args_list and "--help" not in self.launch_args_list: #TODO needs to be changed in a way that verbose can be enalbed while also asking help
             self.verbose = True
@@ -113,6 +118,8 @@ class Main():
             excelParser.collectGames()
             result_dict[tournament_name] = excelParser.getGames()
         return result_dict
+
+
 
     def __exitError(self, message):
         print(message)
