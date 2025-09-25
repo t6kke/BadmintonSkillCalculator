@@ -20,10 +20,11 @@ class Main():
         self.args_handler = None
         self.commands = {}
         self.__registerCommands()
-        self.__handleLaunchArgs()
+        self.__newExecute()
+        #self.__handleLaunchArgs()
 
         #final function to run the main functionality
-        self.__execute()
+        #self.__execute()
 
 
     def __registerCommands(self):
@@ -35,24 +36,54 @@ class Main():
         output_type = Argument("--out", arguments_info.get("--out"), "-o")
         verbose = Argument("--verbose", arguments_info.get("--verbose"), "-v")
         help_arg = Argument("--help", arguments_info.get("--help"), "-h")
-        list_options = Argument("--list", arguments_info.get("--list"), "-l")
-        report_name = Argument("--name", arguments_info.get("--name"), "-n")
+        list_options = Argument("--list", arguments_info.get("--list"), "-l", function=self.argFuncListReports)
+        report_name = Argument("--r_name", arguments_info.get("--r_name"))
+        report_tid_filter = Argument("--r_tidf", arguments_info.get("--r_tidf"))
 
         self.commands["version"] = Command("version", commands_info.get("version"), self.commandVersion)
         self.commands["help"] = Command("help", commands_info.get("help"), self.commandHelp) #TODO initial help should also be both '-h' and '--help'
         self.commands["insert"] = Command("insert", commands_info.get("insert"), self.commandInsert, db_name, excel_file, excel_sheet, c_name, c_desc, output_type, verbose, help_arg)
-        self.commands["report"] = Command("report", commands_info.get("report"), self.commandReport, db_name, list_options, report_name, help_arg)
+        self.commands["report"] = Command("report", commands_info.get("report"), self.TEMP_commandReport, db_name, list_options, report_name, report_tid_filter, help_arg)
         self.commands["category"] = Command("category", commands_info.get("category"), self.commandCategory, db_name, list_options, c_name, c_desc, help_arg)
 
-    def __handleLaunchArgs(self):
-        print("testing new commands logic, any further fucntionality of app is not executed")
-        print("arguments on execution: " + str(self.launch_args_list))
-        launch_command = self.commands.get(self.launch_args_list[0])
+    def __newExecute(self):
+        if len(self.launch_args_list) == 0:
+            self.__runTest()
+        launch_command = self.commands.get(self.launch_args_list[0].lower())
+        if launch_command == None:
+            self.__exitError(f"invalid command, options: {list(self.commands.keys())}")
         launch_command.run()
-        self.__exitSuccess()
+        self.__exitSuccess("\n=====================\nDone")
+
+    def TEMP_commandReport(self):
+        self.__newHandleLaunchArgs()
+
+        match self.launch_args_list[1:]:
+            case "--list" | "-h":
+                print("do reports listing")
+            case "--r_name":
+                print("do report execution")
+            case _:
+                print("default case")
 
 
+    def argFuncListReports(self):
+        db_name = self.args_handler.getDatabaseName()
+        self.database_obj = DB(db_name, verbose=self.verbose)
+        reports = self.database_obj.GetAvailableReports()
+        print(type(reports), reports)
 
+
+    def __newHandleLaunchArgs(self):
+        if "--verbose" in self.launch_args_list and "-h" not in self.launch_args_list and "--help" not in self.launch_args_list: #TODO needs to be changed in a way that verbose can be enalbed while also asking help
+            self.verbose = True
+            print(f"INFO --- Verbose output is enabled")
+        if self.verbose: print(f"Handling lauch arguments\nArguments: {str(self.launch_args_list)}")
+        self.args_handler = HandleArgs(self.launch_args_list, self.verbose)
+        if self.args_handler.wasHelpRequested(): self.__exitSuccess()   # don't run any longer if user asked for help about arguments/program
+
+
+    def __handleLaunchArgs(self):
         if "--verbose" in self.launch_args_list and "-h" not in self.launch_args_list and "--help" not in self.launch_args_list: #TODO needs to be changed in a way that verbose can be enalbed while also asking help
             self.verbose = True
             print(f"INFO --- Verbose output is enabled")
@@ -86,7 +117,7 @@ class Main():
         if self.verbose: print(f"All matches from raw matches list:\n{raw_matches_list}")
         gamesHandler = Handler(self.database_obj, self.verbose)
         gamesHandler.runGamesParser(raw_matches_list, tournament_id, category_id)
-        self.database_obj.report_TournamentCategoryResult(tournament_id, category_id)
+        self.database_obj.report_TournamentResult(tournament_id)
         self.database_obj.report_AllPlayersELOrankOnCategory(category_id)
         self.database_obj.ss_AllPlayersELOrank()
         self.__exitSuccess("\n=====================\nDone")
@@ -137,7 +168,7 @@ class Main():
         return result_dict
 
     def commandVersion(self):
-        print("\n  Badminton Skill Calculator")
+        print("  Badminton Skill Calculator")
         print(f"  version: {self.app_version}\n")
 
     def commandHelp(self):

@@ -20,7 +20,8 @@ arguments_info = {
 "--verbose": "Enables verbose output, only works if using default output",
 "--help": "Provides more details on how to use the command",
 "--list": "Lists available options from database",
-"--name": "Name of the reporting view to be used to get output"
+"--r_name": "Name of the reporting view to be used to get output",
+"--r_tidf": "Report Tournament ID filter for some specific reports that can utilize filtering"
 }
 
 class Command():
@@ -36,10 +37,11 @@ class Command():
         return f"{command_name}  ::  {self.info}"
 
 class Argument():
-    def __init__(self, long_name, info, short_name=None, is_mandatory=False):
+    def __init__(self, long_name, info, short_name=None, is_mandatory=False, function=None):
         self.info = info
         self.arg_options = [long_name]
         self.is_mandatory = is_mandatory
+        self.run = function
         if short_name != None: self.arg_options.append(short_name)
 
     def __str__(self):

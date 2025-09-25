@@ -85,6 +85,21 @@ class DB():
         con.commit()
         con.close()
 
+    #============================================
+    # system information
+    #============================================
+
+    def GetAvailableReports(self):
+        if self.verbose: print(f"INFO --- DB:GetAvailableReports --- getting available reports options")
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT name FROM sqlite_master WHERE type='view' and name like 'report%'")
+        report_views = []
+        for item in res.fetchall():
+            report_views.append(item[0])
+        con.close()
+        if self.verbose: print(f"INFO --- DB:GetAvailableReports --- returing all available reports")
+        return report_views
 
     #============================================
     # functions for adding data to database

@@ -120,5 +120,7 @@ db_down = {
 "games": """DROP TABLE games""",
 "players_categories_elo": """DROP TABLE players_categories_elo""",
 "players_games": """DROP TABLE players_games""",
-"players_matches_elo_change": """DROP TABLE players_matches_elo_change"""
+"players_matches_elo_change": """DROP TABLE players_matches_elo_change""",
+"report_ELOStandings": """DROP VIEW report_EloStandings""",
+"report_TournamentResults": """DROP VIEW report_TournamentResults"""
 }
