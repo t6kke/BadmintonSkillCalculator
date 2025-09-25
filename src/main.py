@@ -60,10 +60,15 @@ class Main():
         self.__exitSuccess("\n=====================\nDone")
 
     def TEMP_commandReport(self):
+        is_executed = False
         for used_arg in self.args_handler.args_used:
+            if is_executed == True: break
             for reg_arg in self.command_arg_objects:
                 if used_arg in reg_arg.arg_options:
-                    if reg_arg.run != None: reg_arg.run()
+                    if reg_arg.run != None:
+                        is_executed = True
+                        reg_arg.run()
+                        break
 
 
     def argFuncListReports(self):
