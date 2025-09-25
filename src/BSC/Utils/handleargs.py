@@ -8,10 +8,13 @@ class HandleArgs():
         self.database_name = ""
         self.category_name = ""
         self.category_desc = ""
+        self.report_name = ""
+        self.report_tournament_id_filter = ""
 
         # general class variables
         self.verbose = verbose
         self.args_list = args_list
+        self.args_used = []
         self.was_help_requested = False
         #parse arguments on initilization
         self.__handleArgumentsList()
@@ -44,6 +47,14 @@ class HandleArgs():
         if self.verbose: print(f"INFO --- category description was requested, returning: '{self.category_desc}'")
         return self.category_desc
 
+    def getReportName(self):
+        if self.verbose: print(f"INFO --- report name was requested, returning: '{self.report_name}'")
+        return self.report_name
+
+    def getReportTournamentIDFilter(self):
+        if self.verbose: print(f"INFO --- report tournament id filter was requested, returning: '{self.report_tournament_id_filter}'")
+        return self.report_tournament_id_filter
+
     #============================================
     # internal functions parsing arguments
     #============================================
@@ -61,9 +72,11 @@ class HandleArgs():
                     if self.args_list[i+1] in ["--help", "-h"]:
                         self.__helpCheck(self.args_list[i])
                 if "=" not in self.args_list[i]:
+                    self.args_used.append(self.args_list[i])
                     pass #TODO handle arguments that don't have key/value pair
                 else:
                     arg_elements = self.args_list[i].split("=")
+                    self.args_used.append(arg_elements[0])
                     self.__assignVariables(arg_elements[0], arg_elements[1])
 
     def __helpCheck(self, arg):
@@ -91,5 +104,11 @@ class HandleArgs():
             case "--c_desc":
                 if self.category_desc != "": raise Exception(f"One value for '{key}' is expected")
                 self.category_desc = value
+            case "--r_name":
+                if self.report_name != "": raise Exception(f"One value for '{key}' is expected")
+                self.report_name = value
+            case "--r_tidf":
+                if self.report_tournament_id_filter != "": raise Exception(f"One value for '{key}' is expected")
+                self.report_tournament_id_filter = str(value)
             case _:
                 if self.verbose: print(f"DEBUG --- key/value handler ended in default state handing key: '{key}' and value: '{value}'")

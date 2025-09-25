@@ -19,6 +19,7 @@ class Main():
         self.launch_args_list = launch_args_list
         self.args_handler = None
         self.commands = {}
+        self.command_arg_objects = []
         self.__registerCommands()
         self.__newExecute()
         #self.__handleLaunchArgs()
@@ -37,7 +38,7 @@ class Main():
         verbose = Argument("--verbose", arguments_info.get("--verbose"), "-v")
         help_arg = Argument("--help", arguments_info.get("--help"), "-h")
         list_options = Argument("--list", arguments_info.get("--list"), "-l", function=self.argFuncListReports)
-        report_name = Argument("--r_name", arguments_info.get("--r_name"))
+        report_name = Argument("--r_name", arguments_info.get("--r_name"), function=self.argFuncRunReport)
         report_tid_filter = Argument("--r_tidf", arguments_info.get("--r_tidf"))
 
         self.commands["version"] = Command("version", commands_info.get("version"), self.commandVersion)
@@ -52,26 +53,39 @@ class Main():
         launch_command = self.commands.get(self.launch_args_list[0].lower())
         if launch_command == None:
             self.__exitError(f"invalid command, options: {list(self.commands.keys())}")
+        for arg in launch_command.arguments:
+            self.command_arg_objects.append(arg)
+        self.__newHandleLaunchArgs()
         launch_command.run()
         self.__exitSuccess("\n=====================\nDone")
 
     def TEMP_commandReport(self):
-        self.__newHandleLaunchArgs()
-
-        match self.launch_args_list[1:]:
-            case "--list" | "-h":
-                print("do reports listing")
-            case "--r_name":
-                print("do report execution")
-            case _:
-                print("default case")
+        for used_arg in self.args_handler.args_used:
+            for reg_arg in self.command_arg_objects:
+                if used_arg in reg_arg.arg_options:
+                    if reg_arg.run != None: reg_arg.run()
 
 
     def argFuncListReports(self):
         db_name = self.args_handler.getDatabaseName()
         self.database_obj = DB(db_name, verbose=self.verbose)
         reports = self.database_obj.GetAvailableReports()
-        print(type(reports), reports)
+        print(f"Available reports: {reports}")
+
+    def argFuncRunReport(self):
+        report_name = self.args_handler.getReportName()
+        db_name = self.args_handler.getDatabaseName()
+        self.database_obj = DB(db_name, verbose=self.verbose)
+        match report_name:
+            case "report_EloStandings":
+                self.database_obj.report_AllPlayersELOrank()
+            case "report_TournamentResults":
+                tournament_id = self.args_handler.getReportTournamentIDFilter()
+                if tournament_id == "": return print("'--r_tidf' filter for tournament is required")
+                self.database_obj.report_TournamentResult(tournament_id)
+            case _:
+                print("no report found")
+
 
 
     def __newHandleLaunchArgs(self):
