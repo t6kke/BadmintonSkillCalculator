@@ -21,33 +21,31 @@ class Main():
         self.commands = {}
         self.command_arg_objects = []
         self.__registerCommands()
-        self.__newExecute()
-        #self.__handleLaunchArgs()
-
-        #final function to run the main functionality
-        #self.__execute()
+        self.__ExecuteApp()
 
 
     def __registerCommands(self):
         db_name = Argument("--db_name", arguments_info.get("--db_name"), is_mandatory=True)
         excel_file = Argument("--file", arguments_info.get("--file"), "-f", is_mandatory=True)
         excel_sheet = Argument("--sheet", arguments_info.get("--sheet"), "-s", is_mandatory=True)
-        c_name = Argument("--c_name", arguments_info.get("--c_name"), is_mandatory=True)
+        c_name = Argument("--c_name", arguments_info.get("--c_name"), is_mandatory=True, function=self.argFuncAddCategory)
         c_desc = Argument("--c_desc", arguments_info.get("--c_desc"), is_mandatory=True)
         output_type = Argument("--out", arguments_info.get("--out"), "-o")
         verbose = Argument("--verbose", arguments_info.get("--verbose"), "-v")
         help_arg = Argument("--help", arguments_info.get("--help"), "-h")
-        list_options = Argument("--list", arguments_info.get("--list"), "-l", function=self.argFuncListReports)
+        list_category_options = Argument("--list", arguments_info.get("--list"), "-l", function=self.argFuncListCategories)
+        list_report_options = Argument("--list", arguments_info.get("--list"), "-l", function=self.argFuncListReports)
         report_name = Argument("--r_name", arguments_info.get("--r_name"), function=self.argFuncRunReport)
         report_tid_filter = Argument("--r_tidf", arguments_info.get("--r_tidf"))
 
         self.commands["version"] = Command("version", commands_info.get("version"), self.commandVersion)
         self.commands["help"] = Command("help", commands_info.get("help"), self.commandHelp) #TODO initial help should also be both '-h' and '--help'
         self.commands["insert"] = Command("insert", commands_info.get("insert"), self.commandInsert, db_name, excel_file, excel_sheet, c_name, c_desc, output_type, verbose, help_arg)
-        self.commands["report"] = Command("report", commands_info.get("report"), self.TEMP_commandReport, db_name, list_options, report_name, report_tid_filter, help_arg)
-        self.commands["category"] = Command("category", commands_info.get("category"), self.commandCategory, db_name, list_options, c_name, c_desc, help_arg)
+        self.commands["report"] = Command("report", commands_info.get("report"), self.commandReport, db_name, list_report_options, report_name, report_tid_filter, output_type, verbose, help_arg)
+        self.commands["category"] = Command("category", commands_info.get("category"), self.commandCategory, db_name, list_category_options, c_name, c_desc, output_type, verbose, help_arg)
 
-    def __newExecute(self):
+
+    def __ExecuteApp(self):
         if len(self.launch_args_list) == 0:
             self.__runTest()
         launch_command = self.commands.get(self.launch_args_list[0].lower())
@@ -55,108 +53,17 @@ class Main():
             self.__exitError(f"invalid command, options: {list(self.commands.keys())}")
         for arg in launch_command.arguments:
             self.command_arg_objects.append(arg)
-        self.__newHandleLaunchArgs()
+        self.__handleLaunchArgs()
         launch_command.run()
         self.__exitSuccess("\n=====================\nDone")
 
-    def TEMP_commandReport(self):
-        is_executed = False
-        for used_arg in self.args_handler.args_used:
-            if is_executed == True: break
-            for reg_arg in self.command_arg_objects:
-                if used_arg in reg_arg.arg_options:
-                    if reg_arg.run != None:
-                        is_executed = True
-                        reg_arg.run()
-                        break
 
-
-    def argFuncListReports(self):
-        db_name = self.args_handler.getDatabaseName()
-        self.database_obj = DB(db_name, verbose=self.verbose)
-        reports = self.database_obj.GetAvailableReports()
-        print(f"Available reports: {reports}")
-
-    def argFuncRunReport(self):
-        report_name = self.args_handler.getReportName()
-        db_name = self.args_handler.getDatabaseName()
-        self.database_obj = DB(db_name, verbose=self.verbose)
-        match report_name:
-            case "report_EloStandings":
-                self.database_obj.report_AllPlayersELOrank()
-            case "report_TournamentResults":
-                tournament_id = self.args_handler.getReportTournamentIDFilter()
-                if tournament_id == "": return print("'--r_tidf' filter for tournament is required")
-                self.database_obj.report_TournamentResult(tournament_id)
-            case _:
-                print("no report found")
-
-
-
-    def __newHandleLaunchArgs(self):
-        if "--verbose" in self.launch_args_list and "-h" not in self.launch_args_list and "--help" not in self.launch_args_list: #TODO needs to be changed in a way that verbose can be enalbed while also asking help
-            self.verbose = True
-            print(f"INFO --- Verbose output is enabled")
-        if self.verbose: print(f"Handling lauch arguments\nArguments: {str(self.launch_args_list)}")
-        self.args_handler = HandleArgs(self.launch_args_list, self.verbose)
-        if self.args_handler.wasHelpRequested(): self.__exitSuccess()   # don't run any longer if user asked for help about arguments/program
-
-
-    def __handleLaunchArgs(self):
-        if "--verbose" in self.launch_args_list and "-h" not in self.launch_args_list and "--help" not in self.launch_args_list: #TODO needs to be changed in a way that verbose can be enalbed while also asking help
-            self.verbose = True
-            print(f"INFO --- Verbose output is enabled")
-        if self.verbose: print(f"Handling lauch arguments\nArguments: {str(self.launch_args_list)}")
-        if len(self.launch_args_list) == 0:
-            self.test_execution = True
-        self.args_handler = HandleArgs(self.launch_args_list, self.verbose)
-        if self.args_handler.wasHelpRequested(): self.__exitSuccess()   # don't run any longer if user asked for help about arguments/program
-
-    def __execute(self):
-        print("\n  Badminton Skill Calculator")
-        print(f"  version: {self.app_version}\n")
-        if self.test_execution:
-            self.__runTest()
-        else:
-            try:
-                self.__run()
-            except Exception as e:
-                self.__exitError(str(e)+"\nError exit")
-
-    # test execution with sample data from txt file
-    def __runTest(self):
-        self.verbose = False #for testing purpose sometimes I need full debug log for tests sometimes I don't need it
-        db_name = "db_test.db"
-        self.database_obj = DB(db_name, verbose=self.verbose, clear_db=True)
-
-        if self.verbose: print(f"Executing test run from file {self.test_data_txt}")
-        raw_matches_list, tournament_name, tournament_category_name, tournament_category_description = getGamesFromTXT(self.test_data_txt)
-        tournament_id = self.database_obj.AddTournament((tournament_name,))
-        category_id = self.database_obj.GetOrAddCategory(tournament_category_name, tournament_category_description)
-        if self.verbose: print(f"All matches from raw matches list:\n{raw_matches_list}")
-        gamesHandler = Handler(self.database_obj, self.verbose)
-        gamesHandler.runGamesParser(raw_matches_list, tournament_id, category_id)
-        self.database_obj.report_TournamentResult(tournament_id)
-        self.database_obj.report_AllPlayersELOrankOnCategory(category_id)
-        self.database_obj.ss_AllPlayersELOrank()
-        self.__exitSuccess("\n=====================\nDone")
-
-    # actual execution with data provided through launch arguments
-    def __run(self):
-        excel_file = self.args_handler.getSourceExcelFileName()
-        sheets_list = self.args_handler.getExcelSheetsList()
-        db_name = self.args_handler.getDatabaseName()
-        category_name = self.args_handler.getCategoryName()
-        category_desc = self.args_handler.getCategoryDescription()
-
-        if excel_file == "" or len(sheets_list) == 0:
-            raise Exception("No valid source data provided exception")
-        if db_name == "":
-            raise Exception("No valid database name provided")
-        if category_name == "" or category_desc == "":
-            #TODO maybe instead of exception user should be prompted for values, and maybe even given options from DB for selection
-            raise Exception("No category details provoided")
-
+    def commandInsert(self):
+        excel_file = self.args_handler.getUsedArgValueWList(self.command_arg_objects[1].arg_options) #TODO handle no value provided by user  #TODO indexed option is hack to handle long and short version of arguments
+        sheets_list = self.args_handler.getUsedArgValueWList(self.command_arg_objects[2].arg_options) #TODO handle no value provided by user  #TODO indexed option is hack to handle long and short version of arguments
+        category_name = self.args_handler.getUsedArgValue("--c_name") #TODO handle no value provided by user
+        category_desc = self.args_handler.getUsedArgValue("--c_desc") #TODO handle no value provided by user
+        db_name = self.args_handler.getUsedArgValue("--db_name") #TODO handle no value provided by user
         self.database_obj = DB(db_name, verbose=self.verbose)
         raw_tournaments_from_excel = self.__getGamesFromExcel(excel_file, sheets_list)
         gamesHandler = Handler(self.database_obj, self.verbose)
@@ -170,21 +77,17 @@ class Main():
             gamesHandler.runGamesParser(raw_matches_list_from_excel, tournament_id, category_id)
             if self.verbose: print(f"Post matches data entry status report")
             self.database_obj.report_TournamentResult(tournament_id)
-
         if self.verbose: print(f"Final reports")
         self.database_obj.report_AllPlayersELOrankOnCategory(category_id)
         self.database_obj.report_AllPlayersELOrank()
         self.database_obj.ss_AllPlayersELOrank()
-        self.__exitSuccess("\n=====================\nDone")
 
-    def __getGamesFromExcel(self, excel_file, list_of_sheets):
-        result_dict = {}
-        for sheet in list_of_sheets:
-            excelParser = ExcelParser(excel_file, sheet, self.verbose)
-            tournament_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
-            excelParser.collectGames()
-            result_dict[tournament_name] = excelParser.getGames()
-        return result_dict
+    def commandCategory(self):
+        for used_arg in self.args_handler.used_args_list:
+            for reg_arg in self.command_arg_objects:
+                if used_arg in reg_arg.arg_options:
+                    if reg_arg.run != None:
+                        reg_arg.run()
 
     def commandVersion(self):
         print("  Badminton Skill Calculator")
@@ -197,20 +100,71 @@ class Main():
                 print(arg)
             print("")
 
-    def commandInsert(self):
-        #TODO code here
-        pass
-
     def commandReport(self):
-        #TODO code here
-        pass
+        is_executed = False
+        for used_arg in self.args_handler.used_args_list:
+            if is_executed == True: break
+            for reg_arg in self.command_arg_objects:
+                if used_arg in reg_arg.arg_options:
+                    if reg_arg.run != None:
+                        is_executed = True
+                        reg_arg.run()
+                        break
 
-    def commandCategory(self):
-        #TODO code here
-        pass
+    def argFuncListCategories(self):
+        db_name = self.args_handler.getUsedArgValue("--db_name")
+        self.database_obj = DB(db_name, verbose=self.verbose)
+        categories_data = self.database_obj.GetAvailableCategories()
+        print("Available categories:")
+        for category in categories_data:
+            print(f"ID: '{category[0]}' with name: '{category[1]}' and description: '{category[2]}'")
 
-    def commandTest(self):
-        print("hello from command")
+    def argFuncAddCategory(self):
+        category_name = self.args_handler.getUsedArgValue("--c_name")
+        if category_name == None: self.__exitError("no category name provided, cannot add new category")
+        category_desc = self.args_handler.getUsedArgValue("--c_desc")
+        if category_desc == None: self.__exitError("no category description provided, cannot add new category")
+        db_name = self.args_handler.getUsedArgValue("--db_name")
+        self.database_obj = DB(db_name, verbose=self.verbose)
+        self.database_obj.GetOrAddCategory(category_name, category_desc)
+
+    def argFuncListReports(self):
+        db_name = self.args_handler.getUsedArgValue("--db_name") #TODO handle no value provided by user
+        self.database_obj = DB(db_name, verbose=self.verbose)
+        reports = self.database_obj.GetAvailableReports()
+        print(f"Available reports: {reports}")
+
+    def argFuncRunReport(self):
+        report_name = self.args_handler.getUsedArgValue("--r_name")
+        db_name = self.args_handler.getUsedArgValue("--db_name") #TODO handle no value provided by user
+        self.database_obj = DB(db_name, verbose=self.verbose)
+        match report_name:
+            case "report_EloStandings":
+                self.database_obj.report_AllPlayersELOrank()
+            case "report_TournamentResults":
+                tournament_id = self.args_handler.getUsedArgValue("--r_tidf")
+                if tournament_id == "": return print("'--r_tidf' filter for tournament is required")
+                self.database_obj.report_TournamentResult(tournament_id)
+            case _:
+                print("no report found") #TODO better response with, potentially with listing options and also error exit
+
+
+    def __handleLaunchArgs(self):
+        if "--verbose" in self.launch_args_list and "-h" not in self.launch_args_list and "--help" not in self.launch_args_list: #TODO needs to be changed in a way that verbose can be enalbed while also asking help
+            self.verbose = True
+            print(f"INFO --- Verbose output is enabled")
+        if self.verbose: print(f"Handling lauch arguments\nArguments: {str(self.launch_args_list)}")
+        self.args_handler = HandleArgs(self.launch_args_list, self.verbose)
+        if self.args_handler.wasHelpRequested(): self.__exitSuccess()   # don't run any longer if user asked for help about arguments/program
+
+    def __getGamesFromExcel(self, excel_file, list_of_sheets):
+        result_dict = {}
+        for sheet in list_of_sheets:
+            excelParser = ExcelParser(excel_file, sheet, self.verbose)
+            tournament_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
+            excelParser.collectGames()
+            result_dict[tournament_name] = excelParser.getGames()
+        return result_dict
 
     def __exitError(self, message):
         print(message)
@@ -221,8 +175,6 @@ class Main():
             sys.exit(0)
         print(message)
         sys.exit(0)
-
-
 
 
 if __name__=="__main__":

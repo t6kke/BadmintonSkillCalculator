@@ -86,7 +86,7 @@ class DB():
         con.close()
 
     #============================================
-    # system information
+    # General information
     #============================================
 
     def GetAvailableReports(self):
@@ -100,6 +100,16 @@ class DB():
         con.close()
         if self.verbose: print(f"INFO --- DB:GetAvailableReports --- returing all available reports")
         return report_views
+
+    def GetAvailableCategories(self):
+        if self.verbose: print(f"INFO --- DB:GetAvailableCategories --- getting available categories")
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT * FROM categories")
+        categories_data = res.fetchall()
+        con.close()
+        if self.verbose: print(f"INFO --- DB:GetAvailableCategories --- returing all data about categories")
+        return categories_data
 
     #============================================
     # functions for adding data to database

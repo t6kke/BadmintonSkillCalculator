@@ -69,13 +69,10 @@ List is not just code improvements but also project functionalities
 - GetOrAddPlayer function in Database package is a mess and needs some work.
 - Extract details from Tournament name and store them in DB.
 - application version metadata(db logic version, skill calculator version) in database for initial validation.
-- SQL of the reports should be views in the database.
 - created_at and updated_at fields into varios database tables where they make sense.
-- Improve functionality to define category of the tournament.
 - Add ELO confidence value and use it to handle ELO gain/loss.
 - Fix excel parser being dependant on results information.
 - Tournament results statistics report users games count. This change will be in the future since this has to change when matches consist of multiple games.
-- Rework how commands/launch arguments are built and handled.
 
 ### Far Future
 
@@ -99,11 +96,13 @@ Required libraries: pandas, openpyxl, sqlite3
 
 working directory should include the source data files. I provide example data both in txt file and also in excel file in how it's in final format.
 
-For test execution run command: `python3 main.py`
+For test execution run: `python3 main.py`
 
-For help information run command: `python3 main.py -h`
+For regular usage run: `python3 main.py [command] [argument(s)]`
 
-More detailed how to commands will be provided once the launch arguments setup is finalized. Currently -h is the best option to check how the given version can be used.
+Valid command options are: version, help, insert, report, category
+
+For help information for all commands and how their arguments work run: `python3 main.py help`
 
 ## ERD of the Tournament and players ELO
 
@@ -114,7 +113,7 @@ More detailed how to commands will be provided once the launch arguments setup i
 ### Alpha 4
 
 - Under utils new launch arguments system created for commands and arguments
-- First launch argument is command; options: insert, report, category, version, help
+- First launch argument is command; options: version, help, insert, report, category
 - Each command is registered and can take anything betwee 0 to many arguments for additional parameters
 - 
 - Information output functionality separated with option to just print human readable CLI output or to output json formatted data for machine interactions
