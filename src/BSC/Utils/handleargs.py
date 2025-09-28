@@ -6,6 +6,7 @@ class HandleArgs():
         self.source_excel = ""
         self.source_excel_sheet_list = []
         self.database_name = ""
+        self.output_type = ""
         self.category_name = ""
         self.category_desc = ""
         self.report_name = ""
@@ -97,7 +98,7 @@ class HandleArgs():
         except:
             helpSelector(arg)
 
-    def __assignVariables(self, key, value):
+    def __assignVariables(self, key, value): #TODO analyze if this match/case can be removed by some auto populate logic
         match key:
             case "--file" | "-f":
                 if self.source_excel != "": raise Exception(f"One file name already provided, only one value for '{key}' is expected")
@@ -111,6 +112,11 @@ class HandleArgs():
             case "--db_name":
                 if self.database_name != "": raise Exception(f"One file name already provided, only one value for '{key}' is expected")
                 self.database_name = value
+                self.used_args_list.append(key)
+                self.used_args_value_dict[key] = value
+            case "--out" | "-o":
+                if self.output_type != "": raise Exception(f"One value for '{key}' is expected")
+                self.output_type = value
                 self.used_args_list.append(key)
                 self.used_args_value_dict[key] = value
             case "--c_name":

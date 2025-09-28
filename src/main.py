@@ -7,6 +7,7 @@ from BSC.DataExtractor.fromExcel import ExcelParser
 from BSC.GameHandler.handler import Handler
 from BSC.Utils.handleargs import HandleArgs
 from BSC.Utils.commands import Argument, Command, arguments_info, commands_info
+from BSC.Utils.output import Output
 from BSC.Database.db import DB
 
 class Main():
@@ -54,6 +55,8 @@ class Main():
             self.__exitError(f"invalid command, options: {list(self.commands.keys())}")
         self.command_arg_objects_dict.update(launch_command.kv_arguments)
         self.__handleLaunchArgs()
+        output_type = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("output_type").arg_options)
+        self.output = Output(output_type)
         launch_command.run()
         self.__exitSuccess("\n=====================\nDone")
 
@@ -118,8 +121,10 @@ class Main():
     def argFuncListReports(self):
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options) #TODO handle no value provided by user
         self.database_obj = DB(db_name, verbose=self.verbose)
-        reports = self.database_obj.GetAvailableReports()
-        print(f"Available reports: {reports}")
+        reports_list = self.database_obj.GetAvailableReports()
+        for report in reports_list:
+            self.output.write(self.verbose, "INFO", "reports:name", report)
+        print(self.output.json_output_result)
 
     def argFuncRunReport(self):
         report_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("report_name").arg_options)
