@@ -7,7 +7,7 @@ from BSC.Database.sql_001 import db_up, db_down
 
 class DB():
     def __init__(self, db_name, verbose=False, clear_db=False):
-        self.verbose = verbose #TODO verbose variable check needs to be implemented to class funciton print statements
+        self.verbose = verbose
         self.clear_db = clear_db
         self.db_name = db_name
         self.__validateAndInitalize()
@@ -115,17 +115,24 @@ class DB():
     # functions for adding data to database
     #============================================
 
-    def AddTournament(self, data_in):
+    def FindTournament(self, tournament_name, tournament_date): #TODO add verbose info
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        cur.execute("INSERT INTO tournaments (name) VALUES(?)", data_in)
+        res = cur.execute("SELECT * FROM tournaments WHERE name = '" + tournament_name +"' OR date = '"+tournament_date+"'")
+        result = res.fetchall()
+        return result
+
+    def AddTournament(self, data_in): #TODO add verbose info
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        cur.execute("INSERT INTO tournaments (name, date, location) VALUES(?, ?, ?)", data_in) #TODO fix result fetch, cur.execute should retrun the value entered
         res = cur.execute("SELECT id FROM tournaments ORDER BY id DESC LIMIT 1")
         tournament_id = res.fetchone()[0]
         con.commit()
         con.close()
         return tournament_id
 
-    def GetOrAddCategory(self, category_name, category_description):
+    def GetOrAddCategory(self, category_name, category_description): #TODO add verbose info
         category_id = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
@@ -277,15 +284,20 @@ class DB():
     # results reports printing to terminal
     #============================================
 
+    def report_ListTournaments(self):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        query = "SELECT * FROM report_ListTournaments"
+        res = cur.execute(query)
+        data_list = res.fetchall()
+        con.close()
+        for item in data_list:
+            print(f"'{item[1]}' on '{item[2]}' at '{item[3]}'")
+
     def report_AllPlayersELOrank(self):
         print("\nFull list of players and their ELO ranked from highest to lowest rank per category:")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        #query = """SELECT p.name, pce.elo, c.name, c.description
-#FROM players p
-#JOIN players_categories_elo pce ON p.id = pce.player_id
-#JOIN categories c ON c.id = pce.category_id
-#ORDER BY c.name, pce.elo DESC"""
         query = """SELECT * FROM report_EloStandings"""
         res = cur.execute(query)
         data_list = res.fetchall()

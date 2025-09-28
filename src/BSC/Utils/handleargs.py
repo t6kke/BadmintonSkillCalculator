@@ -25,11 +25,6 @@ class HandleArgs():
     #============================================
     # variable get functions
     #============================================
-    def old_getUsedArgValue(self, arg_key):
-        arg_value = self.used_args_value_dict.get(arg_key)
-        if self.verbose: print(f"INFO --- argument '{arg_key}' value was requested, returning: '{arg_value}'")
-        return arg_value
-
     def getUsedArgValue(self, arg_key_list):
         result = None
         for arg_key in arg_key_list:

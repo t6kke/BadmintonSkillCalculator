@@ -67,7 +67,6 @@ List is not just code improvements but also project functionalities
 
 - Various minor improvements in codes marked with TODO.
 - GetOrAddPlayer function in Database package is a mess and needs some work.
-- Extract details from Tournament name and store them in DB.
 - application version metadata(db logic version, skill calculator version) in database for initial validation.
 - created_at and updated_at fields into varios database tables where they make sense.
 - Add ELO confidence value and use it to handle ELO gain/loss.
@@ -115,10 +114,13 @@ For help information for all commands and how their arguments work run: `python3
 - Under utils new launch arguments system created for commands and arguments
 - First launch argument is command; options: version, help, insert, report, category
 - Each command is registered and can take anything betwee 0 to many arguments for additional parameters
-- 
 - Information output functionality separated with option to just print human readable CLI output or to output json formatted data for machine interactions
 - 
-- Report functionality SQL-s moved to be views in DB, will be created on new DB on initialization.
+- Report functionality SQL-s moved to be views in DB, will be created on new DB on initialization
+- Tournament restults report query refined to show actual final tournament teams ranking result
+- All tournaments list report added
+- Tournament details extracted from the excel full string and added to appropriate columns in tournament table
+- Will skip tournaments that are already added to the database, cannot add duplicates
 - Version metadata table to database
 
 ### Alpha 3.1.1

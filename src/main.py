@@ -1,3 +1,4 @@
+import re
 import sys
 import os.path
 
@@ -90,10 +91,19 @@ class Main():
         gamesHandler = Handler(self.database_obj, self.verbose)
         category_id = self.database_obj.GetOrAddCategory(category_name, category_desc)
         tournament_id = None
-        for tournament_name, raw_matches_list_from_excel in raw_tournaments_from_excel.items():
+        for tournament_name_data, raw_matches_list_from_excel in raw_tournaments_from_excel.items():
+            tournament_date = re.search("(\d{2}\.\d{2}\.\d{4})", tournament_name_data).group()
+            tournament_location = re.search("@([^)]+)", tournament_name_data).group().lstrip("@")
+            tournament_name = tournament_name_data.split("(")[0].strip()
             print(f"\nStarting handle tournament: '{tournament_name}' information...")
+            if self.verbose: print(f"INFO --- Checking if '{tournament_name}' exists in DB")
+            tournament_data = self.database_obj.FindTournament(tournament_name, tournament_date)
+            if len(tournament_data) != 0:
+                tournament_id = tournament_data[0][0]
+                print(f"INFO --- Tournament '{tournament_name}' already exists in database, not adding")
+                continue
             if self.verbose: print(f"INFO --- Adding tournament: '{tournament_name}' to the database")
-            tournament_id = self.database_obj.AddTournament((tournament_name,))
+            tournament_id = self.database_obj.AddTournament((tournament_name, tournament_date, tournament_location))
             if self.verbose: print(f"INFO --- Getting or adding new category to the database")
             print(f"Running games handler functionality...")
             gamesHandler.runGamesParser(raw_matches_list_from_excel, tournament_id, category_id)
@@ -115,7 +125,9 @@ class Main():
         report_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("report_name").arg_options)
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options) #TODO handle no value provided by user
         self.database_obj = DB(db_name, verbose=self.verbose)
-        match report_name:
+        match report_name: #TODO analyze if we can remove this match/case solution, maybe some automatically populated functions **kwargs dictionary on the argument can be a solution
+            case "report_ListTournaments":
+                self.database_obj.report_ListTournaments()
             case "report_EloStandings":
                 self.database_obj.report_AllPlayersELOrank()
             case "report_TournamentResults":

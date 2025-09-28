@@ -53,6 +53,12 @@ db_up = {
 	"player_elo_change"	INTEGER NOT NULL,
 	UNIQUE("player_id","match_id")
 )""",
+"report_ListTournaments": """CREATE VIEW "report_ListTournaments" AS
+	SELECT
+	*
+	FROM tournaments
+	ORDER BY date ASC
+""",
 "report_ELOStandings": """CREATE VIEW "report_EloStandings" AS
 	SELECT
 	p.id as player_id,
@@ -121,6 +127,7 @@ db_down = {
 "players_categories_elo": """DROP TABLE players_categories_elo""",
 "players_games": """DROP TABLE players_games""",
 "players_matches_elo_change": """DROP TABLE players_matches_elo_change""",
+"report_ListTournaments": """DROP VIEW report_ListTournaments""",
 "report_ELOStandings": """DROP VIEW report_EloStandings""",
 "report_TournamentResults": """DROP VIEW report_TournamentResults"""
 }
