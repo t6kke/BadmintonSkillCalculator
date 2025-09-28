@@ -25,12 +25,12 @@ class HandleArgs():
     #============================================
     # variable get functions
     #============================================
-    def getUsedArgValue(self, arg_key):
+    def old_getUsedArgValue(self, arg_key):
         arg_value = self.used_args_value_dict.get(arg_key)
         if self.verbose: print(f"INFO --- argument '{arg_key}' value was requested, returning: '{arg_value}'")
         return arg_value
 
-    def getUsedArgValueWList(self, arg_key_list):
+    def getUsedArgValue(self, arg_key_list):
         result = None
         for arg_key in arg_key_list:
             arg_value = self.used_args_value_dict.get(arg_key)
@@ -42,33 +42,33 @@ class HandleArgs():
         if self.verbose: print(f"INFO --- help request status info was requested, returning: '{self.was_help_requested}'")
         return self.was_help_requested
 
-    def __getSourceExcelFileName(self):
-        if self.verbose: print(f"INFO --- excel file name was requested, returning: '{self.source_excel}'")
-        return self.source_excel
-
-    def __getExcelSheetsList(self):
-        if self.verbose: print(f"INFO --- list of sheets was requested, returning: '{self.source_excel_sheet_list}'")
-        return self.source_excel_sheet_list
-
-    def __getDatabaseName(self):
-        if self.verbose: print(f"INFO --- database info was requested, returning: '{self.database_name}'")
-        return self.database_name
-
-    def __getCategoryName(self):
-        if self.verbose: print(f"INFO --- category name was requested, returning: '{self.category_name}'")
-        return self.category_name
-
-    def __getCategoryDescription(self):
-        if self.verbose: print(f"INFO --- category description was requested, returning: '{self.category_desc}'")
-        return self.category_desc
-
-    def __getReportName(self):
-        if self.verbose: print(f"INFO --- report name was requested, returning: '{self.report_name}'")
-        return self.report_name
-
-    def __getReportTournamentIDFilter(self):
-        if self.verbose: print(f"INFO --- report tournament id filter was requested, returning: '{self.report_tournament_id_filter}'")
-        return self.report_tournament_id_filter
+    # def __getSourceExcelFileName(self):
+    #     if self.verbose: print(f"INFO --- excel file name was requested, returning: '{self.source_excel}'")
+    #     return self.source_excel
+    #
+    # def __getExcelSheetsList(self):
+    #     if self.verbose: print(f"INFO --- list of sheets was requested, returning: '{self.source_excel_sheet_list}'")
+    #     return self.source_excel_sheet_list
+    #
+    # def __getDatabaseName(self):
+    #     if self.verbose: print(f"INFO --- database info was requested, returning: '{self.database_name}'")
+    #     return self.database_name
+    #
+    # def __getCategoryName(self):
+    #     if self.verbose: print(f"INFO --- category name was requested, returning: '{self.category_name}'")
+    #     return self.category_name
+    #
+    # def __getCategoryDescription(self):
+    #     if self.verbose: print(f"INFO --- category description was requested, returning: '{self.category_desc}'")
+    #     return self.category_desc
+    #
+    # def __getReportName(self):
+    #     if self.verbose: print(f"INFO --- report name was requested, returning: '{self.report_name}'")
+    #     return self.report_name
+    #
+    # def __getReportTournamentIDFilter(self):
+    #     if self.verbose: print(f"INFO --- report tournament id filter was requested, returning: '{self.report_tournament_id_filter}'")
+    #     return self.report_tournament_id_filter
 
     #============================================
     # internal functions parsing arguments

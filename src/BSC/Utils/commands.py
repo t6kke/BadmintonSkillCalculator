@@ -25,11 +25,11 @@ arguments_info = {
 }
 
 class Command():
-    def __init__(self, name, info, function, *args):
+    def __init__(self, name, info, function, **kwargs):
         self.name = name
         self.info = info
         self.run = function
-        self.arguments = args
+        self.kv_arguments = kwargs
 
     def __str__(self):
         command_len = len(self.name)
