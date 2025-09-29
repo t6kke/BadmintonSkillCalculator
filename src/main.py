@@ -1,6 +1,7 @@
 import re
 import sys
 import os.path
+import json
 
 from BSC.DataExtractor.fromTXT import getGamesFromTXT
 from BSC.DataExtractor.fromExcel import ExcelParser
@@ -120,16 +121,17 @@ class Main():
 
     def argFuncListReports(self):
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options) #TODO handle no value provided by user
-        self.database_obj = DB(db_name, verbose=self.verbose)
+        self.database_obj = DB(db_name, self.output, verbose=self.verbose)
         reports_list = self.database_obj.GetAvailableReports()
         for report in reports_list:
-            self.output.write(self.verbose, "INFO", "reports:name", report)
-        print(self.output.json_output_result)
+            self.output.write(self.verbose, "INFO", ["reports"], name=report)
+        #print(json.dumps(self.output.json_output_result))
+        self.output.PrintResult()
 
     def argFuncRunReport(self):
         report_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("report_name").arg_options)
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options) #TODO handle no value provided by user
-        self.database_obj = DB(db_name, verbose=self.verbose)
+        self.database_obj = DB(db_name, self.output, verbose=self.verbose)
         match report_name: #TODO analyze if we can remove this match/case solution, maybe some automatically populated functions **kwargs dictionary on the argument can be a solution
             case "report_ListTournaments":
                 self.database_obj.report_ListTournaments()

@@ -6,10 +6,11 @@ import sqlite3
 from BSC.Database.sql_001 import db_up, db_down
 
 class DB():
-    def __init__(self, db_name, verbose=False, clear_db=False):
+    def __init__(self, db_name, output, verbose=False, clear_db=False):
         self.verbose = verbose
         self.clear_db = clear_db
         self.db_name = db_name
+        self.output = output
         self.__validateAndInitalize()
 
 
@@ -292,7 +293,9 @@ class DB():
         data_list = res.fetchall()
         con.close()
         for item in data_list:
-            print(f"'{item[1]}' on '{item[2]}' at '{item[3]}'")
+            #print(f"'{item[1]}' on '{item[2]}' at '{item[3]}'")
+            self.output.write(self.verbose, "INFO", ["tournaments"], id=item[0], name=item[1], date=item[2], location=item[3])
+        self.output.PrintResult()
 
     def report_AllPlayersELOrank(self):
         print("\nFull list of players and their ELO ranked from highest to lowest rank per category:")
