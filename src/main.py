@@ -58,6 +58,8 @@ class Main():
         self.__handleLaunchArgs()
         output_type = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("output_type").arg_options)
         self.output = Output(output_type)
+        self.output.write(self.verbose, "INFO", None, name="Badminton Skill Calculator")
+        self.output.write(self.verbose, "INFO", None, version=self.app_version)
         launch_command.run()
         self.__exitSuccess("\n=====================\nDone")
 
@@ -90,7 +92,7 @@ class Main():
         category_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("c_name").arg_options) #TODO handle no value provided by user
         category_desc = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("c_desc").arg_options) #TODO handle no value provided by user
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options) #TODO handle no value provided by user
-        self.database_obj = DB(db_name, verbose=self.verbose)
+        self.database_obj = DB(db_name, self.output, verbose=self.verbose)
         raw_tournaments_from_excel = self.__getGamesFromExcel(source_file, sheets_list)
         gamesHandler = Handler(self.database_obj, self.verbose)
         category_id = self.database_obj.GetOrAddCategory(category_name, category_desc)
@@ -123,9 +125,9 @@ class Main():
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options) #TODO handle no value provided by user
         self.database_obj = DB(db_name, self.output, verbose=self.verbose)
         reports_list = self.database_obj.GetAvailableReports()
+        self.output.write(self.verbose, "INFO", [], info="Available reports:")
         for report in reports_list:
             self.output.write(self.verbose, "INFO", ["reports"], name=report)
-        #print(json.dumps(self.output.json_output_result))
         self.output.PrintResult()
 
     def argFuncRunReport(self):
@@ -153,11 +155,12 @@ class Main():
 
     def argFuncListCategories(self):
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options)
-        self.database_obj = DB(db_name, verbose=self.verbose)
+        self.database_obj = DB(db_name, self.output, verbose=self.verbose)
         categories_data = self.database_obj.GetAvailableCategories()
-        print("Available categories:")
+        self.output.write(self.verbose, "INFO", [], info="Available categories:")
         for category in categories_data:
-            print(f"ID: '{category[0]}' with name: '{category[1]}' and description: '{category[2]}'")
+            self.output.write(self.verbose, "INFO", ["categories"], ID=category[0], name=category[1], description=category[2])
+        self.output.PrintResult()
 
     def argFuncAddCategory(self):
         category_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("c_name").arg_options)
@@ -186,13 +189,13 @@ class Main():
         return result_dict
 
     def __exitError(self, message):
-        print(message)
+        self.output.write(False, "INFO", None, name=message)
         sys.exit(1)
 
     def __exitSuccess(self, message = None):
         if message == None:
             sys.exit(0)
-        print(message)
+        self.output.write(False, "INFO", None, name=message)
         sys.exit(0)
 
 

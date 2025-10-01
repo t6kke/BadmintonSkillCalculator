@@ -294,11 +294,11 @@ class DB():
         con.close()
         for item in data_list:
             #print(f"'{item[1]}' on '{item[2]}' at '{item[3]}'")
-            self.output.write(self.verbose, "INFO", ["tournaments"], id=item[0], name=item[1], date=item[2], location=item[3])
+            self.output.write(self.verbose, "INFO", "tournaments", id=item[0], name=item[1], date=item[2], location=item[3])
         self.output.PrintResult()
 
     def report_AllPlayersELOrank(self):
-        print("\nFull list of players and their ELO ranked from highest to lowest rank per category:")
+        self.output.write(self.verbose, "INFO", None, message="Full list of players and their ELO ranked from highest to lowest rank per category:")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         query = """SELECT * FROM report_EloStandings"""
@@ -311,8 +311,11 @@ class DB():
             if item[4] != category_name:
                 category_name = item[4]
                 category_desc = item[5]
-                print(f"\tRanking on category '{category_name}', '{category_desc}':")
-            print(f"Player: '{item[1]}' with ELO: '{item[2]}'")
+                #print(f"\tRanking on category '{category_name}', '{category_desc}':")
+                self.output.write(self.verbose, "INFO", "category", name=category_name, description=category_desc, ranking=[])
+            #print(f"Player: '{item[1]}' with ELO: '{item[2]}'")
+            self.output.write(self.verbose, "INFO", "category:ranking", id=item[0], name=item[1], elo=item[2])
+        self.output.PrintResult()
 
     def report_AllPlayersELOrankOnCategory(self, category_id):
         con = sqlite3.connect(self.db_name)

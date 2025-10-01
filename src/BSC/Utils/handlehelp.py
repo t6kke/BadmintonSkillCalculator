@@ -38,7 +38,7 @@ Examples:
 GIT repo: https://github.com/t6kke/BadmintonSkillCalculator
 """
 version_help_text = """Badminton Skill Calculator
-version: Prototype v2
+version: Alpha 4
 """
 verbose_help_text = """Enables verbose output of the application.
 
