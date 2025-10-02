@@ -69,7 +69,7 @@ class Handler():
                 for team, score in match.items():
                     print(f"INFO --- team: '{team}' with score: '{score}'")
 
-        print(f"Running ELO calculations...")
+        #print(f"Running ELO calculations...")
         skillCalculator = SkillCalc(players_obj_dict_in_tournament ,self.verbose)
         for match in converted_all_matches_list:
             #if self.verbose: print(f"INFO --- working with match: '{match}'") #TODO fix printing problem

@@ -72,6 +72,8 @@ List is not just code improvements but also project functionalities
 - Add ELO confidence value and use it to handle ELO gain/loss.
 - Fix excel parser being dependant on results information.
 - Tournament results statistics report users games count. This change will be in the future since this has to change when matches consist of multiple games.
+- Migrate all verbose and regular print statements to use new output utility package
+- Improve console output of information
 
 ### Far Future
 
@@ -115,13 +117,12 @@ For help information for all commands and how their arguments work run: `python3
 - First launch argument is command; options: version, help, insert, report, category
 - Each command is registered and can take anything betwee 0 to many arguments for additional parameters
 - Information output functionality separated with option to just print human readable CLI output or to output json formatted data for machine interactions
-- 
+- All output logic that would be required by computer reading have been built to be usable with --out argument and provide valid json output
 - Report functionality SQL-s moved to be views in DB, will be created on new DB on initialization
 - Tournament restults report query refined to show actual final tournament teams ranking result
 - All tournaments list report added
 - Tournament details extracted from the excel full string and added to appropriate columns in tournament table
 - Will skip tournaments that are already added to the database, cannot add duplicates
-- Version metadata table to database
 
 ### Alpha 3.1.1
 

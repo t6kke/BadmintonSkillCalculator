@@ -24,7 +24,7 @@ class Output():
 
     def __consolePrint(self, verbose, message_type, message_key, **key_message):
         if verbose:
-            print(f"{message_type} --- {':'.join(message_key)} --- ", end="")
+            print(f"{message_type} --- {message_key} --- ", end="")
             for v in key_message.values():
                 print(v, end="  ")
             print("")
