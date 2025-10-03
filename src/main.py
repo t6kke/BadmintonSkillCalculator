@@ -100,7 +100,7 @@ class Main():
         category_id = self.database_obj.GetOrAddCategory(category_name, category_desc)
         tournament_id = None
         for tournament_name_data, raw_matches_list_from_excel in raw_tournaments_from_excel.items():
-            tournament_date = re.search("(\d{2}\.\d{2}\.\d{4})", tournament_name_data).group()
+            tournament_date = re.search("(\\d{2}\\.\\d{2}\\.\\d{4})", tournament_name_data).group()
             tournament_location = re.search("@([^)]+)", tournament_name_data).group().lstrip("@")
             tournament_name = tournament_name_data.split("(")[0].strip()
             #print(f"\nStarting handle tournament: '{tournament_name}' information...")
