@@ -34,7 +34,7 @@ class Output():
             print("")
 
     def __toJson(self, verbose, message_type, message_key, **key_message):
-        if verbose: pass #json output will not have verbose information
+        if verbose: return #json output will not have verbose information
         index = -1
         if message_key == None:
             self.json_output_result.update(key_message) #TODO this will overwrite if key is matching, find a solution
