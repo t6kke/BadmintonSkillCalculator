@@ -180,7 +180,12 @@ class Main():
         if category_desc == None: self.__exitError("no category description provided, cannot add new category")
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options)
         self.database_obj = DB(db_name, self.output, verbose=self.verbose)
-        self.database_obj.GetOrAddCategory(category_name, category_desc)
+        category_id = self.database_obj.GetOrAddCategory(category_name, category_desc)
+        if category_id == None:
+            self.output.write(False, "INFO", None, status="error", message="failed to add category")
+        else:
+            self.output.write(False, "INFO", None, status="success", message="category added successfully")
+        self.output.PrintResult()
 
     def __handleLaunchArgs(self):
         if "--verbose" in self.launch_args_list and "-h" not in self.launch_args_list and "--help" not in self.launch_args_list: #TODO needs to be changed in a way that verbose can be enalbed while also asking help
