@@ -6,8 +6,9 @@ import sqlite3
 from BSC.Database.sql_001 import db_up, db_down
 
 class DB():
-    def __init__(self, db_name, output, verbose=False, clear_db=False):
+    def __init__(self, db_name, output, verbose=False, add_default_categories=False, clear_db=False):
         self.verbose = verbose
+        self.add_default_categories = add_default_categories
         self.clear_db = clear_db
         self.db_name = db_name
         self.output = output
@@ -40,18 +41,20 @@ class DB():
         con.close()
 
     def __createTables(self):
-        categories_data = [("MS", "men singles"),
-                           ("WS", "women singles"),
-                           ("MD", "men double"),
-                           ("WD", "women double"),
-                           ("XD", "mixed double")]
+
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         for table, sql in db_up.items():
             if self.verbose: print(f"DEBUG --- DB --- Creating table: '{table}'")
             cur.execute(sql)
-        if self.verbose: print(f"DEBUG --- DB --- adding default categories to db: '{categories_data}'")
-        cur.executemany("INSERT INTO categories (name, description) VALUES(?,?)", categories_data)
+        if self.add_default_categories:
+            categories_data = [("MS", "men singles"),
+                           ("WS", "women singles"),
+                           ("MD", "men double"),
+                           ("WD", "women double"),
+                           ("XD", "mixed double")]
+            if self.verbose: print(f"DEBUG --- DB --- adding default categories to db: '{categories_data}'")
+            cur.executemany("INSERT INTO categories (name, description) VALUES(?,?)", categories_data)
         con.commit()
         con.close()
 

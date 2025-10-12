@@ -68,14 +68,14 @@ class Main():
 
 
     def commandVersion(self):
-        pass #TODO figure out what to do with this, what additional data should be here?
+        pass #TODO figure out what to do with this, what additional data should be here? Maybe when DB has app metadata it should be provided with the 'version' command
 
     def commandHelp(self):
         for args_dict in self.commands.values():
-            print(args_dict)
+            self.output.write(self.verbose, "INFO", None, message=args_dict)
             for arg in args_dict.kv_arguments.values():
-                print(arg)
-            print("")
+                self.output.write(self.verbose, "INFO", None, message=arg)
+            self.output.write(self.verbose, "INFO", None, message="")
 
     def commandReport(self):
         is_executed = False
@@ -103,30 +103,20 @@ class Main():
             tournament_date = re.search("(\\d{2}\\.\\d{2}\\.\\d{4})", tournament_name_data).group()
             tournament_location = re.search("@([^)]+)", tournament_name_data).group().lstrip("@")
             tournament_name = tournament_name_data.split("(")[0].strip()
-            #print(f"\nStarting handle tournament: '{tournament_name}' information...")
             self.output.write(True, "INFO", "tournaments", message=f"\nStarting handle tournament: '{tournament_name}' information...")
-            if self.verbose: print(f"INFO --- Checking if '{tournament_name}' exists in DB")
+            self.output.write(True, "INFO", "tournaments", message=f"Checking if '{tournament_name}' exists in DB")
             tournament_data = self.database_obj.FindTournament(tournament_name, tournament_date)
             if len(tournament_data) != 0:
                 tournament_id = tournament_data[0][0]
-                #print(f"INFO --- Tournament '{tournament_name}' already exists in database, not adding")
                 self.output.write(False, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="error", error=f"INFO --- Tournament '{tournament_name}' already exists in database, not adding")
                 continue
-            if self.verbose: print(f"INFO --- Adding tournament: '{tournament_name}' to the database")
+            self.output.write(True, "INFO", "tournaments", message=f"Adding tournament: '{tournament_name}' to the database")
             tournament_id = self.database_obj.AddTournament((tournament_name, tournament_date, tournament_location))
-            if self.verbose: print(f"INFO --- Getting or adding new category to the database")
-            #print(f"Running games handler functionality...")
             self.output.write(True, "INFO", "tournaments", message=f"Running games handler functionality...")
             gamesHandler.runGamesParser(raw_matches_list_from_excel, tournament_id, category_id)
-            if self.verbose: print(f"Post matches data entry status report")
-            #self.database_obj.report_TournamentResult(tournament_id)
             self.output.write(False, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="success")
-        if self.verbose: print(f"Final reports")
+        self.output.write(self.verbose, "INFO", message=f"Final reports")
         self.output.PrintResult()
-        #self.database_obj.report_TournamentResult(tournament_id)
-        #self.database_obj.report_AllPlayersELOrankOnCategory(category_id)
-        #self.database_obj.report_AllPlayersELOrank()
-        #self.database_obj.ss_AllPlayersELOrank()
 
     def argFuncListReports(self):
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options) #TODO handle no value provided by user
@@ -149,12 +139,12 @@ class Main():
             case "report_TournamentResults":
                 tournament_id = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("report_tid_filter").arg_options)
                 if tournament_id == "" or tournament_id == None:
-                    self.output.write(self.verbose, "INFO", None, status="error", error="'--r_tidf' filter for tournament is required")
+                    self.output.write(self.verbose, "INFO", None, status="error", message="'--r_tidf' filter for tournament is required")
                     self.output.PrintResult() #TODO should also do error exit?
                     return
                 self.database_obj.report_TournamentResult(tournament_id)
             case _:
-                self.output.write(self.verbose, "INFO", None, status="error", error="report not found") #TODO better response with, potentially with listing options and also error exit
+                self.output.write(self.verbose, "INFO", None, status="error", message="report not found") #TODO better response with, potentially with listing options and also error exit
                 self.output.PrintResult()
 
     def commandCategory(self):

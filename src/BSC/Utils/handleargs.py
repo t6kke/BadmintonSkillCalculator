@@ -27,6 +27,7 @@ class HandleArgs():
     # variable get functions
     #============================================
     def getUsedArgValue(self, arg_key_list):
+        arg_key = None
         arg_value = None
         for arg_key in arg_key_list:
             arg_value = self.used_args_value_dict.get(arg_key)

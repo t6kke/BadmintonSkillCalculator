@@ -24,10 +24,13 @@ class Output():
 
     def __consolePrint(self, verbose, message_type, message_key, **key_message):
         if verbose:
-            print(f"{message_type} --- {message_key} --- ", end="")
-            for v in key_message.values():
-                print(v, end="  ")
-            print("")
+            m_type = message_type + " ---"
+            m_key = str(message_key) + ": "
+            if message_key == None:
+                m_key = ": "
+            print(m_type, m_key)
+            for k, v in key_message.items():
+                print("    ", k, "-", v)
         else:
             for v in key_message.values():
                 print(v,end="  ")
