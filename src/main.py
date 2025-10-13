@@ -115,7 +115,7 @@ class Main():
             self.output.write(True, "INFO", "tournaments", message=f"Running games handler functionality...")
             gamesHandler.runGamesParser(raw_matches_list_from_excel, tournament_id, category_id)
             self.output.write(False, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="success")
-        self.output.write(self.verbose, "INFO", message=f"Final reports")
+        self.output.write(self.verbose, "INFO", None, message=f"Final reports")
         self.output.PrintResult()
 
     def argFuncListReports(self):

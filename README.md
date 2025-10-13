@@ -70,7 +70,6 @@ List is not just code improvements but also project functionalities
 - application version metadata(db logic version, skill calculator version) in database for initial validation.
 - created_at and updated_at fields into varios database tables where they make sense.
 - Add ELO confidence value and use it to handle ELO gain/loss.
-- Fix excel parser being dependant on results information.
 - Tournament results statistics report users games count. This change will be in the future since this has to change when matches consist of multiple games.
 - Old help information should be implemented through new output help information.
 - Re-work how arguments handling is done after registration
@@ -127,6 +126,7 @@ For help information for all commands and how their arguments work run: `python3
 - Will skip tournaments that are already added to the database, cannot add duplicates
 - All previous print statments moved to new output object usage
 - Default categories creation is not done by default
+- Initial fix to handle excel files where only games are presented, no results summary
 
 ### Alpha 3.1.1
 

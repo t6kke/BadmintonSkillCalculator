@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 class ExcelParser():
     def __init__(self, excel_data_games_filename, excel_sheet_name, verbose=False):
@@ -41,6 +42,7 @@ class ExcelParser():
     def __setDataframe(self):
         if self.verbose: print(f"INFO --- getting the full dataframe from excel")
         self.dataframe = pd.read_excel(self.excel_data_games_filename, sheet_name=self.excel_sheet_name, header=None)
+        self.dataframe[len(self.dataframe.columns)] = np.nan #Initial hack to work around the NaN field detection for end of games, solves a problem where only games are in excel and no summary
         if self.verbose: print(f"DEBUG --- got this dataframe:\n{self.dataframe}")
 
     def __findLastGamesColumn(self):
