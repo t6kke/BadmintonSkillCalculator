@@ -3,13 +3,15 @@ import os.path
 import sqlite3
 
 #from BSC.Database.sql_v01_001 import db_up
-from BSC.Database.sql_v02_001 import db_up, db_down
+from BSC.Database.sql_001 import db_up, db_down
 
 class DB():
-    def __init__(self, db_name, verbose=False, clear_db=False):
-        self.verbose = verbose #TODO verbose variable check needs to be implemented to class funciton print statements
+    def __init__(self, db_name, output, verbose=False, add_default_categories=False, clear_db=False):
+        self.verbose = verbose
+        self.add_default_categories = add_default_categories
         self.clear_db = clear_db
         self.db_name = db_name
+        self.output = output
         self.__validateAndInitalize()
 
 
@@ -19,16 +21,16 @@ class DB():
 
     def __validateAndInitalize(self):
         new_db = False
-        if self.verbose: print("INFO --- database file name: ", self.db_name)
+        self.output.write(self.verbose, "INFO", "DB", message=f"Database file name: '{self.db_name}'")
         if os.path.isfile("./"+self.db_name) == False:
-            if self.verbose: print("INFO --- DB --- DB file does not exists, creating new one")
+            self.output.write(self.verbose, "INFO", "DB", message=f"DB file does not exists, creating new one")
             new_db = True
 
         self.__createDB()
         if new_db:
             self.__createTables()
         elif self.clear_db:
-            if self.verbose: print("INFO --- DB --- 'clear_db' flag is set so first dropping all tables and creating them again")
+            self.output.write(self.verbose, "INFO", "DB", message=f"'clear_db' flag is set so first dropping all tables and creating them again")
             self.__DEV_ClearDB()
             self.__createTables()
 
@@ -39,18 +41,20 @@ class DB():
         con.close()
 
     def __createTables(self):
-        categories_data = [("MS", "men singles"),
+
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        for table, sql in db_up.items():
+            self.output.write(self.verbose, "DEBUG", "DB", message=f"Creating table: '{table}'")
+            cur.execute(sql)
+        if self.add_default_categories:
+            categories_data = [("MS", "men singles"),
                            ("WS", "women singles"),
                            ("MD", "men double"),
                            ("WD", "women double"),
                            ("XD", "mixed double")]
-        con = sqlite3.connect(self.db_name)
-        cur = con.cursor()
-        for table, sql in db_up.items():
-            if self.verbose: print(f"DEBUG --- DB --- Creating table: '{table}'")
-            cur.execute(sql)
-        if self.verbose: print(f"DEBUG --- DB --- adding default categories to db: '{categories_data}'")
-        cur.executemany("INSERT INTO categories (name, description) VALUES(?,?)", categories_data)
+            self.output.write(self.verbose, "DEBUG", "DB", message=f"adding default categories to db: '{categories_data}'")
+            cur.executemany("INSERT INTO categories (name, description) VALUES(?,?)", categories_data)
         con.commit()
         con.close()
 
@@ -65,9 +69,9 @@ class DB():
                 #TODO not sure if content check is actually needed
                 has_content = self.__checkTableContent(cur, item[1])
                 if has_content:
-                    if self.verbose: print("DEBUG --- DB --- found table: '"+item[1]+"' that has content")
+                    self.output.write(self.verbose, "DEBUG", "DB", message=f"found table: '{item[1]}' that has content")
                 else:
-                    if self.verbose: print("DEBUG --- DB --- found table: '"+item[1]+"' with no data")
+                    self.output.write(self.verbose, "DEBUG", "DB", message=f"found table: '{item[1]}' with no data")
         con.close()
 
     def __checkTableContent(self, cur, table_name):
@@ -80,34 +84,66 @@ class DB():
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         for table, sql in db_down.items():
-            if self.verbose: print(f"DEBUG --- DB --- Dropping table: '{table}'")
+            self.output.write(self.verbose, "DEBUG", "DB", message=f"Dropping table: '{table}'")
             cur.execute(sql)
         con.commit()
         con.close()
 
+    #============================================
+    # General information
+    #============================================
+
+    def GetAvailableReports(self):
+        self.output.write(self.verbose, "INFO", "DB:GetAvailableReports", message=f"getting available reports options")
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT name FROM sqlite_master WHERE type='view' and name like 'report%'")
+        report_views = []
+        for item in res.fetchall():
+            report_views.append(item[0])
+        con.close()
+        self.output.write(self.verbose, "INFO", "DB:GetAvailableReports", message=f"returing all available reports")
+        return report_views
+
+    def GetAvailableCategories(self):
+        self.output.write(self.verbose, "INFO", "DB:GetAvailableCategories", message=f"getting available categories")
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT * FROM categories")
+        categories_data = res.fetchall()
+        con.close()
+        self.output.write(self.verbose, "INFO", "DB:GetAvailableCategories", message=f"returing all data about categories")
+        return categories_data
 
     #============================================
     # functions for adding data to database
     #============================================
 
-    def AddTournament(self, data_in):
+    def FindTournament(self, tournament_name, tournament_date): #TODO add verbose info
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        cur.execute("INSERT INTO tournaments (name) VALUES(?)", data_in)
+        res = cur.execute("SELECT * FROM tournaments WHERE name = '" + tournament_name +"' OR date = '"+tournament_date+"'")
+        result = res.fetchall()
+        return result
+
+    def AddTournament(self, data_in): #TODO add verbose info
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        cur.execute("INSERT INTO tournaments (name, date, location) VALUES(?, ?, ?)", data_in) #TODO fix result fetch, cur.execute should retrun the value entered
         res = cur.execute("SELECT id FROM tournaments ORDER BY id DESC LIMIT 1")
         tournament_id = res.fetchone()[0]
         con.commit()
         con.close()
         return tournament_id
 
-    def GetOrAddCategory(self, category_name, category_description):
+    def GetOrAddCategory(self, category_name, category_description): #TODO add verbose info
         category_id = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         res = cur.execute("SELECT id FROM categories WHERE name = '" + category_name +"'")
         category_id = res.fetchone()
         if category_id is None:
-            if self.verbose: print("INFO --- DB:GetOrAddCategory --- category does not exist in db, creating new one")
+            self.output.write(self.verbose, "INFO", "DB:GetOrAddCategory", message=f"category does not exist in db, creating new one")
             data_in = (category_name, category_description, )
             cur.execute("INSERT INTO categories (name, description) VALUES(?,?)", data_in)
             con.commit()
@@ -118,14 +154,14 @@ class DB():
 
     def GetOrAddPlayer(self, name, category_id):
         #TODO this function is a mess and needs to be cleaned up
-        if self.verbose: print(f"INFO --- DB:GetOrAddPlayer --- getting or adding player '{name}' to DB")
+        self.output.write(self.verbose, "INFO", "DB:GetOrAddPlayer", message=f"getting or adding player '{name}' to DB")
         result = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         res = cur.execute("SELECT * FROM players WHERE name = '" + name + "'")
         result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
         if result is None:
-            if self.verbose: print(f"INFO --- DB:GetOrAddPlayer --- player not found in db, creating a new entry")
+            self.output.write(self.verbose, "INFO", "DB:GetOrAddPlayer", message=f"player not found in db, creating a new entry")
             player_data = (name,)
             res = cur.execute("INSERT INTO players (name) VALUES (?)", player_data)
             res = cur.execute("SELECT id FROM players ORDER BY id DESC LIMIT 1")
@@ -136,36 +172,36 @@ class DB():
             res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
             result = res.fetchone()
             con.close()
-            if self.verbose: print(f"INFO --- DB:GetOrAddPlayer --- returning db player entry: '{result}'")
+            self.output.write(self.verbose, "INFO", "DB:GetOrAddPlayer", message=f"returning db player entry: '{result}'")
             return result
         player_id = str(result[0])
         res = cur.execute("SELECT * FROM players_categories_elo WHERE category_id = " + category_id + " AND player_id = " + player_id)
         result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
         if result is None:
-            if self.verbose: print(f"INFO --- DB:GetOrAddPlayer --- player found in db but no ELO for category id {category_id}, creating a new entry")
+            self.output.write(self.verbose, "INFO", "DB:GetOrAddPlayer", message=f"player found in db but no ELO for category id {category_id}, creating a new entry")
             elo_data = (player_id, category_id, 1000,) #TODO initial elo value of 1000 should be some configuration file, and maybe even modifiable based on what leage new player starts in.
             cur.execute("INSERT INTO players_categories_elo (player_id, category_id, elo) VALUES (?,?,?)", elo_data)
             con.commit()
             res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
             result = res.fetchone()
             con.close()
-            if self.verbose: print(f"INFO --- DB:GetOrAddPlayer --- returning db player entry: '{result}'")
+            self.output.write(self.verbose, "INFO", "DB:GetOrAddPlayer", message=f"returning db player entry: '{result}'")
             return result
         res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
         result = res.fetchone()
         con.close()
-        if self.verbose: print(f"INFO --- DB:GetOrAddPlayer --- returning db player entry: '{result}'")
+        self.output.write(self.verbose, "INFO", "DB:GetOrAddPlayer", message=f"returning db player entry: '{result}'")
         return result
 
     def GetPlayerWithELO(self, name, category_id):
-        if self.verbose: print(f"INFO --- DB:GetPlayerWithELO --- getting or adding player '{name}' to DB")
+        self.output.write(self.verbose, "INFO", "DB:GetPlayerWithELO", message=f"getting or adding player '{name}' to DB")
         result = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
         result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
         if result is None:
-            if self.verbose: print(f"INFO --- DB:GetPlayerWithELO --- player name not found in db, creating a new entry with base ELO: 1000")
+            self.output.write(self.verbose, "INFO", "DB:GetPlayerWithELO", message=f"player name not found in db, creating a new entry with base ELO: 1000")
             player_data = (name,)
             res = cur.execute("INSERT INTO players (name) VALUES (?)", player_data)
             res = cur.execute("SELECT id FROM players ORDER BY id DESC LIMIT 1")
@@ -176,21 +212,21 @@ class DB():
             res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
             result = res.fetchone()
         con.close()
-        if self.verbose: print(f"INFO --- DB:GetPlayerWithELO --- returning db player entry: '{result}'")
+        self.output.write(self.verbose, "INFO", "DB:GetPlayerWithELO", message=f"returning db player entry: '{result}'")
         return result
 
     def GetPlayerELO(self, player_id, category_id):
-        if self.verbose: print(f"INFO --- DB:GetPlayerELO --- getting ELO value for player id: '{player_id}'")
+        self.output.write(self.verbose, "INFO", "DB:GetPlayerELO", message=f"getting ELO value for player id: '{player_id}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         res = cur.execute("SELECT elo FROM players_categories_elo WHERE category_id = " + category_id + " AND player_id = '" + player_id + "'")
         player_elo = res.fetchone()[0]
         con.close()
-        if self.verbose: print(f"INFO --- DB:GetPlayerELO --- returning ELO value: '{player_elo}'")
+        self.output.write(self.verbose, "INFO", "DB:GetPlayerELO", message=f"getting ELO value for player id: '{player_id}'")
         return player_elo
 
     def AddMatch(self, data_in):
-        if self.verbose: print(f"INFO --- DB:AddMatch --- adding match to DB with data: '{data_in}'")
+        self.output.write(self.verbose, "INFO", "DB:AddMatch", message=f"adding match to DB with data: '{data_in}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         cur.execute("INSERT INTO matches (tournament_id, category_id) VALUES(?,?)", data_in)
@@ -198,11 +234,11 @@ class DB():
         res = cur.execute("SELECT id FROM matches ORDER BY id DESC LIMIT 1")
         match_id = res.fetchone()[0]
         con.close()
-        if self.verbose: print(f"INFO --- DB:AddMatch --- returning match id: '{match_id}'")
+        self.output.write(self.verbose, "INFO", "DB:AddMatch", message=f"returning match id: '{match_id}'")
         return match_id
 
     def AddGame(self, data_in):
-        if self.verbose: print(f"INFO --- DB:AddGame --- adding game to DB with data: '{data_in}'")
+        self.output.write(self.verbose, "INFO", "DB:AddGame", message=f"adding game to DB with data: '{data_in}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         cur.execute("INSERT INTO games (match_id, game_count, compeditor_one_score, compeditor_two_score) VALUES(?,?,?,?)", data_in)
@@ -210,11 +246,11 @@ class DB():
         res = cur.execute("SELECT id FROM games ORDER BY id DESC LIMIT 1")
         game_id = res.fetchone()[0]
         con.close()
-        if self.verbose: print(f"INFO --- DB:AddGame --- returning game id: '{game_id}'")
+        self.output.write(self.verbose, "INFO", "DB:AddGame", message=f"returning game id: '{game_id}'")
         return game_id
 
     def AddPlayerGameRel(self, data_in_list):
-        if self.verbose: print(f"INFO --- DB:AddPlayerGameRel --- adding player game relation for the whole match for all players with data: '{data_in_list}'")
+        self.output.write(self.verbose, "INFO", "DB:AddPlayerGameRel", message=f"adding player game relation for the whole match for all players with data: '{data_in_list}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         cur.executemany("INSERT INTO players_games (player_id, game_id, compeditor_nbr) VALUES(?,?,?)", data_in_list)
@@ -223,7 +259,7 @@ class DB():
 
     def AddPlayerMatchRel_W_ELOUpdate(self, data_in_list, category_id):
         def addPlayerMatchRel(data_in):
-            if self.verbose: print(f"INFO --- DB:AddPlayerMatchRel_W_ELOUpdate:addPlayerMatchRel --- adding player match relation to DB with ELO data: '{data_in}'")
+            self.output.write(self.verbose, "INFO", "DB:AddPlayerMatchRel_W_ELOUpdate:addPlayerMatchRel", message=f"adding player match relation to DB with ELO data: '{data_in}'")
             con = sqlite3.connect(self.db_name)
             cur = con.cursor()
             cur.executemany("INSERT INTO players_matches_elo_change (player_id, match_id, player_start_elo, player_elo_change) VALUES(?,?,?,?)", data_in)
@@ -231,7 +267,7 @@ class DB():
             con.close()
 
         def updatePlayersELO(data_in):
-            if self.verbose: print(f"INFO --- DB:AddPlayerMatchRel_W_ELOUpdate:updatePlayersELO --- updating player ELO value with following data: '{data_in}'")
+            self.output.write(self.verbose, "INFO", "DB:AddPlayerMatchRel_W_ELOUpdate:updatePlayersELO", message=f"updating player ELO value with following data: '{data_in}'")
             con = sqlite3.connect(self.db_name)
             cur = con.cursor()
             cur.executemany("UPDATE players_categories_elo SET elo = ? WHERE category_id = ? AND player_id = ?", data_in)
@@ -252,26 +288,34 @@ class DB():
     # results reports printing to terminal
     #============================================
 
-    def report_AllPlayersELOrank(self):
-        print("\nFull list of players and their ELO ranked from highest to lowest rank per category:")
+    def report_ListTournaments(self):
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        query = """SELECT p.name, pce.elo, c.name, c.description
-FROM players p
-JOIN players_categories_elo pce ON p.id = pce.player_id
-JOIN categories c ON c.id = pce.category_id
-ORDER BY c.name, pce.elo DESC"""
+        query = "SELECT * FROM report_ListTournaments"
+        res = cur.execute(query)
+        data_list = res.fetchall()
+        con.close()
+        for item in data_list:
+            self.output.write(None, "INFO", "tournaments", id=item[0], name=item[1], date=item[2], location=item[3])
+        self.output.PrintResult()
+
+    def report_AllPlayersELOrank(self):
+        self.output.write(None, "INFO", None, message="Full list of players and their ELO ranked from highest to lowest rank per category:")
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        query = """SELECT * FROM report_EloStandings"""
         res = cur.execute(query)
         data_list = res.fetchall()
         con.close()
         category_name = ""
         category_desc = ""
         for item in data_list:
-            if item[2] != category_name:
-                category_name = item[2]
-                category_desc = item[3]
-                print(f"\tRanking on category '{category_name}', '{category_desc}':")
-            print(f"Player: '{item[0]}' with ELO: '{item[1]}'")
+            if item[4] != category_name:
+                category_name = item[4]
+                category_desc = item[5]
+                self.output.write(None, "INFO", "category", name=category_name, description=category_desc, ranking=[])
+            self.output.write(None, "INFO", "category:ranking", id=item[0], name=item[1], elo=item[2])
+        self.output.PrintResult()
 
     def report_AllPlayersELOrankOnCategory(self, category_id):
         con = sqlite3.connect(self.db_name)
@@ -279,10 +323,9 @@ ORDER BY c.name, pce.elo DESC"""
         res = cur.execute("SELECT name, description FROM categories where id = "+str(category_id))
         category_data = res.fetchone()
         print(f"\nFull list of players and their ELO ranked from highest to lowest rank in category: '{category_data[0]}', '{category_data[1]}'")
-        query = """SELECT p.name, pce.elo
-FROM players p
-JOIN players_categories_elo pce ON p.id = pce.player_id
-WHERE category_id = """ + str(category_id) + " ORDER BY pce.elo DESC"
+        query = """SELECT player_name, ELO
+FROM report_EloStandings
+WHERE category_id = """ + str(category_id)
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         res = cur.execute(query)
@@ -291,34 +334,23 @@ WHERE category_id = """ + str(category_id) + " ORDER BY pce.elo DESC"
         for item in data_list:
             print(f"Player: '{item[0]}' with ELO: '{item[1]}'")
 
-    def report_TournamentCategoryResult(self, tournament_id, category_id):
+    def report_TournamentResult(self, tournament_id):
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         res = cur.execute("SELECT name FROM tournaments where id = "+str(tournament_id))
-        print(f"\nEnd statistics and final ELO ranking from tournament: '{res.fetchone()[0]}'")
-        query = """SELECT DISTINCT p.name, pce.elo, statistics.nbr_matches, statistics.victories
-FROM matches m
-JOIN players_matches_elo_change pm ON m.id = pm.match_id
-JOIN players p ON p.id = pm.player_id
-JOIN players_categories_elo pce ON p.id = pce.player_id AND pce.category_id = """ + str(category_id) + """ JOIN (
-	SELECT
-	p.id,
-	p.name,
-	count(g.id) as nbr_matches,
-	SUM(IIF(CASE pg.compeditor_nbr WHEN '1' THEN g.compeditor_one_score ELSE g.compeditor_two_score END > CASE pg.compeditor_nbr WHEN '1' THEN g.compeditor_two_score ELSE g.compeditor_one_score END, 1, 0)) victories
-	FROM players p
-	JOIN players_games pg ON p.id = pg.player_id
-	JOIN games g ON pg.game_id = g.id
-	JOIN matches m ON m.id = g.match_id
-	WHERE m.tournament_id = """ + str(tournament_id) + """ group by p.name
-) statistics ON statistics.id = p.id
-ORDER BY pce.elo DESC"""
+        #print(f"\nEnd statistics and final ELO ranking from tournament: '{res.fetchone()[0]}'")
+        self.output.write(None, "INFO", None, message=f"End statistics and final ELO ranking from tournament: '{res.fetchone()[0]}'")
+        query = """SELECT * FROM report_TournamentResults
+WHERE tournament_id = """ + str(tournament_id)
         res = cur.execute(query)
         data_list = res.fetchall()
         con.close()
+        position = 0
         for item in data_list:
-            print(f"Player: '{item[0]}' with final ELO: '{item[1]}' played '{item[2]}' games and won: '{item[3]} games'")
-
+            position += 1
+            #print(f"'Position: '{position}': '{item[4]}' played '{item[5]}' games and won: '{item[6]} games'. Points For: '{item[7]}'; Points Against: '{item[8]}'; Points Difference: '{item[9]}'")
+            self.output.write(None, "INFO", "results", position=position, team=item[4], games_total=item[5], games_won=item[6], points_for=item[7], points_against=item[8], points_diff=item[9])
+        self.output.PrintResult()
 
     #============================================
     # static site generators

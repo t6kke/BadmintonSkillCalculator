@@ -67,15 +67,15 @@ List is not just code improvements but also project functionalities
 
 - Various minor improvements in codes marked with TODO.
 - GetOrAddPlayer function in Database package is a mess and needs some work.
-- Extract details from Tournament name and store them in DB.
 - application version metadata(db logic version, skill calculator version) in database for initial validation.
-- SQL of the reports should be views in the database.
 - created_at and updated_at fields into varios database tables where they make sense.
-- Improve functionality to define category of the tournament.
 - Add ELO confidence value and use it to handle ELO gain/loss.
-- Fix excel parser being dependant on results information.
 - Tournament results statistics report users games count. This change will be in the future since this has to change when matches consist of multiple games.
-- Rework how commands/launch arguments are built and handled.
+- Old help information should be implemented through new output help information.
+- Verbosity logic of output package needs to be reworked.
+- Re-work how arguments handling is done after registration.
+- Consolidate output message/error/status into logical coherent structure across different commands.
+- Create additional flag for enabling default categories creation on initial DB creation.
 
 ### Far Future
 
@@ -99,17 +99,35 @@ Required libraries: pandas, openpyxl, sqlite3
 
 working directory should include the source data files. I provide example data both in txt file and also in excel file in how it's in final format.
 
-For test execution run command: `python3 main.py`
+For test execution run: `python3 main.py`
 
-For help information run command: `python3 main.py -h`
+For regular usage run: `python3 main.py [command] [argument(s)]`
 
-More detailed how to commands will be provided once the launch arguments setup is finalized. Currently -h is the best option to check how the given version can be used.
+Valid command options are: version, help, insert, report, category
+
+For help information for all commands and how their arguments work run: `python3 main.py help`
 
 ## ERD of the Tournament and players ELO
 
 ![ERD](BSC_ERD.png)
 
 ## Change Log
+
+### Alpha 4
+
+- Under utils new launch arguments system created for commands and arguments
+- First launch argument is command; options: version, help, insert, report, category
+- Each command is registered and can take anything betwee 0 to many arguments for additional parameters
+- Information output functionality separated with option to just print human readable CLI output or to output json formatted data for machine interactions
+- All output logic that would be required by computer reading have been built to be usable with --out argument and provide valid json output
+- Report functionality SQL-s moved to be views in DB, will be created on new DB on initialization
+- Tournament restults report query refined to show actual final tournament teams ranking result
+- All tournaments list report added
+- Tournament details extracted from the excel full string and added to appropriate columns in tournament table
+- Will skip tournaments that are already added to the database, cannot add duplicates
+- All previous print statments moved to new output object usage
+- Default categories creation is not done by default
+- Initial fix to handle excel files where only games are presented, no results summary
 
 ### Alpha 3.1.1
 
