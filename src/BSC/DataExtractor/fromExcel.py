@@ -2,8 +2,9 @@ import pandas as pd
 import numpy as np
 
 class ExcelParser():
-    def __init__(self, excel_data_games_filename, excel_sheet_name, verbose=False):
+    def __init__(self, excel_data_games_filename, excel_sheet_name, output, verbose=False):
         self.verbose = verbose
+        self.output = output
         self.excel_data_games_filename = excel_data_games_filename
         self.excel_sheet_name = excel_sheet_name
         self.dataframe = None
@@ -12,38 +13,37 @@ class ExcelParser():
         self.collected_games_list = []
 
     def getTournamentName(self):
-        if self.verbose: print(f"INFO --- retreiving tournament name")
+        self.output.write(self.verbose, "INFO", None, message=f"retreiving tournament name")
         dataframe_event_name = pd.read_excel(self.excel_data_games_filename, sheet_name=self.excel_sheet_name, nrows=1, header=None)
         event_name = dataframe_event_name.at[0,0]
         #print(pd.ExcelFile(self.excel_data_games_filename).sheet_names)    # sheets can be found like this, not sure if needed
-        if self.verbose: print(f"DEBUG --- returning tournament name: '{event_name}'")
+        self.output.write(self.verbose, "INFO", None, message=f"returning tournament name: '{event_name}'")
         return str(event_name)
 
     def getGames(self):
-        if self.verbose: print(f"INFO --- returning all collected games: '{self.collected_games_list}'")
+        self.output.write(self.verbose, "INFO", None, message=f"returning all collected games: '{self.collected_games_list}'")
         return self.collected_games_list
 
     def collectGames(self):
-        if self.verbose: print(f"INFO --- staring collection of games from dataframe:\n{self.dataframe}")
+        self.output.write(self.verbose, "INFO", None, message=f"staring collection of games from dataframe:\n{self.dataframe}")
         last_column = self.__findLastGamesColumn()
         last_row = len(self.dataframe.index)-1
         first_game_row = self.__findFirstGamesRow()
-        if self.verbose: print(f"DEBUG --- games section limiters -- First game row: '{first_game_row}' -- Last row: '{last_row}' -- Last column: '{last_column}'")
+        self.output.write(self.verbose, "INFO", None, message=f"games section limiters -- First game row: '{first_game_row}' -- Last row: '{last_row}' -- Last column: '{last_column}'")
 
         column_range = [] #Used to limit colums for the game dataframes
         for i in range(0,last_column+1):
             column_range.append(i)
         for i in range(first_game_row,last_row+1,5):    #TODO range step is hardcoded as 5 since it's standard, it could be extraced dynamically but not relevant for now
             self.__getGameDataframe(i,column_range)
-
         self.__getAllGames()
 
 
     def __setDataframe(self):
-        if self.verbose: print(f"INFO --- getting the full dataframe from excel")
+        self.output.write(self.verbose, "INFO", None, message=f"getting the full dataframe from excel")
         self.dataframe = pd.read_excel(self.excel_data_games_filename, sheet_name=self.excel_sheet_name, header=None)
         self.dataframe[len(self.dataframe.columns)] = np.nan #Initial hack to work around the NaN field detection for end of games, solves a problem where only games are in excel and no summary
-        if self.verbose: print(f"DEBUG --- got this dataframe:\n{self.dataframe}")
+        self.output.write(self.verbose, "INFO", None, message=f"got this dataframe:\n{self.dataframe}")
 
     def __findLastGamesColumn(self):
         for column in range(len(self.dataframe.columns)):
@@ -63,9 +63,9 @@ class ExcelParser():
                 return row
 
     def __getGameDataframe(self, row_index, column_range):
-        if self.verbose: print(f"INFO --- getting specific games section dataframe")
+        self.output.write(self.verbose, "INFO", None, message=f"getting specific games section dataframe")
         dataframe = pd.read_excel(self.excel_data_games_filename, sheet_name=self.excel_sheet_name, skiprows=row_index, nrows=4, usecols=column_range, header=None)
-        if self.verbose: print(f"DEBUG --- found this dataframe:\n{dataframe}")
+        self.output.write(self.verbose, "INFO", None, message=f"found this dataframe:\n{dataframe}")
         self.games_dataframe_list.append(dataframe)
 
     def __getAllGames(self):    #TODO should also add some verbose information to this function

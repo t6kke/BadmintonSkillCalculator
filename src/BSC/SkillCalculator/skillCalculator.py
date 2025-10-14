@@ -1,6 +1,7 @@
 class SkillCalc():
-    def __init__(self, players_obj_dict, verbose=False):
+    def __init__(self, players_obj_dict, output, verbose=False):
         self.verbose = verbose #TODO extend verbose information to stuff that might be relevant
+        self.output = output
         self.k_factor = 32 #TODO there should be 2 K-Factor variables, one for winner and one loser. when we have implemented ELO confidence value. example high ELO player will not lose a lot of points if new team with base/low ELO beats them
         self.players_obj_dict = players_obj_dict
 
@@ -23,7 +24,7 @@ class SkillCalc():
         return resut_ELO_changes_dict
 
     def __scaleKFactor(self, win_status, ELO_diff):
-        if self.verbose: print(f"DEBUG --- SkillCalc:__scaleKFactor --- ELO difference: {ELO_diff}")
+        self.output.write(self.verbose, "SkillCalc:__scaleKFactor", None, message=f"ELO difference: '{ELO_diff}'")
         #TODO investigate can this if else logic be simplified
         if win_status == 1 and ELO_diff > 0:
             # I win and have higher ELO so k_factor has to scale down based on difference

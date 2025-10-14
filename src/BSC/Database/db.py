@@ -296,11 +296,11 @@ class DB():
         data_list = res.fetchall()
         con.close()
         for item in data_list:
-            self.output.write(self.verbose, "INFO", "tournaments", id=item[0], name=item[1], date=item[2], location=item[3])
+            self.output.write(None, "INFO", "tournaments", id=item[0], name=item[1], date=item[2], location=item[3])
         self.output.PrintResult()
 
     def report_AllPlayersELOrank(self):
-        self.output.write(self.verbose, "INFO", None, message="Full list of players and their ELO ranked from highest to lowest rank per category:")
+        self.output.write(None, "INFO", None, message="Full list of players and their ELO ranked from highest to lowest rank per category:")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         query = """SELECT * FROM report_EloStandings"""
@@ -313,8 +313,8 @@ class DB():
             if item[4] != category_name:
                 category_name = item[4]
                 category_desc = item[5]
-                self.output.write(self.verbose, "INFO", "category", name=category_name, description=category_desc, ranking=[])
-            self.output.write(self.verbose, "INFO", "category:ranking", id=item[0], name=item[1], elo=item[2])
+                self.output.write(None, "INFO", "category", name=category_name, description=category_desc, ranking=[])
+            self.output.write(None, "INFO", "category:ranking", id=item[0], name=item[1], elo=item[2])
         self.output.PrintResult()
 
     def report_AllPlayersELOrankOnCategory(self, category_id):
@@ -339,7 +339,7 @@ WHERE category_id = """ + str(category_id)
         cur = con.cursor()
         res = cur.execute("SELECT name FROM tournaments where id = "+str(tournament_id))
         #print(f"\nEnd statistics and final ELO ranking from tournament: '{res.fetchone()[0]}'")
-        self.output.write(self.verbose, "INFO", None, message=f"End statistics and final ELO ranking from tournament: '{res.fetchone()[0]}'")
+        self.output.write(None, "INFO", None, message=f"End statistics and final ELO ranking from tournament: '{res.fetchone()[0]}'")
         query = """SELECT * FROM report_TournamentResults
 WHERE tournament_id = """ + str(tournament_id)
         res = cur.execute(query)
@@ -349,7 +349,7 @@ WHERE tournament_id = """ + str(tournament_id)
         for item in data_list:
             position += 1
             #print(f"'Position: '{position}': '{item[4]}' played '{item[5]}' games and won: '{item[6]} games'. Points For: '{item[7]}'; Points Against: '{item[8]}'; Points Difference: '{item[9]}'")
-            self.output.write(self.verbose, "INFO", "results", position=position, team=item[4], games_total=item[5], games_won=item[6], points_for=item[7], points_against=item[8], points_diff=item[9])
+            self.output.write(None, "INFO", "results", position=position, team=item[4], games_total=item[5], games_won=item[6], points_for=item[7], points_against=item[8], points_diff=item[9])
         self.output.PrintResult()
 
     #============================================

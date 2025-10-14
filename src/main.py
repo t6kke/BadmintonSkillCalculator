@@ -61,8 +61,8 @@ class Main():
             o_type = self.command_arg_objects_dict.get("output_type").arg_options
         output_type = self.args_handler.getUsedArgValue(o_type)
         self.output = Output(output_type)
-        self.output.write(self.verbose, "INFO", None, name="Badminton Skill Calculator")
-        self.output.write(self.verbose, "INFO", None, version=self.app_version)
+        self.output.write(None, "INFO", None, name="Badminton Skill Calculator")
+        self.output.write(None, "INFO", None, version=self.app_version)
         launch_command.run()
         self.__exitSuccess("\n=====================\nDone")
 
@@ -96,7 +96,7 @@ class Main():
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options) #TODO handle no value provided by user
         self.database_obj = DB(db_name, self.output, verbose=self.verbose)
         raw_tournaments_from_excel = self.__getGamesFromExcel(source_file, sheets_list)
-        gamesHandler = Handler(self.database_obj, self.verbose)
+        gamesHandler = Handler(self.database_obj, self.output, self.verbose)
         category_id = self.database_obj.GetOrAddCategory(category_name, category_desc)
         tournament_id = None
         for tournament_name_data, raw_matches_list_from_excel in raw_tournaments_from_excel.items():
@@ -108,13 +108,13 @@ class Main():
             tournament_data = self.database_obj.FindTournament(tournament_name, tournament_date)
             if len(tournament_data) != 0:
                 tournament_id = tournament_data[0][0]
-                self.output.write(False, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="error", error=f"INFO --- Tournament '{tournament_name}' already exists in database, not adding")
+                self.output.write(None, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="error", error=f"INFO --- Tournament '{tournament_name}' already exists in database, not adding")
                 continue
             self.output.write(True, "INFO", "tournaments", message=f"Adding tournament: '{tournament_name}' to the database")
             tournament_id = self.database_obj.AddTournament((tournament_name, tournament_date, tournament_location))
             self.output.write(True, "INFO", "tournaments", message=f"Running games handler functionality...")
             gamesHandler.runGamesParser(raw_matches_list_from_excel, tournament_id, category_id)
-            self.output.write(False, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="success")
+            self.output.write(None, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="success")
         self.output.write(self.verbose, "INFO", None, message=f"Final reports")
         self.output.PrintResult()
 
@@ -122,9 +122,9 @@ class Main():
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options) #TODO handle no value provided by user
         self.database_obj = DB(db_name, self.output, verbose=self.verbose)
         reports_list = self.database_obj.GetAvailableReports()
-        self.output.write(self.verbose, "INFO", None, message="Available reports:")
+        self.output.write(None, "INFO", None, message="Available reports:")
         for report in reports_list:
-            self.output.write(self.verbose, "INFO", "reports", name=report)
+            self.output.write(None, "INFO", "reports", name=report)
         self.output.PrintResult()
 
     def argFuncRunReport(self):
@@ -139,12 +139,12 @@ class Main():
             case "report_TournamentResults":
                 tournament_id = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("report_tid_filter").arg_options)
                 if tournament_id == "" or tournament_id == None:
-                    self.output.write(self.verbose, "INFO", None, status="error", message="'--r_tidf' filter for tournament is required")
+                    self.output.write(None, "INFO", None, status="error", message="'--r_tidf' filter for tournament is required")
                     self.output.PrintResult() #TODO should also do error exit?
                     return
                 self.database_obj.report_TournamentResult(tournament_id)
             case _:
-                self.output.write(self.verbose, "INFO", None, status="error", message="report not found") #TODO better response with, potentially with listing options and also error exit
+                self.output.write(None, "INFO", None, status="error", message="report not found") #TODO better response with, potentially with listing options and also error exit
                 self.output.PrintResult()
 
     def commandCategory(self):
@@ -158,9 +158,9 @@ class Main():
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options)
         self.database_obj = DB(db_name, self.output, verbose=self.verbose)
         categories_data = self.database_obj.GetAvailableCategories()
-        self.output.write(self.verbose, "INFO", None, message="Available categories:")
+        self.output.write(None, "INFO", None, message="Available categories:")
         for category in categories_data:
-            self.output.write(self.verbose, "INFO", "categories", ID=category[0], name=category[1], description=category[2])
+            self.output.write(None, "INFO", "categories", ID=category[0], name=category[1], description=category[2])
         self.output.PrintResult()
 
     def argFuncAddCategory(self):
@@ -172,9 +172,9 @@ class Main():
         self.database_obj = DB(db_name, self.output, verbose=self.verbose)
         category_id = self.database_obj.GetOrAddCategory(category_name, category_desc)
         if category_id == None:
-            self.output.write(False, "INFO", None, status="error", message="failed to add category")
+            self.output.write(None, "INFO", None, status="error", message="failed to add category")
         else:
-            self.output.write(False, "INFO", None, status="success", message="category added successfully")
+            self.output.write(None, "INFO", None, status="success", message="category added successfully")
         self.output.PrintResult()
 
     def __handleLaunchArgs(self):
@@ -188,20 +188,20 @@ class Main():
     def __getGamesFromExcel(self, excel_file, list_of_sheets):
         result_dict = {}
         for sheet in list_of_sheets:
-            excelParser = ExcelParser(excel_file, sheet, self.verbose)
+            excelParser = ExcelParser(excel_file, sheet, self.output, self.verbose)
             tournament_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
             excelParser.collectGames()
             result_dict[tournament_name] = excelParser.getGames()
         return result_dict
 
     def __exitError(self, message):
-        self.output.write(False, "INFO", None, error=message)
+        self.output.write(None, "INFO", None, error=message)
         sys.exit(1)
 
     def __exitSuccess(self, message = None):
         if message == None:
             sys.exit(0)
-        self.output.write(False, "INFO", None, message=message)
+        self.output.write(None, "INFO", None, message=message)
         sys.exit(0)
 
 

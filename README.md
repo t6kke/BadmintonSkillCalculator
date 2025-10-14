@@ -72,9 +72,10 @@ List is not just code improvements but also project functionalities
 - Add ELO confidence value and use it to handle ELO gain/loss.
 - Tournament results statistics report users games count. This change will be in the future since this has to change when matches consist of multiple games.
 - Old help information should be implemented through new output help information.
-- Re-work how arguments handling is done after registration
-- Consolidate output message/error/status into logical coherent structure across different commands
-- Create additional flag for enabling default categories creation on initial DB creation
+- Verbosity logic of output package needs to be reworked.
+- Re-work how arguments handling is done after registration.
+- Consolidate output message/error/status into logical coherent structure across different commands.
+- Create additional flag for enabling default categories creation on initial DB creation.
 
 ### Far Future
 
