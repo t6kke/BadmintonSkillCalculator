@@ -72,10 +72,10 @@ class Main():
 
     def commandHelp(self):
         for args_dict in self.commands.values():
-            self.output.write(self.verbose, "INFO", None, message=args_dict)
+            self.output.write(None, "INFO", None, message=args_dict)
             for arg in args_dict.kv_arguments.values():
-                self.output.write(self.verbose, "INFO", None, message=arg)
-            self.output.write(self.verbose, "INFO", None, message="")
+                self.output.write(None, "INFO", None, message=arg)
+            self.output.write(None, "INFO", None, message="")
 
     def commandReport(self):
         is_executed = False

@@ -181,6 +181,10 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 
 ## Change Log
 
+### Alpha 4.0.1
+
+- Fixed 'help' command not providing correct output
+
 ### Alpha 4
 
 - Under utils new launch arguments system created for commands and arguments
