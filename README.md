@@ -1,10 +1,16 @@
 # Badminton Skill Calculator
 
-This is personal project that is meant to collect tournament results information. Parse the players results and calculate ELO for each player for skill ranking. Currently developed for small tournaments where each player/team plays agains every other player/team one game. This code does not directly care about the tournament results, it just calculates ELO ranking after each match/round. It supports singles and doubles tournaments since these are two of the more common badminton tournament types(some regions of the world also have somewhat active 3v3 scene but not for me). This project does not specifically need to be used for Badminton, tehnically any kind of tournament with games and scores can use this project for ELO calculations. Only additinal challenges in this case is that data entry currently works only on specific formated tournaments so it's likely that you need to build your own custom tournament data parser.
+CLI tool to parse Badminton tournament results(currently from specific excel format from specific tournament type) and calculating player head to head ELO ranking results.
 
-I'm using some basic ELO calculations setup to learn more about how ELO raking works and how best to implement it for my situation. More details in the next chapter.
+Project additionall provides Full ongoing players ELO ranking report, and also does the tournament results calculations. 
 
-This started out as a personal development project. At this point it's been refined enought that it could be used as a standalone CLI application or even as a back-end tool that has some UI wrapper for it's usage. At some point the future I might also rewrite this project is some other language but will still keep it as CLI tool. Any additional usability changes should be separate wrapper projects on top of this tool.
+## Motivation
+
+This was created as an interest to see how players ranking would work if they would be scored similarly how they do it in chess, with head to head ELO calculations. Current Badminton ranking solutions just give points for tournament results but they don't take into consideration specific head to head situations where maybe good players can have lower results if they always end up against top players.
+
+It supports singles and doubles tournaments since these are two of the more common badminton tournament types(some regions of the world also have somewhat active 3v3 scene but not for me). This project does not specifically need to be used for Badminton, tehnically any kind of tournament with games and scores can use this project for ELO calculations.
+
+I'm using basic ELO calculations setup to learn more about how ELO raking works and how best to implement it for my situation.
 
 ## ELO Ranking Logic
 
@@ -97,7 +103,9 @@ Python version that was used to develop the application: Python 3.10
 
 Required libraries: pandas, openpyxl, sqlite3
 
-working directory should include the source data files. I provide example data both in txt file and also in excel file in how it's in final format.
+working directory includes the source data files. I provide example data both in txt file and also in excel files.
+
+#### Quick Start
 
 For test execution run: `python3 main.py`
 
@@ -107,9 +115,69 @@ Valid command options are: version, help, insert, report, category
 
 For help information for all commands and how their arguments work run: `python3 main.py help`
 
+#### Usage
+
+All options:
+```
+         [version]  ::  Shows application version information  
+  
+            [help]  ::  Initial help information, for more details use [command] --help  
+  
+          [insert]  ::  Insert new tournament to database  
+    --db_name,      ::  SQLite database name to be used, will create new one if it does not exist - MANDATORY  
+       --file,  -f  ::  Input Excel file of tournament results to parsed and injected - MANDATORY  
+      --sheet,  -s  ::  Excel sheet name to be parsed, multiple sheets can be defined in one execution - MANDATORY  
+     --c_name,      ::  Short name of the category to be used or inserted to the database - MANDATORY  
+     --c_desc,      ::  Category description - MANDATORY  
+        --out,  -o  ::  Output format, by default prints human readble results to terminal.
+                        '-out=json' will output response in json format for when other applications need to parse the results  
+    --verbose,  -v  ::  Enables verbose output, only works if using default output  
+       --help,  -h  ::  Provides more details on how to use the command  
+  
+          [report]  ::  Use reporting views from database  
+    --db_name,      ::  SQLite database name to be used, will create new one if it does not exist - MANDATORY  
+       --list,  -l  ::  Lists available options from database  
+     --r_name,      ::  Name of the reporting view to be used to get output  
+     --r_tidf,      ::  Report Tournament ID filter for some specific reports that can utilize filtering  
+        --out,  -o  ::  Output format, by default prints human readble results to terminal.
+                        '-out=json' will output response in json format for when other applications need to parse the results  
+    --verbose,  -v  ::  Enables verbose output, only works if using default output  
+       --help,  -h  ::  Provides more details on how to use the command  
+  
+        [category]  ::  List or add tournament categories  
+    --db_name,      ::  SQLite database name to be used, will create new one if it does not exist - MANDATORY  
+       --list,  -l  ::  Lists available options from database  
+     --c_name,      ::  Short name of the category to be used or inserted to the database - MANDATORY  
+     --c_desc,      ::  Category description - MANDATORY  
+        --out,  -o  ::  Output format, by default prints human readble results to terminal.
+                        '-out=json' will output response in json format for when other applications need to parse the results  
+    --verbose,  -v  ::  Enables verbose output, only works if using default output  
+       --help,  -h  ::  Provides more details on how to use the command
+```
+
+Following commands will work with provided excel files
+
+Example of importing tournament: `python3 main.py insert --db_name=db_excel_test.db -f=test_xlsx_d -s=Sheet1 --c_name=TDC --c_desc="test doubles category"`
+
+Example of importing multiple tournaments from one excel: `python3 main.py insert --db_name=db_excel_test.db -f=test_xlsx_d -s=Sheet1 -s=Sheet2 -s=Sheet3 -s=Sheet4 --c_name=TDC --c_desc="test doubles category"`
+
+Example of listing available reports: `python3 main.py report --db_name=db_excel_test.db --list`
+
+Example of getting tournament result report: `python3 main.py report --db_name=db_excel_test.db --r_name=report_TournamentResults --r_tidf=1`
+
+Example of getting whole players ELO standing ranking report in JSON frormat: `python3 main.py report --db_name=db_excel_test.db --r_name=report_EloStandings -o=json`
+
 ## ERD of the Tournament and players ELO
 
 ![ERD](BSC_ERD.png)
+
+## Contributing
+
+- Minimum python version 3.10 installed
+- If you don't have pip install pandas and openpyxl
+- Clone the repo
+- Project comes with example data that you can use to start testing
+- If you'd like to contribute, please fork the repository and open a pull request to the `main` branch
 
 ## Change Log
 
