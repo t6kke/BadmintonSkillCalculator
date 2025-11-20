@@ -1,47 +1,47 @@
-Game 1
-Player11+Player12 15	Player31+Player32 10
-Player21+Player22 20	Player41+Player42 12
+Match 1
+Player11+Player12 15:10	Player31+Player32 20:12:16
+Player21+Player22 10:9	Player41+Player42 12:16:20
 
-Game 2
-Player11+Player12 13	Player31+Player32 10
-Player41+Player42 11	Player21+Player22 15
+Match 2
+Player11+Player12 15:30	Player31+Player32 10:18:20
+Player41+Player42 11:5	Player21+Player22 13:20:8
 
-Game 3
-Player11+Player12 13	Player41+Player42 17
-Player31+Player32 11	Player21+Player22 19
+Match 3
+Player11+Player12 19:15	Player41+Player42 17:20
+Player31+Player32 11:11	Player21+Player22 13:18
 
-Game 4
-Player11+Player12 15	Player31+Player32 13
-Player21+Player22 20	Player41+Player42 12
+Match 4
+Player11+Player12 15:10	Player31+Player32 20:12:16
+Player21+Player22 10:9	Player41+Player42 12:16:20
 
-Game 5
-Player11+Player12 13	Player31+Player32 10
-Player41+Player42 12	Player21+Player22 15
+Match 5
+Player11+Player12 15:30	Player31+Player32 10:18:20
+Player41+Player42 11:5	Player21+Player22 13:20:8
 
-Game 6
-Player11+Player12 13	Player41+Player42 17
-Player31+Player32 14	Player21+Player22 19
+Match 6
+Player11+Player12 19:15	Player41+Player42 17:20
+Player31+Player32 11:11	Player21+Player22 13:18
 
-Game 7
-Player11+Player12 15	Player31+Player32 18
-Player21+Player22 20	Player41+Player42 12
+Match 7
+Player11+Player12 15:10	Player31+Player32 20:12:16
+Player21+Player22 10:9	Player41+Player42 12:16:20
 
-Game 8
-Player11+Player12 13	Player31+Player32 10
-Player41+Player42 11	Player21+Player22 15
+Match 8
+Player11+Player12 15:30	Player31+Player32 10:18:20
+Player41+Player42 11:5	Player21+Player22 13:20:8
 
-Game 9
-Player11+Player12 13	Player41+Player42 17
-Player31+Player32 17	Player21+Player22 19
+Match 9
+Player11+Player12 19:15	Player41+Player42 17:20
+Player31+Player32 11:11	Player21+Player22 13:18
 
-Game 10
-Player11+Player12 15	Player31+Player32 13
-Player21+Player22 20	Player41+Player42 12
+Match 10
+Player11+Player12 15:10	Player31+Player32 20:12:16
+Player21+Player22 10:9	Player41+Player42 12:16:20
 
-Game 11
-Player11+Player12 13	Player31+Player32 10
-Player41+Player42 12	Player21+Player22 15
+Match 11
+Player11+Player12 15:30	Player31+Player32 10:18:20
+Player41+Player42 11:5	Player21+Player22 13:20:8
 
-Game 12
-Player11+Player12 13	Player41+Player42 17
-Player31+Player32 14	Player21+Player22 19
+Match 12
+Player11+Player12 19:15	Player41+Player42 17:20
+Player31+Player32 11:11	Player21+Player22 13:18

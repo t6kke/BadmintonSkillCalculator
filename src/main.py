@@ -204,6 +204,16 @@ class Main():
         self.output.write(None, "INFO", None, message=message)
         sys.exit(0)
 
+    def __runTest(self):
+        tournament_name = "Example Tournament"
+        tournament_date = "01.01.2025"
+        tournament_location = "Example Location"
+        category_name = "EC"
+        category_desc = "example category"
+
+        matches_list = getGamesFromTXT(self.test_data_txt)
+        print(matches_list)
+        sys.exit(0)
 
 if __name__=="__main__":
     if len(sys.argv) <= 1:
