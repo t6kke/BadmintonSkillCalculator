@@ -4,7 +4,7 @@ Player21+Player22 10:9	Player41+Player42 12:16:20
 
 Match 2
 Player11+Player12 15:30	Player31+Player32 10:18:20
-Player41+Player42 11:5	Player21+Player22 13:20:8
+Player41+Player42 11:5	Player21+Player22 13:17:8
 
 Match 3
 Player11+Player12 19:15	Player41+Player42 17:20
@@ -16,7 +16,7 @@ Player21+Player22 10:9	Player41+Player42 12:16:20
 
 Match 5
 Player11+Player12 15:30	Player31+Player32 10:18:20
-Player41+Player42 11:5	Player21+Player22 13:20:8
+Player41+Player42 11:5	Player21+Player22 13:17:8
 
 Match 6
 Player11+Player12 19:15	Player41+Player42 17:20
@@ -28,7 +28,7 @@ Player21+Player22 10:9	Player41+Player42 12:16:20
 
 Match 8
 Player11+Player12 15:30	Player31+Player32 10:18:20
-Player41+Player42 11:5	Player21+Player22 13:20:8
+Player41+Player42 11:5	Player21+Player22 13:17:8
 
 Match 9
 Player11+Player12 19:15	Player41+Player42 17:20
@@ -40,7 +40,7 @@ Player21+Player22 10:9	Player41+Player42 12:16:20
 
 Match 11
 Player11+Player12 15:30	Player31+Player32 10:18:20
-Player41+Player42 11:5	Player21+Player22 13:20:8
+Player41+Player42 11:5	Player21+Player22 13:17:8
 
 Match 12
 Player11+Player12 19:15	Player41+Player42 17:20

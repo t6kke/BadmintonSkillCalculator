@@ -187,8 +187,8 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 - TXT test data includes multiple games per match
 - TXT test data returns matches result per team as a list of scores on their given match
 - Excel parser returns matches result per team/player as a list of scores on their given match
-- Match wictory is decided based on games won count
-- 
+- GameHandler now inserts all games separately to the DB into the games table
+- SkillCalculator match victory is decided based on last games score comparison
 
 ### Alpha 4.0.1
 

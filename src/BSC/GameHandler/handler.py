@@ -74,13 +74,16 @@ class Handler():
         skillCalculator = SkillCalc(players_obj_dict_in_tournament, self.output, self.verbose)
         for match in converted_all_matches_list:
             #if self.verbose: print(f"INFO --- working with match: '{match}'") #TODO fix printing problem
+            if len(list(match.values())[0]) != len(list(match.values())[1]):
+                raise Exception("game score counts mismatch")
             match_data_to_db = (tournament_id, category_id,)
             match_id = self.database_obj.AddMatch(match_data_to_db)
 
-            game_nbr = 1 #TODO temp variable until scores are in a list and this tool needs to handle multi game matches
-
-            game_data_to_db = (match_id, game_nbr, list(match.values())[0], list(match.values())[1],)
-            game_id = self.database_obj.AddGame(game_data_to_db)
+            #game_nbr = 0 #TODO temp variable until scores are in a list and this tool needs to handle multi game matches
+            games_count = len(list(match.values())[0])
+            for i in range(games_count):
+                game_data_to_db = (match_id, i+1, list(match.values())[0][i], list(match.values())[1][i],)
+                game_id = self.database_obj.AddGame(game_data_to_db)
 
             self.output.write(self.verbose, "INFO", None, message=f"running ELO calculation for the match")
             elo_results_dict = skillCalculator.calculate(match)

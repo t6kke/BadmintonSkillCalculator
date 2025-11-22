@@ -13,7 +13,7 @@ from BSC.Database.db import DB
 
 class Main():
     def __init__(self, launch_args_list, verbose=False):
-        self.app_version = "alpha 4"
+        self.app_version = "alpha 411"
         self.verbose = verbose
         self.test_execution = False
         self.test_data_txt = "test_data.txt"
@@ -205,15 +205,25 @@ class Main():
         sys.exit(0)
 
     def __runTest(self):
+        verbose = False
         tournament_name = "Example Tournament"
         tournament_date = "01.01.2025"
         tournament_location = "Example Location"
         category_name = "EC"
         category_desc = "example category"
-
+        db_name = "db_txt.db"
         matches_list = getGamesFromTXT(self.test_data_txt)
-        print(matches_list)
+        #print(matches_list)
+        output = Output("console")
+        database_obj = DB(db_name, output, verbose=verbose, clear_db=True)
+        gamesHandler = Handler(database_obj, output, verbose=verbose)
+        category_id = database_obj.GetOrAddCategory(category_name, category_desc)
+        tournament_id = database_obj.AddTournament((tournament_name, tournament_date, tournament_location))
+        gamesHandler.runGamesParser(matches_list, tournament_id, category_id)
+        output.write(verbose, "INFO", None, message=f"Final reports")
+        database_obj.report_TournamentResult(tournament_id)
         sys.exit(0)
+
 
 if __name__=="__main__":
     if len(sys.argv) <= 1:
