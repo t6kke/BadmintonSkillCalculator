@@ -181,6 +181,15 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 
 ## Change Log
 
+### Alpha 4.1.1
+
+- Test run functinality restored with when using `python3 main.py`
+- TXT test data includes multiple games per match
+- TXT test data returns matches result per team as a list of scores on their given match
+- Excel parser returns matches result per team/player as a list of scores on their given match
+- GameHandler now inserts all games separately to the DB into the games table
+- SkillCalculator match victory is decided based on last games score comparison
+
 ### Alpha 4.0.1
 
 - Fixed 'help' command not providing correct output

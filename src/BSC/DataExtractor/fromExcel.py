@@ -77,6 +77,6 @@ class ExcelParser():
                 team_two = str(df.loc[3].at[i]).rstrip()
                 team_one_score = df.loc[2].at[i+1]
                 team_two_score = df.loc[3].at[i+1]
-                temp_dict[team_one] = team_one_score
-                temp_dict[team_two] = team_two_score
+                temp_dict[team_one] = [team_one_score]
+                temp_dict[team_two] = [team_two_score]
                 self.collected_games_list.append(temp_dict)

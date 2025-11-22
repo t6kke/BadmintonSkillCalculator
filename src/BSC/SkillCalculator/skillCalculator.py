@@ -68,7 +68,7 @@ class SkillCalc():
         match_copy = match.copy()
         my_score = match_copy.pop(team)
         opponent_score = match_copy.get(next(iter(match_copy))) #TODO find a better way to get the other teams score from dictionary
-        if my_score > opponent_score:
+        if int(my_score[-1]) > int(opponent_score[-1]):
             result = 1
         else:
             result = 0
