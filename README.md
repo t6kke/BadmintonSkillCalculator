@@ -101,7 +101,7 @@ List is not just code improvements but also project functionalities
 
 Python version that was used to develop the application: Python 3.10
 
-Required libraries: pandas, openpyxl, sqlite3
+Required libraries: pandas, openpyxl, sqlite3, BeautifulSoup
 
 working directory includes the source data files. I provide example data both in txt file and also in excel files.
 
@@ -174,12 +174,18 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 ## Contributing
 
 - Minimum python version 3.10 installed
-- If you don't have pip install pandas and openpyxl
+- If you don't have pip install pandas, openpyxl, beautifulsoup4
 - Clone the repo
 - Project comes with example data that you can use to start testing
 - If you'd like to contribute, please fork the repository and open a pull request to the `main` branch
 
 ## Change Log
+
+### Alpha 5
+
+- Official badminton league tournaments data scraping and injection functionality implemented
+- Initial version of BSC/DataExtractor internal package fromTS.py created for scraping tournamentsoftware.com tournament data
+- 
 
 ### Alpha 4.1.1
 

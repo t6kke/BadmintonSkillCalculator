@@ -5,6 +5,7 @@ import json
 
 from BSC.DataExtractor.fromTXT import getGamesFromTXT
 from BSC.DataExtractor.fromExcel import ExcelParser
+from BSC.DataExtractor.fromTS import WebScraper
 from BSC.GameHandler.handler import Handler
 from BSC.Utils.handleargs import HandleArgs
 from BSC.Utils.commands import Argument, Command, arguments_info, commands_info
@@ -13,7 +14,7 @@ from BSC.Database.db import DB
 
 class Main():
     def __init__(self, launch_args_list, verbose=False):
-        self.app_version = "alpha 411"
+        self.app_version = "alpha 5"
         self.verbose = verbose
         self.test_execution = False
         self.test_data_txt = "test_data.txt"
@@ -206,22 +207,43 @@ class Main():
 
     def __runTest(self):
         verbose = False
-        tournament_name = "Example Tournament"
+
+        #Testing execution with reading txt file
+        # tournament_name = "Example Tournament"
+        # tournament_date = "01.01.2025"
+        # tournament_location = "Example Location"
+        # category_name = "EC"
+        # category_desc = "example category"
+        # db_name = "db_txt.db"
+        # matches_list = getGamesFromTXT(self.test_data_txt)
+        # print(matches_list)
+        # output = Output("console")
+        # database_obj = DB(db_name, output, verbose=verbose, clear_db=True)
+        # gamesHandler = Handler(database_obj, output, verbose=verbose)
+        # category_id = database_obj.GetOrAddCategory(category_name, category_desc)
+        # tournament_id = database_obj.AddTournament((tournament_name, tournament_date, tournament_location))
+        # gamesHandler.runGamesParser(matches_list, tournament_id, category_id)
+        # output.write(verbose, "INFO", None, message=f"Final reports")
+        # database_obj.report_TournamentResult(tournament_id)
+
+        #Testing execution with scraping tournamentsoftware.com
+        test_url = "https://www.tournamentsoftware.com/tournament/dd30e793-b978-4ad4-83cb-3459de20b11b/Matches"
+        output = Output("console")
+        scraper = WebScraper(test_url, output, verbose=verbose)
+        matches_list = scraper.matches_list
+        tournament_name = scraper.tournament_title
         tournament_date = "01.01.2025"
         tournament_location = "Example Location"
         category_name = "EC"
         category_desc = "example category"
-        db_name = "db_txt.db"
-        matches_list = getGamesFromTXT(self.test_data_txt)
+        db_name = "db_tournamentsoftware_test.db"
         #print(matches_list)
-        output = Output("console")
         database_obj = DB(db_name, output, verbose=verbose, clear_db=True)
         gamesHandler = Handler(database_obj, output, verbose=verbose)
         category_id = database_obj.GetOrAddCategory(category_name, category_desc)
         tournament_id = database_obj.AddTournament((tournament_name, tournament_date, tournament_location))
         gamesHandler.runGamesParser(matches_list, tournament_id, category_id)
-        output.write(verbose, "INFO", None, message=f"Final reports")
-        database_obj.report_TournamentResult(tournament_id)
+
         sys.exit(0)
 
 
