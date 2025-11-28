@@ -1,6 +1,6 @@
 # Badminton Skill Calculator
 
-CLI tool to parse Badminton tournament results(currently from specific excel format from specific tournament type) and calculating player head to head ELO ranking results.
+CLI tool to parse Badminton tournament results from tournamentsoftware.com matches page(and from specific excel format from specific tournament type) and calculating player head to head ELO ranking results.
 
 Project additionall provides Full ongoing players ELO ranking report, and also does the tournament results calculations. 
 
@@ -62,6 +62,7 @@ This is just prototype calculation logic. Various elements can change in the fut
 - has few status reports for output from database.
 - handles any number of players in team, regular 1v1 and 2v2 but tehnically works with 3v3 or 11v11 if other type of competition is used.
 - static site table generation for full raking on all categories
+- webscraping of tournamentsoftware.com tournament results
 
 ## Future Development
 
@@ -81,11 +82,9 @@ List is not just code improvements but also project functionalities
 - Verbosity logic of output package needs to be reworked.
 - Re-work how arguments handling is done after registration.
 - Consolidate output message/error/status into logical coherent structure across different commands.
-- Create additional flag for enabling default categories creation on initial DB creation.
 
 ### Far Future
 
-- Import game results(data) from Tournamentsoftare.com competition results, some webscraping probably needed.
 - Support universal team sizes.
 - Large scale testing suit to validate end to end functionality of the application
 
@@ -185,6 +184,7 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 
 - Official badminton league tournaments data scraping and injection functionality implemented
 - Initial version of BSC/DataExtractor internal package fromTS.py created for scraping tournamentsoftware.com tournament data
+- Separate extraction for tournament metadata(name, start/end date) and scraping matches from each tournament day
 - 
 
 ### Alpha 4.1.1

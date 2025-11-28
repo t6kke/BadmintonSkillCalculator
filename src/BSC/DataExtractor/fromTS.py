@@ -11,6 +11,7 @@ HEADERS = {
     "Connection": "keep-alive",
 }
 
+#TODO currently using cookies from browser session, need a fix for this
 COOKEIS = {
     "ASP.NET_SessionId": "mf0eemxpvsng500mplkaq3df",
     "euconsent-v2": "CQZ8xwAQZ8xwADsACAENCCFkAP_gAEPgAAhoLstR_G__bWlr-bb3aftkeYxP9_hr7sQxBgbJk24FzLvW7JwXx2E5NAzatqIKmRIAu3TBIQNlHJDURVCgKIgVryDMaEyUoTNKJ6BkiFMRI2NYCFxvm4tjWQCY5vr99lc1mB-N7dr82dzyy6hHn3a5_2S1WJCdIYetDfv8ZBKT-9IEd_x8v4v4_F7pE2-eS1n_pGvp6j9-YnM_dBmxt-bSffzPn__rl_e7X_vd_n37v94XH77v____f_-7___2C7AAJhoVEEZYECAQKBhBAgAUFYQAUCAIAAEgYICAEwYFOQMAF1hMgBACgAGCAEAAIMAAQAAAQAIRABQAQCAACAQKAAMACAICAAgYAAQAWIgEAAIDoGKYEEAgWACRmVQaYEoACQQEtlQgkAwIK4QhFngEECImCgAAAAAKAAAAeCwEJJASoSCALiCaAAAgAAAiBAgQSEmAAKgzRaA8CTqMjTAMHzBIgp0GQBMEZCQaEJvQkHikKIUEGQGhSzAHAAAA.YAAAAAAAAAAA",
@@ -18,75 +19,109 @@ COOKEIS = {
     "st": "l=1033&exp=46349.8850925347&c=1&cp=23&s=2"
 }
 
+URL_PART_MATCHES = "/matches"
+
 class WebScraper():
     def __init__(self, url, output, verbose=False):
         self.verbose = verbose
-        self.output = output
+        self.output = output #TODO build out information printing logic
         self.url = url
 
         self.tournament_title = ""
+        self.tournament_start = ""
+        self.tournament_end = ""
         self.matches_list = []
+        self.tounament_days_list = []
 
         self.__runScraper()
 
 
+
     def __runScraper(self):
+        self.__getTournamentMetadata()
+        self.__getGamesResults()
+
+
+    def __getTournamentMetadata(self):
         response = requests.get(self.url, headers = HEADERS, cookies = COOKEIS)
         if response.status_code != 200:
             raise Exception(f"bad response code: {response.status_code}")
 
         soup = BeautifulSoup(response.text, "html.parser")
-        self.tournament_title = soup.find("title").get_text()
+        self.tournament_title = soup.find("h2", class_=["media__title", "media__title--large"]).get_text(strip=True)
 
-        raw_matches = soup.find_all("div",class_=["match","match--list"])
-        for raw_match in raw_matches:
-            match_dict = {}
-            team_one_scores = []
-            team_two_scores = []
+        timeline_metadata = soup.find("div", class_=["tournament-meta__timeline"])
+        start_element = timeline_metadata.find("li", class_=["is-started"])
+        end_element = timeline_metadata.find("li", class_=["is-finished"])
 
-            match_header = raw_match.find("li", class_=["match__header-title-item"]).get_text(strip=True)
-            players_result = raw_match.find_all("div", class_=["match__row"])
-            match_results = raw_match.find_all("li", class_=["points__cell"])
+        self.tournament_start = start_element.find("time").get("datetime").split("T")[0]
+        self.tournament_end = end_element.find("time").get("datetime").split("T")[0]
+        if self.tournament_start != self.tournament_end:
+            #TODO need to add all days in between start end and to support tournaments that last more than 2 days, but not currently relevant for me
+            self.tounament_days_list = [self.tournament_start.replace("-",""), self.tournament_end.replace("-","")]
+        else:
+            self.tounament_days_list = [self.tournament_start.replace("-","")]
 
 
-            team_one = players_result[0].find("div", class_=["match__row-title"]).get_text("+", strip=True)
-            team_two = players_result[1].find("div", class_=["match__row-title"]).get_text("+", strip=True)
-            team_one_status = players_result[0].find("span", class_=["tag"])
-            team_two_status = players_result[1].find("span", class_=["tag"])
+    def __getGamesResults(self):
+        for tournament_day in self.tounament_days_list:
+            url = self.url + URL_PART_MATCHES + "/" + tournament_day
+            response = requests.get(url, headers = HEADERS, cookies = COOKEIS)
+            if response.status_code != 200:
+                raise Exception(f"bad response code: {response.status_code}")
 
-            # if status item exists we want it's text value
-            if team_one_status != None:
-                team_one_status = team_one_status.get_text(strip=True)
-            if team_two_status != None:
-                team_two_status = team_two_status.get_text(strip=True)
+            soup = BeautifulSoup(response.text, "html.parser")
+            #self.tournament_title = soup.find("title").get_text()
 
-            #TODO this is initial hack to have scores for walkovers, final solutions should handle no score situations
-            if len(match_results) == 0:
-                if team_one_status == 'W':
-                    team_one_scores.append(1)
-                    team_two_scores.append(0)
-                else:
-                    team_one_scores.append(0)
-                    team_two_scores.append(1)
+            raw_matches = soup.find_all("div",class_=["match","match--list"])
+            for raw_match in raw_matches:
+                match_dict = {}
+                team_one_scores = []
+                team_two_scores = []
 
-            #removing placement data from name
-            team_one = re.sub(" .\d.","", team_one)
-            team_two = re.sub(" .\d.","", team_two)
+                match_header = raw_match.find("li", class_=["match__header-title-item"]).get_text(strip=True)
+                players_result = raw_match.find_all("div", class_=["match__row"])
+                match_results = raw_match.find_all("li", class_=["points__cell"])
 
-            for i in range(len(match_results)):
-                if i % 2 == 0:
-                    team_one_scores.append(match_results[i].get_text(" ", strip=True))
-                else:
-                    team_two_scores.append(match_results[i].get_text(" ", strip=True))
-            match_dict[team_one] = team_one_scores
-            match_dict[team_two] = team_two_scores
 
-            # print("--- DATA ---")
-            # print("header:", match_header)
-            # print(f"Team: '{team_one}' with result: '{team_one_status}' and game scores '{team_one_scores}'")
-            # print(f"Team: '{team_two}' with result: '{team_two_status}' and game scores '{team_two_scores}'")
-            # print("Final dictionary of the match:")
-            # print(match_dict)
-            # print("")
+                team_one = players_result[0].find("div", class_=["match__row-title"]).get_text("+", strip=True)
+                team_two = players_result[1].find("div", class_=["match__row-title"]).get_text("+", strip=True)
+                team_one_status = players_result[0].find("span", class_=["tag"])
+                team_two_status = players_result[1].find("span", class_=["tag"])
 
-            self.matches_list.append(match_dict)
+                # if status item exists we want it's text value
+                if team_one_status != None:
+                    team_one_status = team_one_status.get_text(strip=True)
+                if team_two_status != None:
+                    team_two_status = team_two_status.get_text(strip=True)
+
+                #TODO this is initial hack to have scores for walkovers, final solutions should handle no score situations
+                if len(match_results) == 0:
+                    if team_one_status == 'W':
+                        team_one_scores.append(1)
+                        team_two_scores.append(0)
+                    else:
+                        team_one_scores.append(0)
+                        team_two_scores.append(1)
+
+                #removing placement data from name
+                team_one = re.sub(" .\d.","", team_one)
+                team_two = re.sub(" .\d.","", team_two)
+
+                for i in range(len(match_results)):
+                    if i % 2 == 0:
+                        team_one_scores.append(match_results[i].get_text(" ", strip=True))
+                    else:
+                        team_two_scores.append(match_results[i].get_text(" ", strip=True))
+                match_dict[team_one] = team_one_scores
+                match_dict[team_two] = team_two_scores
+
+                # print("--- DATA ---")
+                # print("header:", match_header)
+                # print(f"Team: '{team_one}' with result: '{team_one_status}' and game scores '{team_one_scores}'")
+                # print(f"Team: '{team_two}' with result: '{team_two_status}' and game scores '{team_two_scores}'")
+                # print("Final dictionary of the match:")
+                # print(match_dict)
+                # print("")
+
+                self.matches_list.append(match_dict)

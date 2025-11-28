@@ -227,7 +227,8 @@ class Main():
         # database_obj.report_TournamentResult(tournament_id)
 
         #Testing execution with scraping tournamentsoftware.com
-        test_url = "https://www.tournamentsoftware.com/tournament/dd30e793-b978-4ad4-83cb-3459de20b11b/Matches"
+        test_url = "https://www.tournamentsoftware.com/tournament/dd30e793-b978-4ad4-83cb-3459de20b11b"
+        test_url = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
         output = Output("console")
         scraper = WebScraper(test_url, output, verbose=verbose)
         matches_list = scraper.matches_list
