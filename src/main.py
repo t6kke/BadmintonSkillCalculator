@@ -232,6 +232,10 @@ class Main():
         output = Output("console")
         scraper = WebScraper(test_url, output, verbose=verbose)
         matches_list = scraper.matches_list
+        raw_matches_list = scraper.rawMatchesObjects_list
+        for raw_match_data in raw_matches_list:
+            print(type(raw_match_data))
+            print(raw_match_data.GetMatchString())
         tournament_name = scraper.tournament_title
         tournament_date = "01.01.2025"
         tournament_location = "Example Location"
