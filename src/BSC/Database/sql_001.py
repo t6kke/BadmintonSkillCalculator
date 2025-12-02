@@ -2,8 +2,11 @@ db_up = {
 "tournaments": """CREATE TABLE "tournaments" (
 	"id"	INTEGER NOT NULL UNIQUE,
 	"name"	TEXT NOT NULL,
-	"date"	TEXT,
+	"start_date"	TEXT,
+	"end_date"	TEXT,
 	"location"	TEXT,
+	"external_url" TEXT,
+	"has_internal_result" BOOLEAN NOT NULL,
 	PRIMARY KEY("id" AUTOINCREMENT)
 )""",
 "players": """CREATE TABLE "players" (
@@ -14,6 +17,19 @@ db_up = {
 "categories": """CREATE TABLE "categories" (
 	"id"	INTEGER NOT NULL UNIQUE,
 	"name"	TEXT NOT NULL UNIQUE,
+	PRIMARY KEY("id" AUTOINCREMENT)
+)""",
+"categories_metadata": """CREATE TABLE "categories_metadata" (
+	"id"	INTEGER NOT NULL UNIQUE,
+	"category_id"	INTEGER NOT NULL,
+	"info_type"	TEXT NOT NULL,
+	"info_text"	TEXT NOT NULL,
+	FOREIGN KEY("category_id") REFERENCES "categories"("id"),
+	PRIMARY KEY("id" AUTOINCREMENT)
+)""",
+"leagues": """CREATE TABLE "leagues" (
+	"id"	INTEGER NOT NULL UNIQUE,
+	"level"	TEXT NOT NULL,
 	"description"	TEXT NOT NULL,
 	PRIMARY KEY("id" AUTOINCREMENT)
 )""",
@@ -21,8 +37,10 @@ db_up = {
 	"id"	INTEGER NOT NULL UNIQUE,
 	"tournament_id"	INTEGER NOT NULL,
 	"category_id"	INTEGER NOT NULL,
+	"league_id"	INTEGER NOT NULL,
 	FOREIGN KEY("category_id") REFERENCES "categories"("id"),
 	FOREIGN KEY("tournament_id") REFERENCES "tournaments"("id"),
+	FOREIGN KEY("league_id") REFERENCES "leagues"("id"),
 	PRIMARY KEY("id" AUTOINCREMENT)
 )""",
 "games": """CREATE TABLE "games" (
@@ -122,6 +140,8 @@ db_down = {
 "tournaments": """DROP TABLE tournaments""",
 "players": """DROP TABLE players""",
 "categories": """DROP TABLE categories""",
+"categories_metadata": """DROP TABLE categories_metadata""",
+"leagues": """DROP TABLE leagues""",
 "matches": """DROP TABLE matches""",
 "games": """DROP TABLE games""",
 "players_categories_elo": """DROP TABLE players_categories_elo""",

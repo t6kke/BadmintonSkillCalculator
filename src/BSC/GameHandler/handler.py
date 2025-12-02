@@ -11,7 +11,7 @@ class Handler():
         self.output = output
         self.database_obj = database_obj
 
-    def runGamesParser(self, raw_matches_list, tournament_id, category_id):
+    def runGamesParser(self, raw_matches_list, tournament_id):
         converted_all_matches_list = [] #same list of matches list of dictionaries but content will be Teams objects that have set of player db_id-s
         players_obj_dict_in_tournament = {} #for not repeat checks of players in tournament. strcutre: 'db_id: player_obj'
 

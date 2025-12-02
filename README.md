@@ -185,6 +185,8 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 - Official badminton league tournaments data scraping and injection functionality implemented
 - Initial version of BSC/DataExtractor internal package fromTS.py created for scraping tournamentsoftware.com tournament data
 - Separate extraction for tournament metadata(name, start/end date) and scraping matches from each tournament day
+- Database structure modified with new tables and some additional columns in tournaments tables
+- New setup for creating default categories(standard categories setup that badminton has)
 - 
 
 ### Alpha 4.1.1

@@ -41,20 +41,35 @@ class DB():
         con.close()
 
     def __createTables(self):
-
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         for table, sql in db_up.items():
             self.output.write(self.verbose, "DEBUG", "DB", message=f"Creating table: '{table}'")
             cur.execute(sql)
         if self.add_default_categories:
-            categories_data = [("MS", "men singles"),
-                           ("WS", "women singles"),
-                           ("MD", "men double"),
-                           ("WD", "women double"),
-                           ("XD", "mixed double")]
+            categories_data = [("MS",),
+                           ("WS",),
+                           ("MD",),
+                           ("WD",),
+                           ("XD",)]
             self.output.write(self.verbose, "DEBUG", "DB", message=f"adding default categories to db: '{categories_data}'")
-            cur.executemany("INSERT INTO categories (name, description) VALUES(?,?)", categories_data)
+            cur.executemany("INSERT INTO categories (name) VALUES(?)", categories_data)
+            categories_metadata = {"MS": [("short_eng", "MS"), ("short_est", "MÜ"), ("long_eng", "mens singles"), ("long_est", "meesüksik")],
+                                   "WS": [("short_eng", "WS"), ("short_est", "NÜ"), ("long_eng", "womens singles"), ("long_est", "naisüksik")],
+                                   "MD": [("short_eng", "MD"), ("short_est", "MP"), ("long_eng", "mens doubles"), ("long_est", "meespaar")],
+                                   "WD": [("short_eng", "WD"), ("short_est", "NP"), ("long_eng", "womens doubles"), ("long_est", "naispaar")],
+                                   "XD": [("short_eng", "XD"), ("short_est", "SP"), ("long_eng", "mixed doubles"), ("long_est", "segapaar")]
+                                   }
+            for item, data_list in categories_metadata.items():
+                cur.execute("SELECT id FROM categories WHERE name = '"+ item +"'")
+                category_id = cur.fetchone()
+                updated_data_list = []
+                for data_item in data_list:
+                    temp_list = list(data_item)
+                    temp_list.append(category_id[0])
+                    final_tuple = tuple(temp_list)
+                    updated_data_list.append(final_tuple)
+                cur.executemany("INSERT INTO categories_metadata (info_type, info_text, category_id) VALUES (?,?,?)", updated_data_list)
         con.commit()
         con.close()
 
@@ -129,7 +144,7 @@ class DB():
     def AddTournament(self, data_in): #TODO add verbose info
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        cur.execute("INSERT INTO tournaments (name, date, location) VALUES(?, ?, ?)", data_in) #TODO fix result fetch, cur.execute should retrun the value entered
+        cur.execute("INSERT INTO tournaments (name, start_date, end_date, location, external_url, has_internal_result) VALUES(?, ?, ?, ?, ?, ?)", data_in) #TODO fix result fetch, cur.execute should retrun the value entered
         res = cur.execute("SELECT id FROM tournaments ORDER BY id DESC LIMIT 1")
         tournament_id = res.fetchone()[0]
         con.commit()

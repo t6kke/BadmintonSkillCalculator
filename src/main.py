@@ -231,23 +231,15 @@ class Main():
         test_url = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
         output = Output("console")
         scraper = WebScraper(test_url, output, verbose=verbose)
-        matches_list = scraper.matches_list
-        raw_matches_list = scraper.rawMatchesObjects_list
-        for raw_match_data in raw_matches_list:
-            print(type(raw_match_data))
-            print(raw_match_data.GetMatchString())
+        matches_list = scraper.rawMatchesObjects_list
         tournament_name = scraper.tournament_title
-        tournament_date = "01.01.2025"
-        tournament_location = "Example Location"
-        category_name = "EC"
-        category_desc = "example category"
+        tournament_start_date = scraper.tournament_start
+        tournament_end_date = scraper.tournament_end
         db_name = "db_tournamentsoftware_test.db"
-        #print(matches_list)
-        database_obj = DB(db_name, output, verbose=verbose, clear_db=True)
+        database_obj = DB(db_name, output, verbose=verbose, add_default_categories=True, clear_db=True)
         gamesHandler = Handler(database_obj, output, verbose=verbose)
-        category_id = database_obj.GetOrAddCategory(category_name, category_desc)
-        tournament_id = database_obj.AddTournament((tournament_name, tournament_date, tournament_location))
-        gamesHandler.runGamesParser(matches_list, tournament_id, category_id)
+        tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, "location to be extracted", test_url, False))
+        gamesHandler.runGamesParser(matches_list, tournament_id)
 
         sys.exit(0)
 
