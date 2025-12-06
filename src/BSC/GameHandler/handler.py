@@ -15,7 +15,7 @@ class Handler():
         converted_all_matches_list = [] #same list of matches list of dictionaries but content will be Teams objects that have set of player db_id-s
         players_obj_dict_in_tournament = {} #for not repeat checks of players in tournament. strcutre: 'db_id: player_obj'
 
-        def playerParser(player):
+        def playerParser(player, category_id):
             player_db_entry = self.database_obj.GetOrAddPlayer(player.strip(), str(category_id))
             player_exists = False
             if player_db_entry[0] in players_obj_dict_in_tournament:
@@ -24,7 +24,7 @@ class Handler():
                 player_obj_list_for_team.append(players_obj_dict_in_tournament.get(player_db_entry[0]))
             if player_exists == False:
                 self.output.write(self.verbose, "DEBUG", None, message=f"player obj not yet created and not in the current tournament players list")
-                player_obj = Player(player_db_entry[0], player_db_entry[1], player_db_entry[2])
+                player_obj = Player(player_db_entry[0], player_db_entry[1], category_id, player_db_entry[2])
                 self.output.write(self.verbose, "DEBUG", None, message=f"created new player object: '{player_obj}'")
                 players_obj_dict_in_tournament[player_obj.db_id] = player_obj
                 player_obj_list_for_team.append(player_obj)
@@ -33,7 +33,12 @@ class Handler():
         self.output.write(self.verbose, "INFO", None, message=f"All matches list for parsing: '{raw_matches_list}'")
         self.output.write(self.verbose, "INFO", None, message=f"Total nr of matches to parse: '{len(raw_matches_list)}'")
         i = 0
-        for match in raw_matches_list:
+        for raw_match_obj in raw_matches_list:
+            match = raw_match_obj.GetMatchDict()
+            category_str = raw_match_obj.category
+            category_id = self.database_obj.GetCategory(category_str)
+            league_str = raw_match_obj.league
+            league_id = self.database_obj.GetLeague(league_str.lower())
             i = i + 1
             new_match_dict = {}
             self.output.write(self.verbose, "INFO", None, match_number=i, message=f"Parsing raw match dictionary: '{match}'")
@@ -45,10 +50,10 @@ class Handler():
                     player_str_list = team.split("+")
                     for player in player_str_list:
                         self.output.write(self.verbose, "DEBUG", None, message=f"team is split into players: '{player_str_list}' and working on player '{player}'")
-                        playerParser(player)
+                        playerParser(player, category_id)
                 else:
                     self.output.write(self.verbose, "DEBUG", None, message=f"Only single name detected in team area, must be singles tournament")
-                    playerParser(team)
+                    playerParser(team, category_id)
                 #if self.verbose: print(f"INFO --- creating new Team object with players: '{player_obj_list_for_team}'") #TODO fix printing problem
                 team_obj = Team(player_obj_list_for_team)
                 self.output.write(self.verbose, "INFO", None, message=f"Team object: '{team_obj}' created")
@@ -76,7 +81,7 @@ class Handler():
             #if self.verbose: print(f"INFO --- working with match: '{match}'") #TODO fix printing problem
             if len(list(match.values())[0]) != len(list(match.values())[1]):
                 raise Exception("game score counts mismatch")
-            match_data_to_db = (tournament_id, category_id,)
+            match_data_to_db = (tournament_id, category_id, league_id)
             match_id = self.database_obj.AddMatch(match_data_to_db)
 
             #game_nbr = 0 #TODO temp variable until scores are in a list and this tool needs to handle multi game matches
@@ -104,4 +109,4 @@ class Handler():
             self.output.write(self.verbose, "INFO", None, message=f"updating player object ELO value with updated data")
             for player_id, player_obj in players_obj_dict_in_tournament.items():
                 self.output.write(self.verbose, "INFO", None, message=f"updating ELO for player: '{player_obj}'")
-                player_obj.ELO = self.database_obj.GetPlayerELO(str(player_id), str(category_id))
+                player_obj.ELO = self.database_obj.GetPlayerELO(str(player_id), str(player_obj.category_db_id))

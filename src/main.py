@@ -228,7 +228,7 @@ class Main():
 
         #Testing execution with scraping tournamentsoftware.com
         test_url = "https://www.tournamentsoftware.com/tournament/dd30e793-b978-4ad4-83cb-3459de20b11b"
-        test_url = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
+        #test_url = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
         output = Output("console")
         scraper = WebScraper(test_url, output, verbose=verbose)
         matches_list = scraper.rawMatchesObjects_list
@@ -236,7 +236,7 @@ class Main():
         tournament_start_date = scraper.tournament_start
         tournament_end_date = scraper.tournament_end
         db_name = "db_tournamentsoftware_test.db"
-        database_obj = DB(db_name, output, verbose=verbose, add_default_categories=True, clear_db=True)
+        database_obj = DB(db_name, output, verbose=verbose, add_default_categories=True, add_default_leagues=True, clear_db=True)
         gamesHandler = Handler(database_obj, output, verbose=verbose)
         tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, "location to be extracted", test_url, False))
         gamesHandler.runGamesParser(matches_list, tournament_id)

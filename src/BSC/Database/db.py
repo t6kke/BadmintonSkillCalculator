@@ -6,9 +6,10 @@ import sqlite3
 from BSC.Database.sql_001 import db_up, db_down
 
 class DB():
-    def __init__(self, db_name, output, verbose=False, add_default_categories=False, clear_db=False):
+    def __init__(self, db_name, output, verbose=False, add_default_categories=False, add_default_leagues=False, clear_db=False):
         self.verbose = verbose
         self.add_default_categories = add_default_categories
+        self.add_default_leagues = add_default_leagues
         self.clear_db = clear_db
         self.db_name = db_name
         self.output = output
@@ -70,6 +71,16 @@ class DB():
                     final_tuple = tuple(temp_list)
                     updated_data_list.append(final_tuple)
                 cur.executemany("INSERT INTO categories_metadata (info_type, info_text, category_id) VALUES (?,?,?)", updated_data_list)
+        if self.add_default_leagues:
+            #TODO better logic for leagues information, probably metadata table like categories
+            leagues_data = [("0","meistriliiga",),
+                            ("1","esiliiga",),
+                            ("2","2. liiga",),
+                            ("3","3. liiga",),
+                            ("4","4. liiga",),
+                            ("5","rahvaliiga a",),
+                            ("6","rahvaliiga b",)]
+            cur.executemany("INSERT INTO leagues (level, description) VALUES(?,?)", leagues_data)
         con.commit()
         con.close()
 
@@ -151,7 +162,7 @@ class DB():
         con.close()
         return tournament_id
 
-    def GetOrAddCategory(self, category_name, category_description): #TODO add verbose info
+    def GetOrAddCategory(self, category_name, category_description):
         category_id = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
@@ -166,6 +177,30 @@ class DB():
             category_id = res.fetchone()
         con.close()
         return category_id[0]
+
+    def GetCategory(self, category_str):
+        category_id = None
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("""SELECT c.id
+                                FROM categories c
+                                JOIN categories_metadata cm ON cm.category_id = c.id WHERE info_text = '""" + category_str +"'")
+        category_id = res.fetchone()
+        if category_id is None:
+            raise Exception("No valid category found")
+        con.close()
+        return category_id[0]
+
+    def GetLeague(self, league_str): #TODO add verbose info
+        league_id = None
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT id FROM leagues WHERE description = '" + league_str + "'")
+        league_id = res.fetchone()
+        if league_id is None:
+            raise Exception("No valid league found")
+        con.close()
+        return league_id[0]
 
     def GetOrAddPlayer(self, name, category_id):
         #TODO this function is a mess and needs to be cleaned up
@@ -244,7 +279,7 @@ class DB():
         self.output.write(self.verbose, "INFO", "DB:AddMatch", message=f"adding match to DB with data: '{data_in}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        cur.execute("INSERT INTO matches (tournament_id, category_id) VALUES(?,?)", data_in)
+        cur.execute("INSERT INTO matches (tournament_id, category_id, league_id) VALUES(?,?,?)", data_in)
         con.commit()
         res = cur.execute("SELECT id FROM matches ORDER BY id DESC LIMIT 1")
         match_id = res.fetchone()[0]

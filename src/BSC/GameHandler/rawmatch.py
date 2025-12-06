@@ -9,7 +9,7 @@ class RawMatch():
         self.team_two_status = team_two_status
         self.team_two_scores = team_two_scores
 
-    def GetMatchString(self):
+    def GetMatchDict(self):
         result_dict = {}
         result_dict[self.team_one] = self.team_one_scores
         result_dict[self.team_two] = self.team_two_scores

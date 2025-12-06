@@ -1,9 +1,10 @@
 import time
 
 class Player():
-    def __init__(self, db_id, player_name, ELO):
+    def __init__(self, db_id, player_name, category_db_id, ELO):
         self.db_id = db_id
         self.player_name = player_name
+        self.category_db_id = category_db_id
         self.ELO = ELO
 
     def information(self):
