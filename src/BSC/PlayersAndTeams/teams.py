@@ -3,6 +3,7 @@ from BSC.PlayersAndTeams.players import Player
 class Team():
     def __init__(self, player_obj_list):
         self.team_members_set = set()
+        self.team_members_dict = {}
         self.__fillTeamMebersSet(player_obj_list)
 
     def __str__(self):
@@ -14,3 +15,4 @@ class Team():
     def __fillTeamMebersSet(self, player_obj_list):
         for player_obj in player_obj_list:
             self.team_members_set.add(player_obj.db_id)
+            self.team_members_dict[player_obj.db_id] = player_obj

@@ -187,6 +187,11 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 - Separate extraction for tournament metadata(name, start/end date) and scraping matches from each tournament day
 - Database structure modified with new tables and some additional columns in tournaments tables
 - New setup for creating default categories(standard categories setup that badminton has)
+- DB creation has optional flag to create default leages based on Estonian badminton leage structure
+- Initial fixes for reporting views so they would work again
+- New Games Handler functionality with different workflow that can handle multiple categories in the same tournament
+- Small modification to Teams object so it would work with new Games Handler logic
+- New Skill Calculator object to work with the modified Games Handler logic
 - 
 
 ### Alpha 4.1.1

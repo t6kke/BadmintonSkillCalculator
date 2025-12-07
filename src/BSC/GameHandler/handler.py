@@ -3,7 +3,7 @@ sys.path.append('../')
 
 from BSC.PlayersAndTeams.players import Player
 from BSC.PlayersAndTeams.teams import Team
-from BSC.SkillCalculator.skillCalculator import SkillCalc
+from BSC.SkillCalculator.skillCalculator import SkillCalc, SkillCalc_new
 
 class Handler():
     def __init__(self, database_obj, output,verbose=False):
@@ -110,3 +110,75 @@ class Handler():
             for player_id, player_obj in players_obj_dict_in_tournament.items():
                 self.output.write(self.verbose, "INFO", None, message=f"updating ELO for player: '{player_obj}'")
                 player_obj.ELO = self.database_obj.GetPlayerELO(str(player_id), str(player_obj.category_db_id))
+
+
+
+    # this is new handler execution
+    # intented to be easier to understand with better workflow
+    # that also handles tournaments where users participate in multple categories
+    # but has more db calls compared to previous solutions
+    def runHandler(self, raw_matches_list, tournament_id):
+        #TODO add verbose logging here
+
+        def getPlayerObj(player_str, category_id):
+            player_db_entry = self.database_obj.GetOrAddPlayer(player_str.strip(), str(category_id))
+            player_obj = Player(player_db_entry[0], player_db_entry[1], category_id, player_db_entry[2])
+            return player_obj
+
+        skillCalculator = SkillCalc_new(self.output, self.verbose)
+
+        for raw_match_obj in raw_matches_list:
+            category_id = self.database_obj.GetCategory(raw_match_obj.category)
+            league_id = self.database_obj.GetLeague(raw_match_obj.league.lower())
+
+            if "+" in raw_match_obj.team_one:
+                team_one_player_str_list = raw_match_obj.team_one.split("+")
+                t1_player_obj_list = []
+                for player_str in team_one_player_str_list:
+                    t1_player_obj_list.append(getPlayerObj(player_str, category_id))
+                team_two_player_str_list = raw_match_obj.team_two.split("+")
+                t2_player_obj_list = []
+                for player_str in team_two_player_str_list:
+                    t2_player_obj_list.append(getPlayerObj(player_str, category_id))
+                if raw_match_obj.team_one_status == "W":
+                    winning_team_obj = Team(t1_player_obj_list)
+                    losing_team_obj = Team(t2_player_obj_list)
+                else:
+                    winning_team_obj = Team(t2_player_obj_list)
+                    losing_team_obj = Team(t1_player_obj_list)
+            else:
+                p1_player_obj = getPlayerObj(raw_match_obj.team_one, category_id)
+                p2_player_obj = getPlayerObj(raw_match_obj.team_two, category_id)
+                if raw_match_obj.team_one_status == "W":
+                    winning_team_obj = Team([p1_player_obj])
+                    losing_team_obj = Team([p2_player_obj])
+                else:
+                    winning_team_obj = Team([p2_player_obj])
+                    losing_team_obj = Team([p1_player_obj])
+
+
+            match_data_to_db = (tournament_id, category_id, league_id)
+            match_id = self.database_obj.AddMatch(match_data_to_db)
+
+            games_count = len(raw_match_obj.team_one_scores)
+            for i in range(games_count):
+                game_data_to_db = (match_id, i+1, raw_match_obj.team_one_scores[i], raw_match_obj.team_two_scores[i],)
+                game_id = self.database_obj.AddGame(game_data_to_db)
+
+            elo_results_dict = skillCalculator.calculate(winning_team_obj, losing_team_obj)
+
+            players_games_rel_to_db = []
+            players_matches_rel_wELOupdate_to_db = []
+            compeditor_nbr = 0
+            teams = [winning_team_obj, losing_team_obj]
+            for team in teams:
+                compeditor_nbr = compeditor_nbr + 1
+                for player_id in team.team_members_set:
+                    players_games_rel_to_db.append((player_id, game_id, compeditor_nbr))
+                    players_matches_rel_wELOupdate_to_db.append((player_id, match_id, team.team_members_dict.get(player_id).ELO, elo_results_dict.get(player_id)))
+
+            self.database_obj.AddPlayerGameRel(players_games_rel_to_db)
+            self.database_obj.AddPlayerMatchRel_W_ELOUpdate(players_matches_rel_wELOupdate_to_db, category_id)
+
+
+

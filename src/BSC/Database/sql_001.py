@@ -75,7 +75,7 @@ db_up = {
 	SELECT
 	*
 	FROM tournaments
-	ORDER BY date ASC
+	ORDER BY start_date ASC
 """,
 "report_ELOStandings": """CREATE VIEW "report_EloStandings" AS
 	SELECT
@@ -83,19 +83,17 @@ db_up = {
 	p.name AS player_name,
 	pce.elo AS ELO,
 	c.id AS category_id,
-	c.name AS category_name,
-	c.description AS category_description
+	c.name AS category_name
 	FROM players p
 	JOIN players_categories_elo pce ON p.id = pce.player_id
 	JOIN categories c ON c.id = pce.category_id
-	ORDER BY c.name, pce.elo DESC
+	ORDER BY c.id, pce.elo DESC
 """,
 "report_TournamentResults": """CREATE VIEW "report_TournamentResults" AS
 	SELECT
 	t.id AS tournament_id,
 	t.name AS tournament_name,
 	c.name AS category_name,
-	c.description AS category_description,
 	teams.team_name,
 	count(g.id) AS nbr_of_matches,
 	SUM(IIF(CASE WHEN teams.team_nbr = 1 THEN g.compeditor_one_score ELSE g.compeditor_two_score END > CASE WHEN teams.team_nbr = 1 THEN g.compeditor_two_score ELSE g.compeditor_one_score END, 1, 0)) AS victories,
