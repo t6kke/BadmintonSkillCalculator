@@ -188,7 +188,9 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 - Database structure modified with new tables and some additional columns in tournaments tables
 - New setup for creating default categories(standard categories setup that badminton has)
 - DB creation has optional flag to create default leages based on Estonian badminton leage structure
-- Initial fixes for reporting views so they would work again
+- Leagues metadata table holds the default start ELO value for new players starting first time
+- Default ELO values are used for players first time entry in a given category
+- Initial fixes for reporting views so they would work again after DB structure modifications
 - New Games Handler functionality with different workflow that can handle multiple categories in the same tournament
 - Small modification to Teams object so it would work with new Games Handler logic
 - New Skill Calculator object to work with the modified Games Handler logic

@@ -230,6 +230,7 @@ class Main():
         test_url_1 = "https://www.tournamentsoftware.com/tournament/dd30e793-b978-4ad4-83cb-3459de20b11b"
         test_url_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
         test_url_list = [test_url_1, test_url_2]
+        database_obj = None
         for test_url in test_url_list:
             output = Output("console")
             scraper = WebScraper(test_url, output, verbose=verbose)
@@ -242,7 +243,7 @@ class Main():
             gamesHandler = Handler(database_obj, output, verbose=verbose)
             tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, "location to be extracted", test_url, False))
             gamesHandler.runHandler(matches_list, tournament_id)
-
+        database_obj.ss_AllPlayersELOrank()
         sys.exit(0)
 
 

@@ -10,6 +10,7 @@ class Handler():
         self.verbose = verbose
         self.output = output
         self.database_obj = database_obj
+        self.league_id = None
 
     def runGamesParser(self, raw_matches_list, tournament_id):
         converted_all_matches_list = [] #same list of matches list of dictionaries but content will be Teams objects that have set of player db_id-s
@@ -121,7 +122,7 @@ class Handler():
         #TODO add verbose logging here
 
         def getPlayerObj(player_str, category_id):
-            player_db_entry = self.database_obj.GetOrAddPlayer(player_str.strip(), str(category_id))
+            player_db_entry = self.database_obj.GetOrAddPlayer(player_str.strip(), str(category_id), str(self.league_id))
             player_obj = Player(player_db_entry[0], player_db_entry[1], category_id, player_db_entry[2])
             return player_obj
 
@@ -129,7 +130,8 @@ class Handler():
 
         for raw_match_obj in raw_matches_list:
             category_id = self.database_obj.GetCategory(raw_match_obj.category)
-            league_id = self.database_obj.GetLeague(raw_match_obj.league.lower())
+            self.league_id = self.database_obj.GetLeague(raw_match_obj.league.lower())
+
 
             if "+" in raw_match_obj.team_one:
                 team_one_player_str_list = raw_match_obj.team_one.split("+")
@@ -157,7 +159,7 @@ class Handler():
                     losing_team_obj = Team([p1_player_obj])
 
 
-            match_data_to_db = (tournament_id, category_id, league_id)
+            match_data_to_db = (tournament_id, category_id, self.league_id)
             match_id = self.database_obj.AddMatch(match_data_to_db)
 
             games_count = len(raw_match_obj.team_one_scores)

@@ -72,15 +72,29 @@ class DB():
                     updated_data_list.append(final_tuple)
                 cur.executemany("INSERT INTO categories_metadata (info_type, info_text, category_id) VALUES (?,?,?)", updated_data_list)
         if self.add_default_leagues:
-            #TODO better logic for leagues information, probably metadata table like categories
-            leagues_data = [("0","meistriliiga",),
-                            ("1","esiliiga",),
-                            ("2","2. liiga",),
-                            ("3","3. liiga",),
-                            ("4","4. liiga",),
-                            ("5","rahvaliiga a",),
-                            ("6","rahvaliiga b",)]
-            cur.executemany("INSERT INTO leagues (level, description) VALUES(?,?)", leagues_data)
+            leagues_data = [("meistriliiga",),
+                            ("esiliiga",),
+                            ("2. liiga",),
+                            ("3. liiga",),
+                            ("4. liiga",),
+                            ("rahvaliiga a",),
+                            ("rahvaliiga b",)]
+            cur.executemany("INSERT INTO leagues (name) VALUES(?)", leagues_data)
+            leagues_metadata = {1:[("default ELO", "3000")],
+                                2:[("default ELO", "2500")],
+                                3:[("default ELO", "2000")],
+                                4:[("default ELO", "1500")],
+                                5:[("default ELO", "1000")],
+                                6:[("default ELO", "750")],
+                                7:[("default ELO", "500")]}
+            for league_id, data_list in leagues_metadata.items():
+                updated_data_list = []
+                for data_item in data_list:
+                    temp_list = list(data_item)
+                    temp_list.append(league_id)
+                    final_tuple = tuple(temp_list)
+                    updated_data_list.append(final_tuple)
+                cur.executemany("INSERT INTO leagues_metadata (info_type, info_text, league_id) VALUES (?,?,?)", updated_data_list)
         con.commit()
         con.close()
 
@@ -195,19 +209,22 @@ class DB():
         league_id = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        res = cur.execute("SELECT id FROM leagues WHERE description = '" + league_str + "'")
+        res = cur.execute("SELECT id FROM leagues WHERE name = '" + league_str + "'")
         league_id = res.fetchone()
         if league_id is None:
             raise Exception("No valid league found")
         con.close()
         return league_id[0]
 
-    def GetOrAddPlayer(self, name, category_id):
+    def GetOrAddPlayer(self, name, category_id, league_id):
         #TODO this function is a mess and needs to be cleaned up
+
         self.output.write(self.verbose, "INFO", "DB:GetOrAddPlayer", message=f"getting or adding player '{name}' to DB")
         result = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
+        res = cur.execute("SELECT info_text FROM leagues_metadata WHERE league_id = '" + league_id + "' AND info_type = 'default ELO'")
+        default_ELO = int(res.fetchone()[0])
         res = cur.execute("SELECT * FROM players WHERE name = '" + name + "'")
         result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
         if result is None:
@@ -216,7 +233,7 @@ class DB():
             res = cur.execute("INSERT INTO players (name) VALUES (?)", player_data)
             res = cur.execute("SELECT id FROM players ORDER BY id DESC LIMIT 1")
             player_id = res.fetchone()[0]
-            elo_data = (player_id, category_id, 1000,) #TODO initial elo value of 1000 should be some configuration file, and maybe even modifiable based on what leage new player starts in.
+            elo_data = (player_id, category_id, default_ELO,)
             cur.execute("INSERT INTO players_categories_elo (player_id, category_id, elo) VALUES (?,?,?)", elo_data)
             con.commit()
             res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
@@ -229,7 +246,7 @@ class DB():
         result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
         if result is None:
             self.output.write(self.verbose, "INFO", "DB:GetOrAddPlayer", message=f"player found in db but no ELO for category id {category_id}, creating a new entry")
-            elo_data = (player_id, category_id, 1000,) #TODO initial elo value of 1000 should be some configuration file, and maybe even modifiable based on what leage new player starts in.
+            elo_data = (player_id, category_id, default_ELO,)
             cur.execute("INSERT INTO players_categories_elo (player_id, category_id, elo) VALUES (?,?,?)", elo_data)
             con.commit()
             res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
@@ -409,7 +426,7 @@ WHERE tournament_id = """ + str(tournament_id)
     def ss_AllPlayersELOrank(self):
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        query = """SELECT p.name, pce.elo, c.name, c.description
+        query = """SELECT p.name, pce.elo, c.name
 FROM players p
 JOIN players_categories_elo pce ON p.id = pce.player_id
 JOIN categories c ON c.id = pce.category_id
@@ -427,7 +444,7 @@ ORDER BY c.name, pce.elo DESC"""
                     if category_name != "":
                         out_file.write("\t</tbody>\n</table>\n")
                     category_name = item[2]
-                    category_desc = item[3]
+                    category_desc = item[2]
                     out_file.write(f"<p>Rankings for category: '{category_desc}'</p>\n")
                     out_file.write("<table class=\"table table-bordered table-striped\">\n")
                     out_file.write("\t<thead>\n\t\t<tr>\n\t\t\t<th>Player</th>\n\t\t\t<th>ELO</th>\n\t\t</tr>\n\t</thead>\n")

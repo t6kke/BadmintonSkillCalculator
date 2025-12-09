@@ -29,8 +29,15 @@ db_up = {
 )""",
 "leagues": """CREATE TABLE "leagues" (
 	"id"	INTEGER NOT NULL UNIQUE,
-	"level"	TEXT NOT NULL,
-	"description"	TEXT NOT NULL,
+	"name"	TEXT NOT NULL UNIQUE,
+	PRIMARY KEY("id" AUTOINCREMENT)
+)""",
+"leagues_metadata": """CREATE TABLE "leagues_metadata" (
+	"id"	INTEGER NOT NULL UNIQUE,
+	"league_id"	INTEGER NOT NULL,
+	"info_type"	TEXT NOT NULL,
+	"info_text"	TEXT NOT NULL,
+	FOREIGN KEY("league_id") REFERENCES "leagues"("id"),
 	PRIMARY KEY("id" AUTOINCREMENT)
 )""",
 "matches": """CREATE TABLE "matches" (
@@ -140,6 +147,7 @@ db_down = {
 "categories": """DROP TABLE categories""",
 "categories_metadata": """DROP TABLE categories_metadata""",
 "leagues": """DROP TABLE leagues""",
+"leagues_metadata": """DROP TABLE leagues_metadata""",
 "matches": """DROP TABLE matches""",
 "games": """DROP TABLE games""",
 "players_categories_elo": """DROP TABLE players_categories_elo""",
