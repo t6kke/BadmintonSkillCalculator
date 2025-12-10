@@ -176,7 +176,7 @@ class Handler():
             for team in teams:
                 compeditor_nbr = compeditor_nbr + 1
                 for player_id in team.team_members_set:
-                    players_games_rel_to_db.append((player_id, game_id, compeditor_nbr))
+                    players_games_rel_to_db.append((player_id, game_id, compeditor_nbr)) #TODO fix game_id to not always be the last of the games in the current match
                     players_matches_rel_wELOupdate_to_db.append((player_id, match_id, team.team_members_dict.get(player_id).ELO, elo_results_dict.get(player_id)))
 
             self.database_obj.AddPlayerGameRel(players_games_rel_to_db)

@@ -22,6 +22,16 @@ def getGamesFromTXT(txt_data_games_filename):
                 comp_two_team_name = comp_two_data.split(" ")[0]
                 comp_two_scores = comp_two_data.split(" ")[1].split(":")
 
+                if comp_one_scores[-1] > comp_two_scores[-1]:
+                    comp_one_status = "W"
+                    comp_two_status = None
+                else:
+                    comp_two_status = "W"
+                    comp_one_status = None
+
+                new_raw_match = RawMatch("EC", "example league", comp_one_team_name, comp_one_status, comp_one_scores, comp_two_team_name, comp_two_status, comp_two_scores)
+                result_rawGameObj_list.append(new_raw_match)
+
                 if row_counter % 2 == 0:
                     comp_one_data = split_line[0]
                     comp_two_data = split_line[1]
