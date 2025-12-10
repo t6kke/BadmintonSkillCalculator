@@ -129,6 +129,7 @@ class Handler():
         skillCalculator = SkillCalc_new(self.output, self.verbose)
 
         for raw_match_obj in raw_matches_list:
+            print(raw_match_obj.team_one, raw_match_obj.team_two)
             category_id = self.database_obj.GetCategory(raw_match_obj.category)
             self.league_id = self.database_obj.GetLeague(raw_match_obj.league.lower())
 
@@ -176,7 +177,8 @@ class Handler():
             for team in teams:
                 compeditor_nbr = compeditor_nbr + 1
                 for player_id in team.team_members_set:
-                    players_games_rel_to_db.append((player_id, game_id, compeditor_nbr)) #TODO fix game_id to not always be the last of the games in the current match
+                    for i in range(games_count+1, 1, -1): #TODO analyze if this is a good fix for the game_id relation
+                        players_games_rel_to_db.append((player_id, game_id-i, compeditor_nbr))
                     players_matches_rel_wELOupdate_to_db.append((player_id, match_id, team.team_members_dict.get(player_id).ELO, elo_results_dict.get(player_id)))
 
             self.database_obj.AddPlayerGameRel(players_games_rel_to_db)
