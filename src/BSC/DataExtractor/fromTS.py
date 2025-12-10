@@ -32,7 +32,6 @@ class WebScraper():
         self.tournament_title = ""
         self.tournament_start = ""
         self.tournament_end = ""
-        self.matches_list = []
         self.rawMatchesObjects_list = []
         self.tounament_days_list = []
 
@@ -78,7 +77,6 @@ class WebScraper():
 
             raw_matches = soup.find_all("div",class_=["match","match--list"])
             for raw_match in raw_matches:
-                match_dict = {}
                 team_one_scores = []
                 team_two_scores = []
 
@@ -116,8 +114,6 @@ class WebScraper():
                         team_one_scores.append(match_results[i].get_text(" ", strip=True))
                     else:
                         team_two_scores.append(match_results[i].get_text(" ", strip=True))
-                match_dict[team_one] = team_one_scores
-                match_dict[team_two] = team_two_scores
 
                 category = match_header.split(" ", 1)[0]
                 league = match_header.split(" ", 1)[1].split("-")[0].strip()
@@ -128,11 +124,8 @@ class WebScraper():
                 # print("league:", league)
                 # print(f"Team: '{team_one}' with result: '{team_one_status}' and game scores '{team_one_scores}'")
                 # print(f"Team: '{team_two}' with result: '{team_two_status}' and game scores '{team_two_scores}'")
-                # print("Final dictionary of the match:")
-                # print(match_dict)
                 # print("")
 
                 new_raw_match = RawMatch(category, league, team_one, team_one_status, team_one_scores, team_two, team_two_status, team_two_scores)
 
-                self.matches_list.append(match_dict)
                 self.rawMatchesObjects_list.append(new_raw_match)

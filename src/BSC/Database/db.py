@@ -184,11 +184,15 @@ class DB():
         category_id = res.fetchone()
         if category_id is None:
             self.output.write(self.verbose, "INFO", "DB:GetOrAddCategory", message=f"category does not exist in db, creating new one")
-            data_in = (category_name, category_description, )
-            cur.execute("INSERT INTO categories (name, description) VALUES(?,?)", data_in)
-            con.commit()
+            data_in_category = (category_name,)
+            cur.execute("INSERT INTO categories (name) VALUES(?)", data_in_category)
             res = cur.execute("SELECT id FROM categories WHERE name = '" + category_name +"'")
             category_id = res.fetchone()
+            data_in_category_meta_name = (category_id[0],"short_name",category_name,)
+            data_in_category_meta_desc = (category_id[0],"description",category_description,)
+            data_in_list = [data_in_category_meta_name, data_in_category_meta_desc]
+            cur.executemany("INSERT INTO categories_metadata (category_id, info_type, info_text) VALUES(?,?,?)", data_in_list)
+            con.commit()
         con.close()
         return category_id[0]
 
@@ -205,6 +209,21 @@ class DB():
         con.close()
         return category_id[0]
 
+    def AddLeague(self, league_name, league_description): #TODO add verbose info
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        data_in = (league_name,)
+        cur.execute("INSERT INTO leagues (name) VALUES(?)", data_in)
+        res = cur.execute("SELECT id FROM leagues WHERE name = '" + league_name +"'")
+        league_id = res.fetchone()
+        data_in_league_meta_name = (league_id[0],"short_name",league_name,)
+        data_in_league_meta_desc = (league_id[0],"description",league_description,)
+        data_in_league_meta_default = (league_id[0],"default ELO",1000,)
+        data_in_list = [data_in_league_meta_name, data_in_league_meta_desc, data_in_league_meta_default]
+        cur.executemany("INSERT INTO leagues_metadata (league_id, info_type, info_text) VALUES(?,?,?)", data_in_list)
+        con.commit()
+        con.close()
+
     def GetLeague(self, league_str): #TODO add verbose info
         league_id = None
         con = sqlite3.connect(self.db_name)
@@ -218,7 +237,6 @@ class DB():
 
     def GetOrAddPlayer(self, name, category_id, league_id):
         #TODO this function is a mess and needs to be cleaned up
-
         self.output.write(self.verbose, "INFO", "DB:GetOrAddPlayer", message=f"getting or adding player '{name}' to DB")
         result = None
         con = sqlite3.connect(self.db_name)
@@ -415,8 +433,7 @@ WHERE tournament_id = """ + str(tournament_id)
         position = 0
         for item in data_list:
             position += 1
-            #print(f"'Position: '{position}': '{item[4]}' played '{item[5]}' games and won: '{item[6]} games'. Points For: '{item[7]}'; Points Against: '{item[8]}'; Points Difference: '{item[9]}'")
-            self.output.write(None, "INFO", "results", position=position, team=item[4], games_total=item[5], games_won=item[6], points_for=item[7], points_against=item[8], points_diff=item[9])
+            self.output.write(None, "INFO", "results", position=position, team=item[3], games_total=item[4], games_won=item[5], points_for=item[6], points_against=item[7], points_diff=item[8])
         self.output.PrintResult()
 
     #============================================
