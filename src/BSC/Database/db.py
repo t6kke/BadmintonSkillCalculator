@@ -314,7 +314,7 @@ class DB():
         self.output.write(self.verbose, "INFO", "DB:AddMatch", message=f"adding match to DB with data: '{data_in}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        cur.execute("INSERT INTO matches (tournament_id, category_id, league_id) VALUES(?,?,?)", data_in)
+        cur.execute("INSERT INTO matches (tournament_id, category_id, league_id, winner) VALUES(?,?,?,?)", data_in)
         con.commit()
         res = cur.execute("SELECT id FROM matches ORDER BY id DESC LIMIT 1")
         match_id = res.fetchone()[0]

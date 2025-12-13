@@ -128,12 +128,15 @@ class Handler():
 
         skillCalculator = SkillCalc_new(self.output, self.verbose)
 
+        match_counter = 1
         for raw_match_obj in raw_matches_list:
-            print(raw_match_obj.team_one, raw_match_obj.team_two)
+            #print(f"counter: {match_counter}")
+            #match_counter += 1
+            #print(raw_match_obj.team_one, raw_match_obj.team_one_scores, raw_match_obj.team_two, raw_match_obj.team_two_scores)
             category_id = self.database_obj.GetCategory(raw_match_obj.category)
             self.league_id = self.database_obj.GetLeague(raw_match_obj.league.lower())
 
-
+            compeditor_nbr = None
             if "+" in raw_match_obj.team_one:
                 team_one_player_str_list = raw_match_obj.team_one.split("+")
                 t1_player_obj_list = []
@@ -146,21 +149,24 @@ class Handler():
                 if raw_match_obj.team_one_status == "W":
                     winning_team_obj = Team(t1_player_obj_list)
                     losing_team_obj = Team(t2_player_obj_list)
+                    compeditor_nbr = 1
                 else:
                     winning_team_obj = Team(t2_player_obj_list)
                     losing_team_obj = Team(t1_player_obj_list)
+                    compeditor_nbr = 2
             else:
                 p1_player_obj = getPlayerObj(raw_match_obj.team_one, category_id)
                 p2_player_obj = getPlayerObj(raw_match_obj.team_two, category_id)
                 if raw_match_obj.team_one_status == "W":
                     winning_team_obj = Team([p1_player_obj])
                     losing_team_obj = Team([p2_player_obj])
+                    compeditor_nbr = 1
                 else:
                     winning_team_obj = Team([p2_player_obj])
                     losing_team_obj = Team([p1_player_obj])
+                    compeditor_nbr = 2
 
-
-            match_data_to_db = (tournament_id, category_id, self.league_id)
+            match_data_to_db = (tournament_id, category_id, self.league_id, compeditor_nbr)
             match_id = self.database_obj.AddMatch(match_data_to_db)
 
             games_count = len(raw_match_obj.team_one_scores)
@@ -177,7 +183,7 @@ class Handler():
             for team in teams:
                 compeditor_nbr = compeditor_nbr + 1
                 for player_id in team.team_members_set:
-                    for i in range(games_count+1, 1, -1): #TODO analyze if this is a good fix for the game_id relation
+                    for i in range(games_count-1, -1, -1): #TODO analyze if this is a good fix for the game_id relation
                         players_games_rel_to_db.append((player_id, game_id-i, compeditor_nbr))
                     players_matches_rel_wELOupdate_to_db.append((player_id, match_id, team.team_members_dict.get(player_id).ELO, elo_results_dict.get(player_id)))
 

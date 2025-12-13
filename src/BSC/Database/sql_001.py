@@ -45,6 +45,7 @@ db_up = {
 	"tournament_id"	INTEGER NOT NULL,
 	"category_id"	INTEGER NOT NULL,
 	"league_id"	INTEGER NOT NULL,
+	"winner" INTEGER NOT NULL,
 	FOREIGN KEY("category_id") REFERENCES "categories"("id"),
 	FOREIGN KEY("tournament_id") REFERENCES "tournaments"("id"),
 	FOREIGN KEY("league_id") REFERENCES "leagues"("id"),

@@ -218,7 +218,6 @@ class Main():
         league_desc = "example league"
         db_name = "db_txt.db"
         matches_list = getGamesFromTXT(self.test_data_txt)
-        #print(matches_list)
         output = Output("console")
         database_obj = DB(db_name, output, verbose=verbose, clear_db=True)
         gamesHandler = Handler(database_obj, output, verbose=verbose)
