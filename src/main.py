@@ -209,54 +209,55 @@ class Main():
         verbose = False
 
         #Testing execution with reading txt file
-        tournament_name = "Example Tournament"
-        tournament_date = "01.01.2025"
-        tournament_location = "Example Location"
-        category_name = "EC"
-        category_desc = "example category"
-        league_name = "example league"
-        league_desc = "example league"
-        db_name = "db_txt.db"
-        matches_list = getGamesFromTXT(self.test_data_txt)
-        output = Output("console")
-        database_obj = DB(db_name, output, verbose=verbose, clear_db=True)
-        gamesHandler = Handler(database_obj, output, verbose=verbose)
-        category_id = database_obj.GetOrAddCategory(category_name, category_desc)
-        database_obj.AddLeague(league_name, league_desc)
-        tournament_id = database_obj.AddTournament((tournament_name, tournament_date, tournament_date, tournament_location, None, True))
-        gamesHandler.runHandler(matches_list, tournament_id)
-        output.write(verbose, "INFO", None, message=f"Final reports")
-        database_obj.report_TournamentResult(tournament_id)
+        # tournament_name = "Example Tournament"
+        # tournament_date = "01.01.2025"
+        # tournament_location = "Example Location"
+        # category_name = "EC"
+        # category_desc = "example category"
+        # league_name = "example league"
+        # league_desc = "example league"
+        # db_name = "db_txt.db"
+        # matches_list = getGamesFromTXT(self.test_data_txt)
+        # output = Output("console")
+        # database_obj = DB(db_name, output, verbose=verbose, clear_db=True)
+        # gamesHandler = Handler(database_obj, output, verbose=verbose)
+        # category_id = database_obj.GetOrAddCategory(category_name, category_desc)
+        # database_obj.AddLeague(league_name, league_desc)
+        # tournament_id = database_obj.AddTournament((tournament_name, tournament_date, tournament_date, tournament_location, None, True))
+        # gamesHandler.runHandler(matches_list, tournament_id)
+        # output.write(verbose, "INFO", None, message=f"Final reports")
+        # database_obj.report_TournamentResult(tournament_id)
 
         #Testing execution with scraping tournamentsoftware.com
         test_url_1 = "https://www.tournamentsoftware.com/tournament/dd30e793-b978-4ad4-83cb-3459de20b11b"
         test_url_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
         test_url_list = [test_url_1]
 
-        # gp_1 = "https://www.tournamentsoftware.com/sport/tournament?id=4C2B2BAC-8BBA-4586-B842-10C444F8B13C"
-        # gp_2 = "https://www.tournamentsoftware.com/sport/tournament?id=FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
-        # ava_voistlus = "https://www.tournamentsoftware.com/tournament/A53C2D0E-E068-4995-8D2F-8D295C535A11"
-        # lining_1 = "https://www.tournamentsoftware.com/tournament/8A2817D9-B25B-466A-9FFB-6BE782B3301A"
-        # young_1 = "https://www.tournamentsoftware.com/sport/tournament?id=58727CE6-C7FF-4505-BA88-B0D2B5D05CB3"
-        # victor_1 = "https://www.tournamentsoftware.com/sport/tournament?id=63C4E8DC-6995-4500-8FD4-82C12285E77B"
-        # young_2 = "https://www.tournamentsoftware.com/sport/tournament?id=DEE3D39A-C0DA-4B1E-A0CC-C01921C90D77"
-        # lining_2 = "https://www.tournamentsoftware.com/sport/tournament?id=DD30E793-B978-4AD4-83CB-3459DE20B11B"
-        # test_url_list = [gp_1, gp_2, ava_voistlus, lining_1, young_1, victor_1, young_2, lining_2]
+        gp_1 = "https://www.tournamentsoftware.com/sport/tournament?id=4C2B2BAC-8BBA-4586-B842-10C444F8B13C"
+        gp_2 = "https://www.tournamentsoftware.com/sport/tournament?id=FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
+        ava_voistlus = "https://www.tournamentsoftware.com/tournament/A53C2D0E-E068-4995-8D2F-8D295C535A11"
+        lining_1 = "https://www.tournamentsoftware.com/tournament/8A2817D9-B25B-466A-9FFB-6BE782B3301A"
+        young_1 = "https://www.tournamentsoftware.com/sport/tournament?id=58727CE6-C7FF-4505-BA88-B0D2B5D05CB3"
+        victor_1 = "https://www.tournamentsoftware.com/sport/tournament?id=63C4E8DC-6995-4500-8FD4-82C12285E77B"
+        young_2 = "https://www.tournamentsoftware.com/sport/tournament?id=DEE3D39A-C0DA-4B1E-A0CC-C01921C90D77"
+        lining_2 = "https://www.tournamentsoftware.com/sport/tournament?id=DD30E793-B978-4AD4-83CB-3459DE20B11B"
+        young_3 = "https://www.tournamentsoftware.com/tournament/170E0FF4-AF94-4F2A-B9A0-C0D8654195BB"
+        test_url_list = [gp_1, gp_2, ava_voistlus, lining_1, young_1, victor_1, young_2, lining_2, young_3]
 
-        # database_obj = None
-        # for test_url in test_url_list:
-        #     output = Output("console")
-        #     scraper = WebScraper(test_url, output, verbose=verbose)
-        #     matches_list = scraper.rawMatchesObjects_list
-        #     tournament_name = scraper.tournament_title
-        #     tournament_start_date = scraper.tournament_start
-        #     tournament_end_date = scraper.tournament_end
-        #     db_name = "db_tournamentsoftware_test.db"
-        #     database_obj = DB(db_name, output, verbose=verbose, add_default_categories=True, add_default_leagues=True, clear_db=False)
-        #     gamesHandler = Handler(database_obj, output, verbose=verbose)
-        #     tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, "location to be extracted", test_url, False))
-        #     gamesHandler.runHandler(matches_list, tournament_id)
-        # database_obj.ss_AllPlayersELOrank()
+        database_obj = None
+        for test_url in test_url_list:
+            output = Output("console")
+            scraper = WebScraper(test_url, output, verbose=verbose)
+            matches_list = scraper.rawMatchesObjects_list
+            tournament_name = scraper.tournament_title
+            tournament_start_date = scraper.tournament_start
+            tournament_end_date = scraper.tournament_end
+            db_name = "db_tournamentsoftware_test.db"
+            database_obj = DB(db_name, output, verbose=verbose, add_default_categories=True, add_default_leagues=True, clear_db=False)
+            gamesHandler = Handler(database_obj, output, verbose=verbose)
+            tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, "location to be extracted", test_url, False))
+            gamesHandler.runHandler(matches_list, tournament_id)
+        database_obj.ss_AllPlayersELOrank()
 
         sys.exit(0)
 

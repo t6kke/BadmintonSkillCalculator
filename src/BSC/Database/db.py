@@ -373,10 +373,21 @@ class DB():
     # results reports printing to terminal
     #============================================
 
-    def report_ListTournaments(self):
+    def report_ListAllTournaments(self):
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         query = "SELECT * FROM report_ListTournaments"
+        res = cur.execute(query)
+        data_list = res.fetchall()
+        con.close()
+        for item in data_list:
+            self.output.write(None, "INFO", "tournaments", id=item[0], name=item[1], date=item[2], location=item[3])
+        self.output.PrintResult()
+
+    def report_ListInternalResultTournaments(self):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        query = "SELECT * FROM report_ListInternalResultTournaments"
         res = cur.execute(query)
         data_list = res.fetchall()
         con.close()

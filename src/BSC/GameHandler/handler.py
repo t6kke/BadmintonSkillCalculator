@@ -146,24 +146,28 @@ class Handler():
                 t2_player_obj_list = []
                 for player_str in team_two_player_str_list:
                     t2_player_obj_list.append(getPlayerObj(player_str, category_id))
+                team_one_obj = Team(t1_player_obj_list)
+                team_two_obj = Team(t2_player_obj_list)
                 if raw_match_obj.team_one_status == "W":
-                    winning_team_obj = Team(t1_player_obj_list)
-                    losing_team_obj = Team(t2_player_obj_list)
+                    winning_team_obj = team_one_obj
+                    losing_team_obj = team_two_obj
                     compeditor_nbr = 1
                 else:
-                    winning_team_obj = Team(t2_player_obj_list)
-                    losing_team_obj = Team(t1_player_obj_list)
+                    winning_team_obj = team_two_obj
+                    losing_team_obj = team_one_obj
                     compeditor_nbr = 2
             else:
                 p1_player_obj = getPlayerObj(raw_match_obj.team_one, category_id)
                 p2_player_obj = getPlayerObj(raw_match_obj.team_two, category_id)
+                team_one_obj = Team([p1_player_obj])
+                team_two_obj = Team([p2_player_obj])
                 if raw_match_obj.team_one_status == "W":
-                    winning_team_obj = Team([p1_player_obj])
-                    losing_team_obj = Team([p2_player_obj])
+                    winning_team_obj = team_one_obj
+                    losing_team_obj = team_two_obj
                     compeditor_nbr = 1
                 else:
-                    winning_team_obj = Team([p2_player_obj])
-                    losing_team_obj = Team([p1_player_obj])
+                    winning_team_obj = team_two_obj
+                    losing_team_obj = team_one_obj
                     compeditor_nbr = 2
 
             match_data_to_db = (tournament_id, category_id, self.league_id, compeditor_nbr)
@@ -179,14 +183,13 @@ class Handler():
             players_games_rel_to_db = []
             players_matches_rel_wELOupdate_to_db = []
             compeditor_nbr = 0
-            teams = [winning_team_obj, losing_team_obj]
+            teams = [team_one_obj, team_two_obj]
             for team in teams:
                 compeditor_nbr = compeditor_nbr + 1
                 for player_id in team.team_members_set:
                     for i in range(games_count-1, -1, -1): #TODO analyze if this is a good fix for the game_id relation
                         players_games_rel_to_db.append((player_id, game_id-i, compeditor_nbr))
                     players_matches_rel_wELOupdate_to_db.append((player_id, match_id, team.team_members_dict.get(player_id).ELO, elo_results_dict.get(player_id)))
-
             self.database_obj.AddPlayerGameRel(players_games_rel_to_db)
             self.database_obj.AddPlayerMatchRel_W_ELOUpdate(players_matches_rel_wELOupdate_to_db, category_id)
 

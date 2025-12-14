@@ -79,10 +79,17 @@ db_up = {
 	"player_elo_change"	INTEGER NOT NULL,
 	UNIQUE("player_id","match_id")
 )""",
-"report_ListTournaments": """CREATE VIEW "report_ListTournaments" AS
+"report_ListAllTournaments": """CREATE VIEW "report_ListAllTournaments" AS
 	SELECT
 	*
 	FROM tournaments
+	ORDER BY start_date ASC
+""",
+"report_ListInternalResultTournaments": """CREATE VIEW "report_ListInternalResultTournaments" AS
+	SELECT
+	*
+	FROM tournaments
+	WHERE has_internal_result = true
 	ORDER BY start_date ASC
 """,
 "report_ELOStandings": """CREATE VIEW "report_EloStandings" AS
@@ -104,39 +111,63 @@ db_up = {
 	c.name AS category_name,
 	teams.team_name,
 	count(g.id) AS nbr_of_matches,
-	SUM(IIF(CASE WHEN teams.team_nbr = 1 THEN g.compeditor_one_score ELSE g.compeditor_two_score END > CASE WHEN teams.team_nbr = 1 THEN g.compeditor_two_score ELSE g.compeditor_one_score END, 1, 0)) AS victories,
+	--SUM(IIF(CASE WHEN teams.team_nbr = 1 THEN g.compeditor_one_score ELSE g.compeditor_two_score END > CASE WHEN teams.team_nbr = 1 THEN g.compeditor_two_score ELSE g.compeditor_one_score END, 1, 0)) AS victories,
+	SUM(CASE WHEN teams.team_nbr = teams.winner THEN 1 ELSE 0 END) as victories,
 	SUM(teams.points_for) AS points_for,
 	SUM(teams.points_against) AS points_against,
 	SUM(teams.points_for - teams.points_against) AS point_difference
 	FROM (
 		SELECT
-		g.id,
-		g.match_id,
+		fg.id,
+		fg.match_id,
 		1 AS team_nbr,
+		m.winner as winner,
 		GROUP_CONCAT(p.name, ' + ') AS team_name,
-		g.compeditor_one_score AS points_for,
-		g.compeditor_two_score AS points_against
-		FROM games g
-		JOIN players_games pg ON g.id = pg.game_id AND pg.compeditor_nbr = 1
+		fg.compeditor_one_score AS points_for,
+		fg.compeditor_two_score AS points_against
+		FROM (
+			SELECT
+			id,
+			match_id,
+			MAX(game_count),
+			sum(compeditor_one_score) as compeditor_one_score,
+			sum(compeditor_two_score) as compeditor_two_score
+			FROM
+			games
+			group by match_id) fg
+		JOIN players_games pg ON fg.id = pg.game_id AND pg.compeditor_nbr = 1
 		JOIN players p ON p.id = pg.player_id
-		GROUP BY g.id
+		JOIN matches m ON fg.match_id = m.id
+		GROUP BY fg.match_id
 		UNION ALL
 		SELECT
-		g.id,
-		g.match_id,
+		fg.id,
+		fg.match_id,
 		2 AS team_nbr,
+		m.winner as winner,
 		GROUP_CONCAT(p.name, ' + ') AS team_name,
-		g.compeditor_two_score AS points_for,
-		g.compeditor_one_score AS points_against
-		FROM games g
-		JOIN players_games pg ON g.id = pg.game_id AND pg.compeditor_nbr = 2
+		fg.compeditor_two_score AS points_for,
+		fg.compeditor_one_score AS points_against
+		FROM (
+			SELECT
+			id,
+			match_id,
+			MAX(game_count),
+			sum(compeditor_one_score) as compeditor_one_score,
+			sum(compeditor_two_score) as compeditor_two_score
+			FROM
+			games
+			group by match_id) fg
+		JOIN players_games pg ON fg.id = pg.game_id AND pg.compeditor_nbr = 2
 		JOIN players p ON p.id = pg.player_id
-		GROUP BY g.id
+		JOIN matches m ON fg.match_id = m.id
+		GROUP BY fg.match_id
 	) teams
 	JOIN games g ON g.id = teams.id
 	JOIN matches m ON m.id = teams.match_id
 	JOIN tournaments t ON t.id = m.tournament_id
 	JOIN categories c ON c.id = m.category_id
+	WHERE t.has_internal_result = true
 	GROUP BY teams.team_name, t.id
 	ORDER BY victories DESC, point_difference DESC
 """
@@ -154,7 +185,8 @@ db_down = {
 "players_categories_elo": """DROP TABLE players_categories_elo""",
 "players_games": """DROP TABLE players_games""",
 "players_matches_elo_change": """DROP TABLE players_matches_elo_change""",
-"report_ListTournaments": """DROP VIEW report_ListTournaments""",
+"report_ListAllTournaments": """DROP VIEW report_ListAllTournaments""",
+"report_ListInternalResultTournaments": """DROP VIEW report_ListInternalResultTournaments""",
 "report_ELOStandings": """DROP VIEW report_EloStandings""",
 "report_TournamentResults": """DROP VIEW report_TournamentResults"""
 }
