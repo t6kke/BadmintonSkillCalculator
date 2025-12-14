@@ -45,7 +45,7 @@ db_up = {
 	"tournament_id"	INTEGER NOT NULL,
 	"category_id"	INTEGER NOT NULL,
 	"league_id"	INTEGER NOT NULL,
-	"winner" INTEGER NOT NULL,
+	"winner_compeditor_nbr" INTEGER NOT NULL,
 	FOREIGN KEY("category_id") REFERENCES "categories"("id"),
 	FOREIGN KEY("tournament_id") REFERENCES "tournaments"("id"),
 	FOREIGN KEY("league_id") REFERENCES "leagues"("id"),
@@ -112,7 +112,7 @@ db_up = {
 	teams.team_name,
 	count(g.id) AS nbr_of_matches,
 	--SUM(IIF(CASE WHEN teams.team_nbr = 1 THEN g.compeditor_one_score ELSE g.compeditor_two_score END > CASE WHEN teams.team_nbr = 1 THEN g.compeditor_two_score ELSE g.compeditor_one_score END, 1, 0)) AS victories,
-	SUM(CASE WHEN teams.team_nbr = teams.winner THEN 1 ELSE 0 END) as victories,
+	SUM(CASE WHEN teams.team_nbr = teams.winner_compeditor_nbr THEN 1 ELSE 0 END) as victories,
 	SUM(teams.points_for) AS points_for,
 	SUM(teams.points_against) AS points_against,
 	SUM(teams.points_for - teams.points_against) AS point_difference
@@ -121,7 +121,7 @@ db_up = {
 		fg.id,
 		fg.match_id,
 		1 AS team_nbr,
-		m.winner as winner,
+		m.winner_compeditor_nbr as winner_compeditor_nbr,
 		GROUP_CONCAT(p.name, ' + ') AS team_name,
 		fg.compeditor_one_score AS points_for,
 		fg.compeditor_two_score AS points_against
@@ -144,7 +144,7 @@ db_up = {
 		fg.id,
 		fg.match_id,
 		2 AS team_nbr,
-		m.winner as winner,
+		m.winner_compeditor_nbr as winner_compeditor_nbr,
 		GROUP_CONCAT(p.name, ' + ') AS team_name,
 		fg.compeditor_two_score AS points_for,
 		fg.compeditor_one_score AS points_against

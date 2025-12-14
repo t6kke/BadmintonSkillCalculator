@@ -162,7 +162,7 @@ class DB():
     def FindTournament(self, tournament_name, tournament_date): #TODO add verbose info
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        res = cur.execute("SELECT * FROM tournaments WHERE name = '" + tournament_name +"' OR date = '"+tournament_date+"'")
+        res = cur.execute("SELECT * FROM tournaments WHERE name = '" + tournament_name +"' OR start_date = '"+tournament_date+"'")
         result = res.fetchall()
         return result
 
@@ -209,19 +209,22 @@ class DB():
         con.close()
         return category_id[0]
 
-    def AddLeague(self, league_name, league_description): #TODO add verbose info
+    def AddCustomLeague(self, league_name, league_description): #TODO add verbose info
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         data_in = (league_name,)
-        cur.execute("INSERT INTO leagues (name) VALUES(?)", data_in)
-        res = cur.execute("SELECT id FROM leagues WHERE name = '" + league_name +"'")
-        league_id = res.fetchone()
-        data_in_league_meta_name = (league_id[0],"short_name",league_name,)
-        data_in_league_meta_desc = (league_id[0],"description",league_description,)
-        data_in_league_meta_default = (league_id[0],"default ELO",1000,)
-        data_in_list = [data_in_league_meta_name, data_in_league_meta_desc, data_in_league_meta_default]
-        cur.executemany("INSERT INTO leagues_metadata (league_id, info_type, info_text) VALUES(?,?,?)", data_in_list)
-        con.commit()
+        try:
+            cur.execute("INSERT INTO leagues (name) VALUES(?)", data_in)
+            res = cur.execute("SELECT id FROM leagues WHERE name = '" + league_name +"'")
+            league_id = res.fetchone()
+            data_in_league_meta_name = (league_id[0],"short_name",league_name,)
+            data_in_league_meta_desc = (league_id[0],"description",league_description,)
+            data_in_league_meta_default = (league_id[0],"default ELO",1000,)
+            data_in_list = [data_in_league_meta_name, data_in_league_meta_desc, data_in_league_meta_default]
+            cur.executemany("INSERT INTO leagues_metadata (league_id, info_type, info_text) VALUES(?,?,?)", data_in_list)
+            con.commit()
+        except Exception as e:
+            print("issue inserting league data: " + str(e))
         con.close()
 
     def GetLeague(self, league_str): #TODO add verbose info
@@ -314,7 +317,7 @@ class DB():
         self.output.write(self.verbose, "INFO", "DB:AddMatch", message=f"adding match to DB with data: '{data_in}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        cur.execute("INSERT INTO matches (tournament_id, category_id, league_id, winner) VALUES(?,?,?,?)", data_in)
+        cur.execute("INSERT INTO matches (tournament_id, category_id, league_id, winner_compeditor_nbr) VALUES(?,?,?,?)", data_in)
         con.commit()
         res = cur.execute("SELECT id FROM matches ORDER BY id DESC LIMIT 1")
         match_id = res.fetchone()[0]

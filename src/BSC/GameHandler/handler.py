@@ -12,6 +12,7 @@ class Handler():
         self.database_obj = database_obj
         self.league_id = None
 
+    # old functionality, not used anymore
     def runGamesParser(self, raw_matches_list, tournament_id):
         converted_all_matches_list = [] #same list of matches list of dictionaries but content will be Teams objects that have set of player db_id-s
         players_obj_dict_in_tournament = {} #for not repeat checks of players in tournament. strcutre: 'db_id: player_obj'
@@ -130,9 +131,6 @@ class Handler():
 
         match_counter = 1
         for raw_match_obj in raw_matches_list:
-            #print(f"counter: {match_counter}")
-            #match_counter += 1
-            #print(raw_match_obj.team_one, raw_match_obj.team_one_scores, raw_match_obj.team_two, raw_match_obj.team_two_scores)
             category_id = self.database_obj.GetCategory(raw_match_obj.category)
             self.league_id = self.database_obj.GetLeague(raw_match_obj.league.lower())
 

@@ -77,7 +77,6 @@ List is not just code improvements but also project functionalities
 - application version metadata(db logic version, skill calculator version) in database for initial validation.
 - created_at and updated_at fields into varios database tables where they make sense.
 - Add ELO confidence value and use it to handle ELO gain/loss.
-- Tournament results statistics report users games count. This change will be in the future since this has to change when matches consist of multiple games.
 - Old help information should be implemented through new output help information.
 - Verbosity logic of output package needs to be reworked.
 - Re-work how arguments handling is done after registration.
@@ -194,6 +193,9 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 - New Games Handler functionality with different workflow that can handle multiple categories in the same tournament
 - Small modification to Teams object so it would work with new Games Handler logic
 - New Skill Calculator object to work with the modified Games Handler logic
+- Test execution and main excel data insert functionality converted to use new handler functionality
+- 
+- New separate report view in DB for only tournaments that should be used for internal results reporting
 - 
 
 ### Alpha 4.1.1

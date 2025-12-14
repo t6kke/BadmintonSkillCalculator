@@ -1,16 +1,21 @@
 import pandas as pd
 import numpy as np
 
+from BSC.GameHandler.rawmatch import RawMatch
+
 class ExcelParser():
-    def __init__(self, excel_data_games_filename, excel_sheet_name, output, verbose=False):
+    def __init__(self, excel_data_games_filename, excel_sheet_name, category_name, league_name, output, verbose=False):
         self.verbose = verbose
         self.output = output
         self.excel_data_games_filename = excel_data_games_filename
         self.excel_sheet_name = excel_sheet_name
+        self.category_name = category_name
+        self.league_name = league_name
         self.dataframe = None
         self.__setDataframe()
         self.games_dataframe_list = []
         self.collected_games_list = []
+        self.collected_matchesRawObj_list = []
 
     def getTournamentName(self):
         self.output.write(self.verbose, "INFO", None, message=f"retreiving tournament name")
@@ -23,6 +28,10 @@ class ExcelParser():
     def getGames(self):
         self.output.write(self.verbose, "INFO", None, message=f"returning all collected games: '{self.collected_games_list}'")
         return self.collected_games_list
+
+    def getRawMatchesObjList(self):
+        self.output.write(self.verbose, "INFO", None, message=f"returning all collected matches: '{self.collected_matchesRawObj_list}'")
+        return self.collected_matchesRawObj_list
 
     def collectGames(self):
         self.output.write(self.verbose, "INFO", None, message=f"staring collection of games from dataframe:\n{self.dataframe}")
@@ -80,3 +89,12 @@ class ExcelParser():
                 temp_dict[team_one] = [team_one_score]
                 temp_dict[team_two] = [team_two_score]
                 self.collected_games_list.append(temp_dict)
+
+                if int(team_one_score) > int(team_two_score):
+                    team_one_status = "W"
+                    team_two_status = None
+                else:
+                    team_two_status = "W"
+                    team_one_status = None
+                new_raw_match = RawMatch(self.category_name, self.league_name, team_one, team_one_status, [team_one_score], team_two, team_two_status, [team_two_score])
+                self.collected_matchesRawObj_list.append(new_raw_match)

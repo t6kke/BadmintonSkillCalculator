@@ -2,7 +2,7 @@ from BSC.GameHandler.rawmatch import RawMatch
 
 #for inital development and testing, intended for the 'test_data.txt' file parsing and extracting list of games dictionaries.
 #TODO add verbose option but very low priority.
-def getGamesFromTXT(txt_data_games_filename):
+def getGamesFromTXT(txt_data_games_filename, category_name, league_name):
     result_rawGameObj_list = []
     with open(txt_data_games_filename, "r") as game_data:
         for line in game_data:
@@ -28,6 +28,6 @@ def getGamesFromTXT(txt_data_games_filename):
                     comp_two_status = "W"
                     comp_one_status = None
 
-                new_raw_match = RawMatch("EC", "example league", comp_one_team_name, comp_one_status, comp_one_scores, comp_two_team_name, comp_two_status, comp_two_scores)
+                new_raw_match = RawMatch(category_name, league_name, comp_one_team_name, comp_one_status, comp_one_scores, comp_two_team_name, comp_two_status, comp_two_scores)
                 result_rawGameObj_list.append(new_raw_match)
     return result_rawGameObj_list

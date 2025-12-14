@@ -90,17 +90,20 @@ class Main():
                         break
 
     def commandInsert(self):
+        league_name = "custom league"
+        league_desc = "Custom league value that is not really relevant for excel based round robin tournaments, default starting ELO is 1000"
         source_file = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("excel_file").arg_options) #TODO handle no value provided by user
         sheets_list = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("excel_sheet").arg_options) #TODO handle no value provided by user
         category_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("c_name").arg_options) #TODO handle no value provided by user
         category_desc = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("c_desc").arg_options) #TODO handle no value provided by user
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options) #TODO handle no value provided by user
         self.database_obj = DB(db_name, self.output, verbose=self.verbose)
-        raw_tournaments_from_excel = self.__getGamesFromExcel(source_file, sheets_list)
+        raw_tournaments_from_excel = self.__getGamesFromExcel(source_file, sheets_list, category_name, league_name)
         gamesHandler = Handler(self.database_obj, self.output, self.verbose)
-        category_id = self.database_obj.GetOrAddCategory(category_name, category_desc)
+        self.database_obj.GetOrAddCategory(category_name, category_desc)
+        self.database_obj.AddCustomLeague(league_name, league_desc)
         tournament_id = None
-        for tournament_name_data, raw_matches_list_from_excel in raw_tournaments_from_excel.items():
+        for tournament_name_data, raw_matches_obj_list_from_excel in raw_tournaments_from_excel.items():
             tournament_date = re.search("(\\d{2}\\.\\d{2}\\.\\d{4})", tournament_name_data).group()
             tournament_location = re.search("@([^)]+)", tournament_name_data).group().lstrip("@")
             tournament_name = tournament_name_data.split("(")[0].strip()
@@ -112,9 +115,9 @@ class Main():
                 self.output.write(None, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="error", error=f"INFO --- Tournament '{tournament_name}' already exists in database, not adding")
                 continue
             self.output.write(True, "INFO", "tournaments", message=f"Adding tournament: '{tournament_name}' to the database")
-            tournament_id = self.database_obj.AddTournament((tournament_name, tournament_date, tournament_location))
+            tournament_id = self.database_obj.AddTournament((tournament_name, tournament_date, tournament_date, tournament_location, None, True))
             self.output.write(True, "INFO", "tournaments", message=f"Running games handler functionality...")
-            gamesHandler.runGamesParser(raw_matches_list_from_excel, tournament_id, category_id)
+            gamesHandler.runHandler(raw_matches_obj_list_from_excel, tournament_id)
             self.output.write(None, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="success")
         self.output.write(self.verbose, "INFO", None, message=f"Final reports")
         self.output.PrintResult()
@@ -186,13 +189,13 @@ class Main():
         self.args_handler = HandleArgs(self.launch_args_list, self.verbose)
         if self.args_handler.wasHelpRequested(): self.__exitSuccess()   # don't run any longer if user asked for help about arguments/program
 
-    def __getGamesFromExcel(self, excel_file, list_of_sheets):
+    def __getGamesFromExcel(self, excel_file, list_of_sheets, category_name, league_name):
         result_dict = {}
         for sheet in list_of_sheets:
-            excelParser = ExcelParser(excel_file, sheet, self.output, self.verbose)
-            tournament_name = excelParser.getTournamentName() #TODO gets just basic name from the filed, do addtional parsing to extract date and location
+            excelParser = ExcelParser(excel_file, sheet, category_name, league_name, self.output, self.verbose)
+            tournament_name = excelParser.getTournamentName()
             excelParser.collectGames()
-            result_dict[tournament_name] = excelParser.getGames()
+            result_dict[tournament_name] = excelParser.getRawMatchesObjList()
         return result_dict
 
     def __exitError(self, message):
@@ -209,55 +212,55 @@ class Main():
         verbose = False
 
         #Testing execution with reading txt file
-        # tournament_name = "Example Tournament"
-        # tournament_date = "01.01.2025"
-        # tournament_location = "Example Location"
-        # category_name = "EC"
-        # category_desc = "example category"
-        # league_name = "example league"
-        # league_desc = "example league"
-        # db_name = "db_txt.db"
-        # matches_list = getGamesFromTXT(self.test_data_txt)
-        # output = Output("console")
-        # database_obj = DB(db_name, output, verbose=verbose, clear_db=True)
-        # gamesHandler = Handler(database_obj, output, verbose=verbose)
-        # category_id = database_obj.GetOrAddCategory(category_name, category_desc)
-        # database_obj.AddLeague(league_name, league_desc)
-        # tournament_id = database_obj.AddTournament((tournament_name, tournament_date, tournament_date, tournament_location, None, True))
-        # gamesHandler.runHandler(matches_list, tournament_id)
-        # output.write(verbose, "INFO", None, message=f"Final reports")
-        # database_obj.report_TournamentResult(tournament_id)
+        tournament_name = "Example Tournament"
+        tournament_date = "01.01.2025"
+        tournament_location = "Example Location"
+        category_name = "EC"
+        category_desc = "example category"
+        league_name = "example league"
+        league_desc = "example league"
+        db_name = "db_txt.db"
+        matches_list = getGamesFromTXT(self.test_data_txt, category_name, league_name)
+        output = Output("console")
+        database_obj = DB(db_name, output, verbose=verbose, clear_db=True)
+        gamesHandler = Handler(database_obj, output, verbose=verbose)
+        category_id = database_obj.GetOrAddCategory(category_name, category_desc)
+        database_obj.AddCustomLeague(league_name, league_desc)
+        tournament_id = database_obj.AddTournament((tournament_name, tournament_date, tournament_date, tournament_location, None, True))
+        gamesHandler.runHandler(matches_list, tournament_id)
+        output.write(verbose, "INFO", None, message=f"Final reports")
+        database_obj.report_TournamentResult(tournament_id)
 
         #Testing execution with scraping tournamentsoftware.com
-        test_url_1 = "https://www.tournamentsoftware.com/tournament/dd30e793-b978-4ad4-83cb-3459de20b11b"
-        test_url_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
-        test_url_list = [test_url_1]
-
-        gp_1 = "https://www.tournamentsoftware.com/sport/tournament?id=4C2B2BAC-8BBA-4586-B842-10C444F8B13C"
-        gp_2 = "https://www.tournamentsoftware.com/sport/tournament?id=FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
-        ava_voistlus = "https://www.tournamentsoftware.com/tournament/A53C2D0E-E068-4995-8D2F-8D295C535A11"
-        lining_1 = "https://www.tournamentsoftware.com/tournament/8A2817D9-B25B-466A-9FFB-6BE782B3301A"
-        young_1 = "https://www.tournamentsoftware.com/sport/tournament?id=58727CE6-C7FF-4505-BA88-B0D2B5D05CB3"
-        victor_1 = "https://www.tournamentsoftware.com/sport/tournament?id=63C4E8DC-6995-4500-8FD4-82C12285E77B"
-        young_2 = "https://www.tournamentsoftware.com/sport/tournament?id=DEE3D39A-C0DA-4B1E-A0CC-C01921C90D77"
-        lining_2 = "https://www.tournamentsoftware.com/sport/tournament?id=DD30E793-B978-4AD4-83CB-3459DE20B11B"
-        young_3 = "https://www.tournamentsoftware.com/tournament/170E0FF4-AF94-4F2A-B9A0-C0D8654195BB"
-        test_url_list = [gp_1, gp_2, ava_voistlus, lining_1, young_1, victor_1, young_2, lining_2, young_3]
-
-        database_obj = None
-        for test_url in test_url_list:
-            output = Output("console")
-            scraper = WebScraper(test_url, output, verbose=verbose)
-            matches_list = scraper.rawMatchesObjects_list
-            tournament_name = scraper.tournament_title
-            tournament_start_date = scraper.tournament_start
-            tournament_end_date = scraper.tournament_end
-            db_name = "db_tournamentsoftware_test.db"
-            database_obj = DB(db_name, output, verbose=verbose, add_default_categories=True, add_default_leagues=True, clear_db=False)
-            gamesHandler = Handler(database_obj, output, verbose=verbose)
-            tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, "location to be extracted", test_url, False))
-            gamesHandler.runHandler(matches_list, tournament_id)
-        database_obj.ss_AllPlayersELOrank()
+        # test_url_1 = "https://www.tournamentsoftware.com/tournament/dd30e793-b978-4ad4-83cb-3459de20b11b"
+        # test_url_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
+        # test_url_list = [test_url_1]
+        #
+        # gp_1 = "https://www.tournamentsoftware.com/sport/tournament?id=4C2B2BAC-8BBA-4586-B842-10C444F8B13C"
+        # gp_2 = "https://www.tournamentsoftware.com/sport/tournament?id=FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
+        # ava_voistlus = "https://www.tournamentsoftware.com/tournament/A53C2D0E-E068-4995-8D2F-8D295C535A11"
+        # lining_1 = "https://www.tournamentsoftware.com/tournament/8A2817D9-B25B-466A-9FFB-6BE782B3301A"
+        # young_1 = "https://www.tournamentsoftware.com/sport/tournament?id=58727CE6-C7FF-4505-BA88-B0D2B5D05CB3"
+        # victor_1 = "https://www.tournamentsoftware.com/sport/tournament?id=63C4E8DC-6995-4500-8FD4-82C12285E77B"
+        # young_2 = "https://www.tournamentsoftware.com/sport/tournament?id=DEE3D39A-C0DA-4B1E-A0CC-C01921C90D77"
+        # lining_2 = "https://www.tournamentsoftware.com/sport/tournament?id=DD30E793-B978-4AD4-83CB-3459DE20B11B"
+        # young_3 = "https://www.tournamentsoftware.com/tournament/170E0FF4-AF94-4F2A-B9A0-C0D8654195BB"
+        # test_url_list = [gp_1, gp_2, ava_voistlus, lining_1, young_1, victor_1, young_2, lining_2, young_3]
+        #
+        # database_obj = None
+        # for test_url in test_url_list:
+        #     output = Output("console")
+        #     scraper = WebScraper(test_url, output, verbose=verbose)
+        #     matches_list = scraper.rawMatchesObjects_list
+        #     tournament_name = scraper.tournament_title
+        #     tournament_start_date = scraper.tournament_start
+        #     tournament_end_date = scraper.tournament_end
+        #     db_name = "db_tournamentsoftware_test.db"
+        #     database_obj = DB(db_name, output, verbose=verbose, add_default_categories=True, add_default_leagues=True, clear_db=False)
+        #     gamesHandler = Handler(database_obj, output, verbose=verbose)
+        #     tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, "location to be extracted", test_url, False))
+        #     gamesHandler.runHandler(matches_list, tournament_id)
+        # database_obj.ss_AllPlayersELOrank()
 
         sys.exit(0)
 
