@@ -3,6 +3,7 @@ from BSC.Utils.handlehelp import helpSelector
 class HandleArgs():
     def __init__(self, args_list, verbose=False):
         #argument values variables to be filled
+        self.source_url_list = []
         self.source_excel = ""
         self.source_excel_sheet_list = []
         self.database_name = ""
@@ -101,6 +102,10 @@ class HandleArgs():
 
     def __assignVariables(self, key, value): #TODO analyze if this match/case can be removed by some auto populate logic
         match key:
+            case "--url" | "-u":
+                self.source_url_list.append(value)
+                self.used_args_list.append(key)
+                self.used_args_value_dict[key] = self.source_url_list
             case "--file" | "-f":
                 if self.source_excel != "": raise Exception(f"One file name already provided, only one value for '{key}' is expected")
                 self.source_excel = value

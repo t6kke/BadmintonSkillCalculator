@@ -30,10 +30,11 @@ class Main():
 
     def __registerCommands(self):
         db_name = Argument("--db_name", arguments_info.get("--db_name"), is_mandatory=True)
-        excel_file = Argument("--file", arguments_info.get("--file"), "-f", is_mandatory=True)
-        excel_sheet = Argument("--sheet", arguments_info.get("--sheet"), "-s", is_mandatory=True)
-        c_name = Argument("--c_name", arguments_info.get("--c_name"), is_mandatory=True, function=self.argFuncAddCategory)
-        c_desc = Argument("--c_desc", arguments_info.get("--c_desc"), is_mandatory=True)
+        url_source = Argument("--url", arguments_info.get("--url"), "-u", function=self.argFuncParseURL)
+        excel_file = Argument("--file", arguments_info.get("--file"), "-f", function=self.argFuncParseExcel)
+        excel_sheet = Argument("--sheet", arguments_info.get("--sheet"), "-s")
+        c_name = Argument("--c_name", arguments_info.get("--c_name"), function=self.argFuncAddCategory)
+        c_desc = Argument("--c_desc", arguments_info.get("--c_desc"))
         output_type = Argument("--out", arguments_info.get("--out"), "-o")
         verbose = Argument("--verbose", arguments_info.get("--verbose"), "-v")
         help_arg = Argument("--help", arguments_info.get("--help"), "-h")
@@ -44,7 +45,7 @@ class Main():
 
         self.commands["version"] = Command("version", commands_info.get("version"), self.commandVersion)
         self.commands["help"] = Command("help", commands_info.get("help"), self.commandHelp) #TODO initial help should also be both '-h' and '--help'
-        self.commands["insert"] = Command("insert", commands_info.get("insert"), self.commandInsert, db_name=db_name, excel_file=excel_file, excel_sheet=excel_sheet, c_name=c_name, c_desc=c_desc, output_type=output_type, verbose=verbose, help_arg=help_arg)
+        self.commands["insert"] = Command("insert", commands_info.get("insert"), self.commandInsert, db_name=db_name, url_source=url_source, excel_file=excel_file, excel_sheet=excel_sheet, c_name=c_name, c_desc=c_desc, output_type=output_type, verbose=verbose, help_arg=help_arg)
         self.commands["report"] = Command("report", commands_info.get("report"), self.commandReport, db_name=db_name, list_report_options=list_report_options, report_name=report_name, report_tid_filter=report_tid_filter, output_type=output_type, verbose=verbose, help_arg=help_arg)
         self.commands["category"] = Command("category", commands_info.get("category"), self.commandCategory, db_name=db_name, list_category_options=list_category_options, c_name=c_name, c_desc=c_desc, output_type=output_type, verbose=verbose, help_arg=help_arg)
 
@@ -90,9 +91,42 @@ class Main():
                         break
 
     def commandInsert(self):
+        #TODO better handling to switch between inserting data from web or from excel
+        #TODO add verbose info
+        url_arg_values = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("url_source").arg_options)
+        excel_arg_values = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("excel_file").arg_options)
+        if url_arg_values != None:
+            self.command_arg_objects_dict.get("url_source").run()
+        elif excel_arg_values != None:
+            self.command_arg_objects_dict.get("excel_file").run()
+
+
+    def argFuncParseURL(self):
+        #TODO add both output and verbose info
+        url_list = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("url_source").arg_options)
+        db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options)
+        #TODO validate if DB has default categories and leagues, if not they should be/can be added. Should build it into database pacakges
+        database_obj = None
+        for url in url_list:
+            database_obj = DB(db_name, self.output, verbose=self.verbose, add_default_categories=True, add_default_leagues=True)
+            scraper = WebScraper(url, self.output, verbose=self.verbose)
+            matches_list = scraper.rawMatchesObjects_list
+            tournament_name = scraper.tournament_title
+            tournament_start_date = scraper.tournament_start
+            tournament_end_date = scraper.tournament_end
+            tournament_data = database_obj.FindTournament(tournament_name, tournament_start_date)
+            if len(tournament_data) != 0:
+                tournament_id = tournament_data[0][0]
+                self.output.write(None, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="error", error=f"INFO --- Tournament '{tournament_name}' already exists in database, not adding")
+                continue
+            gamesHandler = Handler(database_obj, self.output, verbose=self.verbose)
+            tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, "location to be extracted", url, False))
+            gamesHandler.runHandler(matches_list, tournament_id)
+
+    def argFuncParseExcel(self):
         league_name = "custom league"
         league_desc = "Custom league value that is not really relevant for excel based round robin tournaments, default starting ELO is 1000"
-        source_file = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("excel_file").arg_options) #TODO handle no value provided by user
+        source_file = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("excel_file").arg_options)
         sheets_list = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("excel_sheet").arg_options) #TODO handle no value provided by user
         category_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("c_name").arg_options) #TODO handle no value provided by user
         category_desc = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("c_desc").arg_options) #TODO handle no value provided by user
@@ -136,8 +170,10 @@ class Main():
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options) #TODO handle no value provided by user
         self.database_obj = DB(db_name, self.output, verbose=self.verbose)
         match report_name: #TODO analyze if we can remove this match/case solution, maybe some automatically populated functions **kwargs dictionary on the argument can be a solution
-            case "report_ListTournaments":
-                self.database_obj.report_ListTournaments()
+            case "report_ListAllTournaments":
+                self.database_obj.report_ListAllTournaments()
+            case "report_ListInternalResultTournaments":
+                self.database_obj.report_ListInternalResultTournaments()
             case "report_EloStandings":
                 self.database_obj.report_AllPlayersELOrank()
             case "report_TournamentResults":
@@ -212,30 +248,30 @@ class Main():
         verbose = False
 
         #Testing execution with reading txt file
-        tournament_name = "Example Tournament"
-        tournament_date = "01.01.2025"
-        tournament_location = "Example Location"
-        category_name = "EC"
-        category_desc = "example category"
-        league_name = "example league"
-        league_desc = "example league"
-        db_name = "db_txt.db"
-        matches_list = getGamesFromTXT(self.test_data_txt, category_name, league_name)
-        output = Output("console")
-        database_obj = DB(db_name, output, verbose=verbose, clear_db=True)
-        gamesHandler = Handler(database_obj, output, verbose=verbose)
-        category_id = database_obj.GetOrAddCategory(category_name, category_desc)
-        database_obj.AddCustomLeague(league_name, league_desc)
-        tournament_id = database_obj.AddTournament((tournament_name, tournament_date, tournament_date, tournament_location, None, True))
-        gamesHandler.runHandler(matches_list, tournament_id)
-        output.write(verbose, "INFO", None, message=f"Final reports")
-        database_obj.report_TournamentResult(tournament_id)
+        # tournament_name = "Example Tournament"
+        # tournament_date = "01.01.2025"
+        # tournament_location = "Example Location"
+        # category_name = "EC"
+        # category_desc = "example category"
+        # league_name = "example league"
+        # league_desc = "example league"
+        # db_name = "db_txt.db"
+        # matches_list = getGamesFromTXT(self.test_data_txt, category_name, league_name)
+        # output = Output("console")
+        # database_obj = DB(db_name, output, verbose=verbose, clear_db=True)
+        # gamesHandler = Handler(database_obj, output, verbose=verbose)
+        # category_id = database_obj.GetOrAddCategory(category_name, category_desc)
+        # database_obj.AddCustomLeague(league_name, league_desc)
+        # tournament_id = database_obj.AddTournament((tournament_name, tournament_date, tournament_date, tournament_location, None, True))
+        # gamesHandler.runHandler(matches_list, tournament_id)
+        # output.write(verbose, "INFO", None, message=f"Final reports")
+        # database_obj.report_TournamentResult(tournament_id)
 
         #Testing execution with scraping tournamentsoftware.com
-        # test_url_1 = "https://www.tournamentsoftware.com/tournament/dd30e793-b978-4ad4-83cb-3459de20b11b"
-        # test_url_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
-        # test_url_list = [test_url_1]
-        #
+        test_url_1 = "https://www.tournamentsoftware.com/tournament/dd30e793-b978-4ad4-83cb-3459de20b11b"
+        test_url_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
+        test_url_list = [test_url_1]
+
         # gp_1 = "https://www.tournamentsoftware.com/sport/tournament?id=4C2B2BAC-8BBA-4586-B842-10C444F8B13C"
         # gp_2 = "https://www.tournamentsoftware.com/sport/tournament?id=FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
         # ava_voistlus = "https://www.tournamentsoftware.com/tournament/A53C2D0E-E068-4995-8D2F-8D295C535A11"
@@ -247,20 +283,20 @@ class Main():
         # young_3 = "https://www.tournamentsoftware.com/tournament/170E0FF4-AF94-4F2A-B9A0-C0D8654195BB"
         # test_url_list = [gp_1, gp_2, ava_voistlus, lining_1, young_1, victor_1, young_2, lining_2, young_3]
         #
-        # database_obj = None
-        # for test_url in test_url_list:
-        #     output = Output("console")
-        #     scraper = WebScraper(test_url, output, verbose=verbose)
-        #     matches_list = scraper.rawMatchesObjects_list
-        #     tournament_name = scraper.tournament_title
-        #     tournament_start_date = scraper.tournament_start
-        #     tournament_end_date = scraper.tournament_end
-        #     db_name = "db_tournamentsoftware_test.db"
-        #     database_obj = DB(db_name, output, verbose=verbose, add_default_categories=True, add_default_leagues=True, clear_db=False)
-        #     gamesHandler = Handler(database_obj, output, verbose=verbose)
-        #     tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, "location to be extracted", test_url, False))
-        #     gamesHandler.runHandler(matches_list, tournament_id)
-        # database_obj.ss_AllPlayersELOrank()
+        database_obj = None
+        for test_url in test_url_list:
+            output = Output("console")
+            scraper = WebScraper(test_url, output, verbose=verbose)
+            matches_list = scraper.rawMatchesObjects_list
+            tournament_name = scraper.tournament_title
+            tournament_start_date = scraper.tournament_start
+            tournament_end_date = scraper.tournament_end
+            db_name = "db_tournamentsoftware_test.db"
+            database_obj = DB(db_name, output, verbose=verbose, add_default_categories=True, add_default_leagues=True, clear_db=False)
+            gamesHandler = Handler(database_obj, output, verbose=verbose)
+            tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, "location to be extracted", test_url, False))
+            gamesHandler.runHandler(matches_list, tournament_id)
+        database_obj.ss_AllPlayersELOrank()
 
         sys.exit(0)
 

@@ -77,16 +77,14 @@ class DB():
                             ("2. liiga",),
                             ("3. liiga",),
                             ("4. liiga",),
-                            ("rahvaliiga a",),
-                            ("rahvaliiga b",)]
+                            ("rahvaliiga",)]
             cur.executemany("INSERT INTO leagues (name) VALUES(?)", leagues_data)
             leagues_metadata = {1:[("default ELO", "3000")],
                                 2:[("default ELO", "2500")],
                                 3:[("default ELO", "2000")],
                                 4:[("default ELO", "1500")],
                                 5:[("default ELO", "1000")],
-                                6:[("default ELO", "750")],
-                                7:[("default ELO", "500")]}
+                                6:[("default ELO", "500")]}
             for league_id, data_list in leagues_metadata.items():
                 updated_data_list = []
                 for data_item in data_list:
@@ -228,10 +226,12 @@ class DB():
         con.close()
 
     def GetLeague(self, league_str): #TODO add verbose info
+        if "rahva" in league_str:
+            league_str = "rahva"
         league_id = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        res = cur.execute("SELECT id FROM leagues WHERE name = '" + league_str + "'")
+        res = cur.execute("SELECT id FROM leagues WHERE name like '%" + league_str + "%'")
         league_id = res.fetchone()
         if league_id is None:
             raise Exception("No valid league found")

@@ -194,7 +194,7 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 - Small modification to Teams object so it would work with new Games Handler logic
 - New Skill Calculator object to work with the modified Games Handler logic
 - Test execution and main excel data insert functionality converted to use new handler functionality
-- 
+- New launch argument --url/-u added for insert command to expose web scraping from CLI
 - New separate report view in DB for only tournaments that should be used for internal results reporting
 - 
 
