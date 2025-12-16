@@ -92,36 +92,44 @@ class Main():
 
     def commandInsert(self):
         #TODO better handling to switch between inserting data from web or from excel
-        #TODO add verbose info
         url_arg_values = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("url_source").arg_options)
         excel_arg_values = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("excel_file").arg_options)
         if url_arg_values != None:
+            self.output.write(True, "INFO", None, message="URL parsing...")
             self.command_arg_objects_dict.get("url_source").run()
         elif excel_arg_values != None:
+            self.output.write(True, "INFO", None, message="Excel file parsing...")
             self.command_arg_objects_dict.get("excel_file").run()
+        else:
+            self.__exitError("Missing either --file or --url argument information, nothing to parse")
 
 
     def argFuncParseURL(self):
-        #TODO add both output and verbose info
         url_list = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("url_source").arg_options)
         db_name = self.args_handler.getUsedArgValue(self.command_arg_objects_dict.get("db_name").arg_options)
         #TODO validate if DB has default categories and leagues, if not they should be/can be added. Should build it into database pacakges
-        database_obj = None
+        database_obj = DB(db_name, self.output, verbose=self.verbose, add_default_categories=True, add_default_leagues=True)
+        gamesHandler = Handler(database_obj, self.output, verbose=self.verbose)
         for url in url_list:
-            database_obj = DB(db_name, self.output, verbose=self.verbose, add_default_categories=True, add_default_leagues=True)
             scraper = WebScraper(url, self.output, verbose=self.verbose)
             matches_list = scraper.rawMatchesObjects_list
             tournament_name = scraper.tournament_title
             tournament_start_date = scraper.tournament_start
             tournament_end_date = scraper.tournament_end
+            self.output.write(True, "INFO", "tournaments", message=f"\nStarting handle tournament: '{tournament_name}' information...")
+            self.output.write(True, "INFO", "tournaments", message=f"Checking if '{tournament_name}' exists in DB")
             tournament_data = database_obj.FindTournament(tournament_name, tournament_start_date)
             if len(tournament_data) != 0:
                 tournament_id = tournament_data[0][0]
                 self.output.write(None, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="error", error=f"INFO --- Tournament '{tournament_name}' already exists in database, not adding")
                 continue
-            gamesHandler = Handler(database_obj, self.output, verbose=self.verbose)
+            self.output.write(True, "INFO", "tournaments", message=f"Adding tournament: '{tournament_name}' to the database")
             tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, "location to be extracted", url, False))
+            self.output.write(True, "INFO", "tournaments", message=f"Running games handler functionality...")
             gamesHandler.runHandler(matches_list, tournament_id)
+            self.output.write(None, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="success")
+        self.output.write(self.verbose, "INFO", None, message=f"Final reports")
+        self.output.PrintResult()
 
     def argFuncParseExcel(self):
         league_name = "custom league"
@@ -235,7 +243,7 @@ class Main():
         return result_dict
 
     def __exitError(self, message):
-        self.output.write(None, "INFO", None, error=message)
+        self.output.write(None, "ERROR", None, error=message)
         sys.exit(1)
 
     def __exitSuccess(self, message = None):
