@@ -98,11 +98,18 @@ db_up = {
 	p.name AS player_name,
 	pce.elo AS ELO,
 	c.id AS category_id,
-	c.name AS category_name
+	c.name AS category_name,
+	COUNT(c.id) as nbr_of_matches,
+	date('now','start of month','-12 month') as date_limit_on_nbr_of_matches
 	FROM players p
-	JOIN players_categories_elo pce ON p.id = pce.player_id
-	JOIN categories c ON c.id = pce.category_id
-	ORDER BY c.id, pce.elo DESC
+	JOIN players_matches_elo_change pmec ON p.id = pmec.player_id
+	JOIN matches m ON m.id = pmec.match_id
+	JOIN tournaments t ON m.tournament_id = t.id
+	JOIN categories c ON c.id = m.category_id
+	JOIN players_categories_elo pce ON p.id = pce.player_id AND c.id = pce.category_id
+	WHERE t.start_date >= date('now','start of month','-12 month')
+	group by c.id, p.id
+	order by c.id, pce.elo DESC
 """,
 "report_TournamentResults": """CREATE VIEW "report_TournamentResults" AS
 	SELECT

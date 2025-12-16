@@ -186,8 +186,9 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 - Separate extraction for tournament metadata(name, start/end date) and scraping matches from each tournament day
 - Database structure modified with new tables and some additional columns in tournaments tables
 - New setup for creating default categories(standard categories setup that badminton has)
-- DB creation has optional flag to create default leages based on Estonian badminton leage structure
 - Leagues metadata table holds the default start ELO value for new players starting first time
+- DB creation has optional flag to create default leages based on Estonian badminton leage structure
+- Default categories and Leagues creation flags will do check if they exist and will add them if needed
 - Default ELO values are used for players first time entry in a given category
 - Initial fixes for reporting views so they would work again after DB structure modifications
 - New Games Handler functionality with different workflow that can handle multiple categories in the same tournament
@@ -196,6 +197,7 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 - Test execution and main excel data insert functionality converted to use new handler functionality
 - New launch argument --url/-u added for insert command to expose web scraping from CLI
 - New separate report view in DB for only tournaments that should be used for internal results reporting
+- ELO results report provides number of matches within the last 12 months
 - 
 
 ### Alpha 4.1.1

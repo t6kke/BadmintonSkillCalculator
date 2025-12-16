@@ -5,6 +5,34 @@ import sqlite3
 #from BSC.Database.sql_v01_001 import db_up
 from BSC.Database.sql_001 import db_up, db_down
 
+
+categories_data = [("MS",),
+                    ("WS",),
+                    ("MD",),
+                    ("WD",),
+                    ("XD",)]
+
+categories_metadata = {"MS": [("short_eng", "MS"), ("short_est", "MÜ"), ("long_eng", "mens singles"), ("long_est", "meesüksik")],
+                        "WS": [("short_eng", "WS"), ("short_est", "NÜ"), ("long_eng", "womens singles"), ("long_est", "naisüksik")],
+                        "MD": [("short_eng", "MD"), ("short_est", "MP"), ("long_eng", "mens doubles"), ("long_est", "meespaar")],
+                        "WD": [("short_eng", "WD"), ("short_est", "NP"), ("long_eng", "womens doubles"), ("long_est", "naispaar")],
+                        "XD": [("short_eng", "XD"), ("short_est", "SP"), ("long_eng", "mixed doubles"), ("long_est", "segapaar")]}
+
+leagues_data = [("meistriliiga",),
+                    ("esiliiga",),
+                    ("2. liiga",),
+                    ("3. liiga",),
+                    ("4. liiga",),
+                    ("rahvaliiga",)]
+
+leagues_metadata = {"meistriliiga": [("default ELO", "3000")],
+                        "esiliiga": [("default ELO", "2500")],
+                        "2. liiga": [("default ELO", "2000")],
+                        "3. liiga": [("default ELO", "1500")],
+                        "4. liiga": [("default ELO", "1000")],
+                        "rahvaliiga": [("default ELO", "500")]}
+
+
 class DB():
     def __init__(self, db_name, output, verbose=False, add_default_categories=False, add_default_leagues=False, clear_db=False):
         self.verbose = verbose
@@ -35,6 +63,9 @@ class DB():
             self.__DEV_ClearDB()
             self.__createTables()
 
+        if self.add_default_categories and self.__validateDefaultCategories() == False: self.__addDefaultCategories()
+        if self.add_default_leagues and self.__validateDefaultLeagues() == False: self.__addDefaultLeagues()
+
         is_ok = self.__validateDatabase()
 
     def __createDB(self):
@@ -47,54 +78,68 @@ class DB():
         for table, sql in db_up.items():
             self.output.write(self.verbose, "DEBUG", "DB", message=f"Creating table: '{table}'")
             cur.execute(sql)
-        if self.add_default_categories:
-            categories_data = [("MS",),
-                           ("WS",),
-                           ("MD",),
-                           ("WD",),
-                           ("XD",)]
-            self.output.write(self.verbose, "DEBUG", "DB", message=f"adding default categories to db: '{categories_data}'")
-            cur.executemany("INSERT INTO categories (name) VALUES(?)", categories_data)
-            categories_metadata = {"MS": [("short_eng", "MS"), ("short_est", "MÜ"), ("long_eng", "mens singles"), ("long_est", "meesüksik")],
-                                   "WS": [("short_eng", "WS"), ("short_est", "NÜ"), ("long_eng", "womens singles"), ("long_est", "naisüksik")],
-                                   "MD": [("short_eng", "MD"), ("short_est", "MP"), ("long_eng", "mens doubles"), ("long_est", "meespaar")],
-                                   "WD": [("short_eng", "WD"), ("short_est", "NP"), ("long_eng", "womens doubles"), ("long_est", "naispaar")],
-                                   "XD": [("short_eng", "XD"), ("short_est", "SP"), ("long_eng", "mixed doubles"), ("long_est", "segapaar")]
-                                   }
-            for item, data_list in categories_metadata.items():
-                cur.execute("SELECT id FROM categories WHERE name = '"+ item +"'")
-                category_id = cur.fetchone()
-                updated_data_list = []
-                for data_item in data_list:
-                    temp_list = list(data_item)
-                    temp_list.append(category_id[0])
-                    final_tuple = tuple(temp_list)
-                    updated_data_list.append(final_tuple)
-                cur.executemany("INSERT INTO categories_metadata (info_type, info_text, category_id) VALUES (?,?,?)", updated_data_list)
-        if self.add_default_leagues:
-            leagues_data = [("meistriliiga",),
-                            ("esiliiga",),
-                            ("2. liiga",),
-                            ("3. liiga",),
-                            ("4. liiga",),
-                            ("rahvaliiga",)]
-            cur.executemany("INSERT INTO leagues (name) VALUES(?)", leagues_data)
-            leagues_metadata = {1:[("default ELO", "3000")],
-                                2:[("default ELO", "2500")],
-                                3:[("default ELO", "2000")],
-                                4:[("default ELO", "1500")],
-                                5:[("default ELO", "1000")],
-                                6:[("default ELO", "500")]}
-            for league_id, data_list in leagues_metadata.items():
-                updated_data_list = []
-                for data_item in data_list:
-                    temp_list = list(data_item)
-                    temp_list.append(league_id)
-                    final_tuple = tuple(temp_list)
-                    updated_data_list.append(final_tuple)
-                cur.executemany("INSERT INTO leagues_metadata (info_type, info_text, league_id) VALUES (?,?,?)", updated_data_list)
         con.commit()
         con.close()
+
+    def __addDefaultCategories(self): #TODO add more verbose information
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        self.output.write(self.verbose, "DEBUG", "DB", message=f"adding default categories to db: '{categories_data}'")
+        cur.executemany("INSERT INTO categories (name) VALUES(?)", categories_data)
+        for item, data_list in categories_metadata.items():
+            cur.execute("SELECT id FROM categories WHERE name = '"+ item +"'")
+            category_id = cur.fetchone()
+            updated_data_list = []
+            for data_item in data_list:
+                temp_list = list(data_item)
+                temp_list.append(category_id[0])
+                final_tuple = tuple(temp_list)
+                updated_data_list.append(final_tuple)
+            cur.executemany("INSERT INTO categories_metadata (info_type, info_text, category_id) VALUES (?,?,?)", updated_data_list)
+        con.commit()
+        con.close()
+
+    def __addDefaultLeagues(self): #TODO add more verbose information
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        self.output.write(self.verbose, "DEBUG", "DB", message=f"adding default leagues to db: '{leagues_data}'")
+        cur.executemany("INSERT INTO leagues (name) VALUES(?)", leagues_data)
+        for item, data_list in leagues_metadata.items():
+            cur.execute("SELECT id FROM leagues WHERE name = '"+ item +"'")
+            league_id = cur.fetchone()
+            updated_data_list = []
+            for data_item in data_list:
+                temp_list = list(data_item)
+                temp_list.append(league_id[0])
+                final_tuple = tuple(temp_list)
+                updated_data_list.append(final_tuple)
+            cur.executemany("INSERT INTO leagues_metadata (info_type, info_text, league_id) VALUES (?,?,?)", updated_data_list)
+        con.commit()
+        con.close()
+
+    def __validateDefaultCategories(self):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT name FROM categories")
+        category_list = res.fetchall()
+        for category in categories_data:
+            if category not in category_list:
+                con.close()
+                return False
+        con.close()
+        return True
+
+    def __validateDefaultLeagues(self):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT name FROM leagues")
+        leagues_list = res.fetchall()
+        for league in leagues_data:
+            if league not in leagues_list:
+                con.close()
+                return False
+        con.close()
+        return True
 
     def __validateDatabase(self):
         con = sqlite3.connect(self.db_name)
@@ -407,12 +452,10 @@ class DB():
         data_list = res.fetchall()
         con.close()
         category_name = ""
-        category_desc = ""
         for item in data_list:
             if item[4] != category_name:
                 category_name = item[4]
-                category_desc = item[5]
-                self.output.write(None, "INFO", "category", name=category_name, description=category_desc, ranking=[])
+                self.output.write(None, "INFO", "category", name=category_name, ranking=[])
             self.output.write(None, "INFO", "category:ranking", id=item[0], name=item[1], elo=item[2])
         self.output.PrintResult()
 
