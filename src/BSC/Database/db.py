@@ -23,14 +23,14 @@ leagues_data = [("meistriliiga",),
                     ("2. liiga",),
                     ("3. liiga",),
                     ("4. liiga",),
-                    ("rahvaliiga",)]
+                    ("rahvasulka",)]
 
-leagues_metadata = {"meistriliiga": [("default ELO", "3000")],
-                        "esiliiga": [("default ELO", "2500")],
-                        "2. liiga": [("default ELO", "2000")],
-                        "3. liiga": [("default ELO", "1500")],
-                        "4. liiga": [("default ELO", "1000")],
-                        "rahvaliiga": [("default ELO", "500")]}
+leagues_metadata = {"meistriliiga": [("default ELO", "2400"), ("main_name", "meistriliiga")],
+                        "esiliiga": [("default ELO", "2100"), ("main_name", "esiliiga")],
+                        "2. liiga": [("default ELO", "1800"), ("main_name", "2. liiga"), ("alt_name", "ii liiga")],
+                        "3. liiga": [("default ELO", "1500"), ("main_name", "3. liiga"), ("alt_name", "iii liiga")],
+                        "4. liiga": [("default ELO", "1200"), ("main_name", "4. liiga"), ("alt_name", "iv liiga")],
+                        "rahvasulka": [("default ELO", "900"), ("main_name", "rahvasulka"), ("alt_name", "rahvaliiga")]}
 
 
 class DB():
@@ -239,13 +239,13 @@ class DB():
         con.close()
         return category_id[0]
 
-    def GetCategory(self, category_str):
+    def GetCategory(self, category_str): #TODO add verbose info
         category_id = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         res = cur.execute("""SELECT c.id
                                 FROM categories c
-                                JOIN categories_metadata cm ON cm.category_id = c.id WHERE info_text = '""" + category_str +"'")
+                                JOIN categories_metadata cm ON cm.category_id = c.id WHERE info_text = '""" + category_str + "'")
         category_id = res.fetchone()
         if category_id is None:
             raise Exception("No valid category found")
@@ -276,7 +276,10 @@ class DB():
         league_id = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        res = cur.execute("SELECT id FROM leagues WHERE name like '%" + league_str + "%'")
+        #res = cur.execute("SELECT id FROM leagues WHERE name like '%" + league_str + "%'")
+        res = cur.execute("""SELECT l.id
+                                FROM leagues l
+                                JOIN leagues_metadata lm ON lm.league_id = l.id WHERE info_text like '%""" + league_str + "%'")
         league_id = res.fetchone()
         if league_id is None:
             raise Exception("No valid league found")
@@ -357,6 +360,18 @@ class DB():
         con.close()
         self.output.write(self.verbose, "INFO", "DB:GetPlayerELO", message=f"getting ELO value for player id: '{player_id}'")
         return player_elo
+
+    def GetPlayerMatchesPlayed(self, player_id):
+        self.output.write(self.verbose, "INFO", "DB:GetPlayerMatchesPlayed", message=f"getting nbr of matches palyed within the last 1 year for player ID: '{player_id}'")
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT nbr_of_matches FROM report_EloStandings WHERE player_id = '" + player_id + "'")
+        nbr_of_matches = res.fetchone()
+        if nbr_of_matches == None:
+            con.close()
+            return 0
+        con.close()
+        return nbr_of_matches[0]
 
     def AddMatch(self, data_in):
         self.output.write(self.verbose, "INFO", "DB:AddMatch", message=f"adding match to DB with data: '{data_in}'")
