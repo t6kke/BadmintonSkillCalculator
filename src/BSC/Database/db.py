@@ -27,9 +27,9 @@ leagues_data = [("meistriliiga",),
 
 leagues_metadata = {"meistriliiga": [("default ELO", "2400"), ("main_name", "meistriliiga")],
                         "esiliiga": [("default ELO", "2100"), ("main_name", "esiliiga")],
-                        "2. liiga": [("default ELO", "1800"), ("main_name", "2. liiga"), ("alt_name", "ii liiga")],
-                        "3. liiga": [("default ELO", "1500"), ("main_name", "3. liiga"), ("alt_name", "iii liiga")],
-                        "4. liiga": [("default ELO", "1200"), ("main_name", "4. liiga"), ("alt_name", "iv liiga")],
+                        "2. liiga": [("default ELO", "1800"), ("main_name", "2. liiga"), ("alt_name", "ii liiga"), ("alt_name_2", "2.liiga")],
+                        "3. liiga": [("default ELO", "1500"), ("main_name", "3. liiga"), ("alt_name", "iii liiga"), ("alt_name_2", "3.liiga")],
+                        "4. liiga": [("default ELO", "1200"), ("main_name", "4. liiga"), ("alt_name", "iv liiga"), ("alt_name_2", "4.liiga")],
                         "rahvasulka": [("default ELO", "900"), ("main_name", "rahvasulka"), ("alt_name", "rahvaliiga")]}
 
 
@@ -205,7 +205,7 @@ class DB():
     def FindTournament(self, tournament_name, tournament_date): #TODO add verbose info
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        res = cur.execute("SELECT * FROM tournaments WHERE name = '" + tournament_name +"' OR start_date = '"+tournament_date+"'")
+        res = cur.execute("SELECT * FROM tournaments WHERE name = '" + tournament_name +"' AND start_date = '"+tournament_date+"'")
         result = res.fetchall()
         return result
 
@@ -401,7 +401,7 @@ class DB():
         self.output.write(self.verbose, "INFO", "DB:AddPlayerGameRel", message=f"adding player game relation for the whole match for all players with data: '{data_in_list}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        cur.executemany("INSERT INTO players_games (player_id, game_id, compeditor_nbr) VALUES(?,?,?)", data_in_list)
+        cur.executemany("INSERT INTO players_games (player_id, game_id, compeditor_nbr, match_id, tournament_id) VALUES(?,?,?,?,?)", data_in_list)
         con.commit()
         con.close()
 

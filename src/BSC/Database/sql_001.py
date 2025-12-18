@@ -70,7 +70,13 @@ db_up = {
 	"player_id"	INTEGER NOT NULL,
 	"game_id"	INTEGER NOT NULL,
 	"compeditor_nbr"	INTEGER NOT NULL,
-	UNIQUE("player_id","game_id")
+	"match_id"	INTEGER NOT NULL,
+	"tournament_id" 	INTEGER NOT NULL,
+	FOREIGN KEY("player_id") REFERENCES "players"("id"),
+	FOREIGN KEY("game_id") REFERENCES "games"("id"),
+	FOREIGN KEY("match_id") REFERENCES "matches"("id"),
+	FOREIGN KEY("tournament_id") REFERENCES "tournaments"("id"),
+	UNIQUE("player_id","game_id", "match_id", "tournament_id")
 )""",
 "players_matches_elo_change": """CREATE TABLE "players_matches_elo_change" (
 	"player_id"	INTEGER NOT NULL,

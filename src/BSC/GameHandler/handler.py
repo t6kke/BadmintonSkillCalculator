@@ -203,7 +203,7 @@ class Handler():
                 compeditor_nbr = compeditor_nbr + 1
                 for player_id in team.team_members_set:
                     for i in range(games_count-1, -1, -1): #TODO analyze if this is a good fix for the game_id relation
-                        players_games_rel_to_db.append((player_id, game_id-i, compeditor_nbr))
+                        players_games_rel_to_db.append((player_id, game_id-i, compeditor_nbr, match_id, tournament_id))
                     players_matches_rel_wELOupdate_to_db.append((player_id, match_id, team.team_members_dict.get(player_id).ELO, elo_results_dict.get(player_id)))
             self.database_obj.AddPlayerGameRel(players_games_rel_to_db)
             self.database_obj.AddPlayerMatchRel_W_ELOUpdate(players_matches_rel_wELOupdate_to_db, category_id)
