@@ -120,7 +120,6 @@ class Handler():
     # that also handles tournaments where users participate in multple categories
     # but has more db calls compared to previous solutions
     def runHandler(self, raw_matches_list, tournament_id):
-        print(tournament_id, len(raw_matches_list))
         self.output.write(self.verbose, "INFO", None, message=f"Games Handler running for tournament ID: '{tournament_id}' and parsing: '{len(raw_matches_list)}' matches")
         #TODO add verbose logging here
 

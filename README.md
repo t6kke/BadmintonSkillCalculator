@@ -30,7 +30,7 @@ This is just prototype calculation logic. Various elements can change in the fut
 - `k_factor` is main "constant" that is used to scale the final ELO change 
 - `my_current_ELO` is the current players ELO value before new ELO calculation is done
 - `opponents_ELO` is the opponent players ELO value before new ELO calculation is done
-- `expectation` variable calculation: `expectation = 1/(1+10**((current_ELO - current_ELO) / 400))`
+- `expectation` variable calculation: `expectation = 1/(1+10**((my_current_ELO - opponents_ELO) / 400))`
 - `result` variable is 1 or 0 based if player won or loss
 - Final ELO change calue calculation: `ELO_change_value = k_factor * (result - expectation)`
 
@@ -205,7 +205,7 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 
 - Official badminton league tournaments data scraping and injection functionality implemented
 - Initial version of BSC/DataExtractor internal package fromTS.py created for scraping tournamentsoftware.com tournament data
-- Separate extraction for tournament metadata(name, start/end date) and scraping matches from each tournament day
+- Separate extraction for tournament metadata(name, location, start/end date) and scraping matches from each tournament day
 - Database structure modified with new tables and some additional columns in tournaments tables
 - New setup for creating default categories(standard categories setup that badminton has)
 - Leagues metadata table holds the default start ELO value for new players starting first time

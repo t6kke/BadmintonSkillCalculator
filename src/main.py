@@ -273,20 +273,20 @@ class Main():
         # database_obj.report_AllPlayersELOrank()
 
         #Testing execution with scraping tournamentsoftware.com
-        #test_url_1 = "https://www.tournamentsoftware.com/tournament/dd30e793-b978-4ad4-83cb-3459de20b11b"
-        #test_url_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
-        #test_url_list = [test_url_1]
+        test_url_1 = "https://www.tournamentsoftware.com/tournament/dd30e793-b978-4ad4-83cb-3459de20b11b"
+        test_url_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
+        test_url_list = [test_url_1, test_url_2]
 
-        gp_1 = "https://www.tournamentsoftware.com/tournament/4C2B2BAC-8BBA-4586-B842-10C444F8B13C"
-        gp_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
-        ava_voistlus = "https://www.tournamentsoftware.com/tournament/A53C2D0E-E068-4995-8D2F-8D295C535A11"
-        lining_1 = "https://www.tournamentsoftware.com/tournament/8A2817D9-B25B-466A-9FFB-6BE782B3301A"
-        young_1 = "https://www.tournamentsoftware.com/tournament/58727CE6-C7FF-4505-BA88-B0D2B5D05CB3"
-        victor_1 = "https://www.tournamentsoftware.com/tournament/63C4E8DC-6995-4500-8FD4-82C12285E77B"
-        young_2 = "https://www.tournamentsoftware.com/tournament/DEE3D39A-C0DA-4B1E-A0CC-C01921C90D77"
-        lining_2 = "https://www.tournamentsoftware.com/tournament/DD30E793-B978-4AD4-83CB-3459DE20B11B"
-        young_3 = "https://www.tournamentsoftware.com/tournament/170E0FF4-AF94-4F2A-B9A0-C0D8654195BB"
-        test_url_list = [gp_1, gp_2, ava_voistlus, lining_1, young_1, victor_1, young_2, lining_2, young_3]
+        # gp_1 = "https://www.tournamentsoftware.com/tournament/4C2B2BAC-8BBA-4586-B842-10C444F8B13C"
+        # gp_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
+        # ava_voistlus = "https://www.tournamentsoftware.com/tournament/A53C2D0E-E068-4995-8D2F-8D295C535A11"
+        # lining_1 = "https://www.tournamentsoftware.com/tournament/8A2817D9-B25B-466A-9FFB-6BE782B3301A"
+        # young_1 = "https://www.tournamentsoftware.com/tournament/58727CE6-C7FF-4505-BA88-B0D2B5D05CB3"
+        # victor_1 = "https://www.tournamentsoftware.com/tournament/63C4E8DC-6995-4500-8FD4-82C12285E77B"
+        # young_2 = "https://www.tournamentsoftware.com/tournament/DEE3D39A-C0DA-4B1E-A0CC-C01921C90D77"
+        # lining_2 = "https://www.tournamentsoftware.com/tournament/DD30E793-B978-4AD4-83CB-3459DE20B11B"
+        # young_3 = "https://www.tournamentsoftware.com/tournament/170E0FF4-AF94-4F2A-B9A0-C0D8654195BB"
+        # test_url_list = [gp_1, gp_2, ava_voistlus, lining_1, young_1, victor_1, young_2, lining_2, young_3]
 
         #database_obj = None
         output = Output("console")
@@ -296,12 +296,16 @@ class Main():
 
             scraper = WebScraper(test_url, output, verbose=verbose)
             matches_list = scraper.rawMatchesObjects_list
+            if len(matches_list) == 0:
+                print("0 matches found in the given tournament, will skip")
+                continue
             tournament_name = scraper.tournament_title
+            tournament_location = scraper.tournament_location
             tournament_start_date = scraper.tournament_start
             tournament_end_date = scraper.tournament_end
 
             gamesHandler = Handler(database_obj, output, verbose=verbose)
-            tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, "location to be extracted", test_url, False))
+            tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, tournament_location, test_url, False))
             gamesHandler.runHandler(matches_list, tournament_id)
         database_obj.ss_AllPlayersELOrank()
 

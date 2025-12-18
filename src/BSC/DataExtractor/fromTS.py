@@ -1,25 +1,12 @@
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+import json
+import time
 import re
 import requests
 from bs4 import BeautifulSoup
 
 from BSC.GameHandler.rawmatch import RawMatch
-
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Referer": "https://www.tournamentsoftware.com/",
-    "Connection": "keep-alive",
-}
-
-#TODO currently using cookies from browser session, need a fix for this
-COOKEIS = {
-    "ASP.NET_SessionId": "mf0eemxpvsng500mplkaq3df",
-    "euconsent-v2": "CQZ8xwAQZ8xwADsACAENCCFkAP_gAEPgAAhoLstR_G__bWlr-bb3aftkeYxP9_hr7sQxBgbJk24FzLvW7JwXx2E5NAzatqIKmRIAu3TBIQNlHJDURVCgKIgVryDMaEyUoTNKJ6BkiFMRI2NYCFxvm4tjWQCY5vr99lc1mB-N7dr82dzyy6hHn3a5_2S1WJCdIYetDfv8ZBKT-9IEd_x8v4v4_F7pE2-eS1n_pGvp6j9-YnM_dBmxt-bSffzPn__rl_e7X_vd_n37v94XH77v____f_-7___2C7AAJhoVEEZYECAQKBhBAgAUFYQAUCAIAAEgYICAEwYFOQMAF1hMgBACgAGCAEAAIMAAQAAAQAIRABQAQCAACAQKAAMACAICAAgYAAQAWIgEAAIDoGKYEEAgWACRmVQaYEoACQQEtlQgkAwIK4QhFngEECImCgAAAAAKAAAAeCwEJJASoSCALiCaAAAgAAAiBAgQSEmAAKgzRaA8CTqMjTAMHzBIgp0GQBMEZCQaEJvQkHikKIUEGQGhSzAHAAAA.YAAAAAAAAAAA",
-    "lvt": "K7yBTRpeL0yYWHKfaj0jjsuUw6KXjNsWYtZqI4DZ/8voA7TbsAjx2BP5W2AGt/T45q5DW6qWMYaYQR+gSr/a7Z5zwFExQOzILqyzlV+tfr522l5OIxKuJrYdsnsNeV93r37lkDjFHHqi6NsVT/HfK0nJcADyZGmA86g7ysK7WiwwUfU3fuaMQoCvoNAYV+C4",
-    "st": "l=1033&exp=46349.8850925347&c=1&cp=23&s=2"
-}
 
 URL_PART_MATCHES = "/matches"
 
@@ -30,6 +17,7 @@ class WebScraper():
         self.url = url
 
         self.tournament_title = ""
+        self.tournament_location = ""
         self.tournament_start = ""
         self.tournament_end = ""
         self.rawMatchesObjects_list = []
@@ -38,24 +26,54 @@ class WebScraper():
         self.__runScraper()
 
 
-
     def __runScraper(self):
+        #TODO figure out if we can accept cookies first so I would not have to waste time accepting them on every time I want to visit the page
         self.__getTournamentMetadata()
         self.__getGamesResults()
 
-
     def __getTournamentMetadata(self):
-        response = requests.get(self.url, headers = HEADERS, cookies = COOKEIS)
-        if response.status_code != 200:
-            raise Exception(f"bad response code: {response.status_code}")
+        soup = None
+        driver = webdriver.Chrome()
+        try:
+            driver.get('https://www.tournamentsoftware.com/')
 
-        soup = BeautifulSoup(response.text, "html.parser")
+            # Accept Cookiewall
+            driver.find_element(By.XPATH, '//button[@type="submit"]').click()
+            time.sleep(2)
+
+            # Get all cookies
+            cookies = driver.get_cookies()
+            # Save cookies to file
+            with open('selenium_cookies.json', 'w') as f:
+                json.dump(cookies, f)
+
+            # Navigate to protected page and get content
+            driver.get(self.url)
+            soup = BeautifulSoup(driver.page_source, 'html.parser')
+        finally:
+            driver.quit()
+
+        if soup == None:
+            raise Exception("Error retreiving data from URL")
+
+        #extracting tournament name
         self.tournament_title = soup.find("h2", class_=["media__title", "media__title--large"]).get_text(strip=True)
 
+        #extracting tournament location
+        module_cards = soup.find_all("div", class_=["module", "module--card"])
+        for module_card in module_cards:
+            mc_title = module_card.find("h3", class_=["module__title"])
+            if mc_title == None:
+                continue
+            if mc_title.get_text(strip=True) != "Venue":
+                continue
+            media = module_card.find("div", class_=["media"])
+            self.tournament_location = media.find("span", class_=["nav-link__value"]).get_text(strip=True)
+
+        #extracting tournament start and end dates and also building list of dates for .../matches/<date> URL
         timeline_metadata = soup.find("div", class_=["tournament-meta__timeline"])
         start_element = timeline_metadata.find("li", class_=["is-started"])
         end_element = timeline_metadata.find("li", class_=["is-finished"])
-
         self.tournament_start = start_element.find("time").get("datetime").split("T")[0]
         self.tournament_end = end_element.find("time").get("datetime").split("T")[0]
         if self.tournament_start != self.tournament_end:
@@ -64,16 +82,29 @@ class WebScraper():
         else:
             self.tounament_days_list = [self.tournament_start.replace("-","")]
 
-
     def __getGamesResults(self):
         for tournament_day in self.tounament_days_list:
             url = self.url + URL_PART_MATCHES + "/" + tournament_day
-            response = requests.get(url, headers = HEADERS, cookies = COOKEIS)
-            if response.status_code != 200:
-                raise Exception(f"bad response code: {response.status_code}")
+            soup = None
+            driver = webdriver.Chrome()
+            try:
+                driver.get('https://www.tournamentsoftware.com/')
 
-            soup = BeautifulSoup(response.text, "html.parser")
-            #self.tournament_title = soup.find("title").get_text()
+                # Accept Cookiewall
+                driver.find_element(By.XPATH, '//button[@type="submit"]').click()
+                time.sleep(2)
+
+                # Get all cookies
+                cookies = driver.get_cookies()
+                # Save cookies to file
+                with open('selenium_cookies.json', 'w') as f:
+                    json.dump(cookies, f)
+
+                # Navigate to protected page and get content
+                driver.get(url)
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
+            finally:
+                driver.quit()
 
             raw_matches = soup.find_all("div",class_=["match","match--list"])
             for raw_match in raw_matches:
@@ -106,8 +137,8 @@ class WebScraper():
                         team_two_scores.append(1)
 
                 #removing placement data from name
-                team_one = re.sub(" .\d.","", team_one)
-                team_two = re.sub(" .\d.","", team_two)
+                team_one = re.sub(r" .\d.","", team_one)
+                team_two = re.sub(r" .\d.","", team_two)
 
                 for i in range(len(match_results)):
                     if i % 2 == 0:
