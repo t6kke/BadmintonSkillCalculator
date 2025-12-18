@@ -9,6 +9,7 @@ from bs4 import BeautifulSoup
 
 from BSC.GameHandler.rawmatch import RawMatch
 
+URL_PART_SITE = "https://www.tournamentsoftware.com"
 URL_PART_MATCHES = "/matches"
 
 class WebScraper():
@@ -28,6 +29,8 @@ class WebScraper():
 
 
     def __runScraper(self):
+        if URL_PART_SITE not in self.url:
+            raise Exception("not a supported site URL provided")
         #TODO figure out if we can accept cookies first so I would not have to waste time accepting them on every time I want to visit the page
         self.__getTournamentMetadata()
         self.__getGamesResults()

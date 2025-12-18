@@ -88,7 +88,7 @@ class HandleArgs():
                     self.used_args_list.append(self.args_list[i])
                     self.used_args_value_dict[self.args_list[i]] = None
                 else:
-                    arg_elements = self.args_list[i].split("=")
+                    arg_elements = self.args_list[i].split("=", 1)
                     self.__assignVariables(arg_elements[0], arg_elements[1])
 
     def __helpCheck(self, arg):

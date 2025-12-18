@@ -109,8 +109,15 @@ class Main():
         database_obj = DB(db_name, self.output, verbose=self.verbose, add_default_categories=True, add_default_leagues=True)
         gamesHandler = Handler(database_obj, self.output, verbose=self.verbose)
         for url in url_list:
-            scraper = WebScraper(url, self.output, verbose=self.verbose)
+            try:
+                scraper = WebScraper(url, self.output, verbose=self.verbose)
+            except Exception as e:
+                self.output.write(None, "INFO", "tournaments", message=f"URL: '{url}' insert", status="error", error=f"INFO --- problem parsing URL: {e}")
+                continue
             matches_list = scraper.rawMatchesObjects_list
+            if len(matches_list) == 0:
+                self.output.write(None, "INFO", "tournaments", message=f"URL: '{url}' insert", status="error", error=f"INFO --- 0 matches found in given tournament, not adding to the system")
+                continue
             tournament_name = scraper.tournament_title
             tournament_start_date = scraper.tournament_start
             tournament_end_date = scraper.tournament_end
