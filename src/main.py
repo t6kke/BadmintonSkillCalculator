@@ -109,6 +109,7 @@ class Main():
         database_obj = DB(db_name, self.output, verbose=self.verbose, add_default_categories=True, add_default_leagues=True)
         gamesHandler = Handler(database_obj, self.output, verbose=self.verbose)
         for url in url_list:
+            self.output.write(True, "INFO", "tournaments", message=f"Scraping data from web...")
             try:
                 scraper = WebScraper(url, self.output, verbose=self.verbose)
             except Exception as e:
@@ -119,6 +120,7 @@ class Main():
                 self.output.write(None, "INFO", "tournaments", message=f"URL: '{url}' insert", status="error", error=f"INFO --- 0 matches found in given tournament, not adding to the system")
                 continue
             tournament_name = scraper.tournament_title
+            tournament_location = scraper.tournament_location
             tournament_start_date = scraper.tournament_start
             tournament_end_date = scraper.tournament_end
             self.output.write(True, "INFO", "tournaments", message=f"\nStarting handle tournament: '{tournament_name}' information...")
@@ -129,7 +131,7 @@ class Main():
                 self.output.write(None, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="error", error=f"INFO --- Tournament '{tournament_name}' already exists in database, not adding")
                 continue
             self.output.write(True, "INFO", "tournaments", message=f"Adding tournament: '{tournament_name}' to the database")
-            tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, "location to be extracted", url, False))
+            tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, tournament_location, url, False))
             self.output.write(True, "INFO", "tournaments", message=f"Running games handler functionality...")
             gamesHandler.runHandler(matches_list, tournament_id)
             self.output.write(None, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="success")
@@ -256,7 +258,7 @@ class Main():
         sys.exit(0)
 
     def __runTest(self):
-        verbose = False
+        verbose = True
 
         #Testing execution with reading txt file
         # tournament_name = "Example Tournament"
@@ -284,16 +286,16 @@ class Main():
         test_url_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
         test_url_list = [test_url_1, test_url_2]
 
-        # gp_1 = "https://www.tournamentsoftware.com/tournament/4C2B2BAC-8BBA-4586-B842-10C444F8B13C"
-        # gp_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
-        # ava_voistlus = "https://www.tournamentsoftware.com/tournament/A53C2D0E-E068-4995-8D2F-8D295C535A11"
-        # lining_1 = "https://www.tournamentsoftware.com/tournament/8A2817D9-B25B-466A-9FFB-6BE782B3301A"
-        # young_1 = "https://www.tournamentsoftware.com/tournament/58727CE6-C7FF-4505-BA88-B0D2B5D05CB3"
-        # victor_1 = "https://www.tournamentsoftware.com/tournament/63C4E8DC-6995-4500-8FD4-82C12285E77B"
-        # young_2 = "https://www.tournamentsoftware.com/tournament/DEE3D39A-C0DA-4B1E-A0CC-C01921C90D77"
-        # lining_2 = "https://www.tournamentsoftware.com/tournament/DD30E793-B978-4AD4-83CB-3459DE20B11B"
-        # young_3 = "https://www.tournamentsoftware.com/tournament/170E0FF4-AF94-4F2A-B9A0-C0D8654195BB"
-        # test_url_list = [gp_1, gp_2, ava_voistlus, lining_1, young_1, victor_1, young_2, lining_2, young_3]
+        gp_1 = "https://www.tournamentsoftware.com/tournament/4C2B2BAC-8BBA-4586-B842-10C444F8B13C"
+        gp_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
+        ava_voistlus = "https://www.tournamentsoftware.com/tournament/A53C2D0E-E068-4995-8D2F-8D295C535A11"
+        lining_1 = "https://www.tournamentsoftware.com/tournament/8A2817D9-B25B-466A-9FFB-6BE782B3301A"
+        young_1 = "https://www.tournamentsoftware.com/tournament/58727CE6-C7FF-4505-BA88-B0D2B5D05CB3"
+        victor_1 = "https://www.tournamentsoftware.com/tournament/63C4E8DC-6995-4500-8FD4-82C12285E77B"
+        young_2 = "https://www.tournamentsoftware.com/tournament/DEE3D39A-C0DA-4B1E-A0CC-C01921C90D77"
+        lining_2 = "https://www.tournamentsoftware.com/tournament/DD30E793-B978-4AD4-83CB-3459DE20B11B"
+        young_3 = "https://www.tournamentsoftware.com/tournament/170E0FF4-AF94-4F2A-B9A0-C0D8654195BB"
+        test_url_list = [gp_1, gp_2, ava_voistlus, lining_1, young_1, victor_1, young_2, lining_2, young_3]
 
         #database_obj = None
         output = Output("console")

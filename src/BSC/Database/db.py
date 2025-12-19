@@ -25,12 +25,12 @@ leagues_data = [("meistriliiga",),
                     ("4. liiga",),
                     ("rahvasulka",)]
 
-leagues_metadata = {"meistriliiga": [("default ELO", "2400"), ("main_name", "meistriliiga")],
-                        "esiliiga": [("default ELO", "2100"), ("main_name", "esiliiga")],
-                        "2. liiga": [("default ELO", "1800"), ("main_name", "2. liiga"), ("alt_name", "ii liiga"), ("alt_name_2", "2.liiga")],
-                        "3. liiga": [("default ELO", "1500"), ("main_name", "3. liiga"), ("alt_name", "iii liiga"), ("alt_name_2", "3.liiga")],
-                        "4. liiga": [("default ELO", "1200"), ("main_name", "4. liiga"), ("alt_name", "iv liiga"), ("alt_name_2", "4.liiga")],
-                        "rahvasulka": [("default ELO", "900"), ("main_name", "rahvasulka"), ("alt_name", "rahvaliiga")]}
+leagues_metadata = {"meistriliiga": [("default ELO", "6000"), ("main_name", "meistriliiga")],
+                        "esiliiga": [("default ELO", "5000"), ("main_name", "esiliiga")],
+                        "2. liiga": [("default ELO", "4000"), ("main_name", "2. liiga"), ("alt_name", "ii liiga"), ("alt_name_2", "2.liiga")],
+                        "3. liiga": [("default ELO", "3000"), ("main_name", "3. liiga"), ("alt_name", "iii liiga"), ("alt_name_2", "3.liiga")],
+                        "4. liiga": [("default ELO", "2000"), ("main_name", "4. liiga"), ("alt_name", "iv liiga"), ("alt_name_2", "4.liiga")],
+                        "rahvasulka": [("default ELO", "1000"), ("main_name", "rahvasulka"), ("alt_name", "rahvaliiga")]}
 
 
 class DB():
@@ -239,7 +239,8 @@ class DB():
         con.close()
         return category_id[0]
 
-    def GetCategory(self, category_str): #TODO add verbose info
+    def GetCategory(self, category_str):
+        self.output.write(self.verbose, "INFO", "DB:GetCategory", message=f"Trying to find category with string: '{category_str}'")
         category_id = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
@@ -270,9 +271,10 @@ class DB():
             print("issue inserting league data: " + str(e))
         con.close()
 
-    def GetLeague(self, league_str): #TODO add verbose info
+    def GetLeague(self, league_str):
         if "rahva" in league_str:
             league_str = "rahva"
+        self.output.write(self.verbose, "INFO", "DB:GetLeague", message=f"Trying to find league with string: '{league_str}'")
         league_id = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
@@ -361,11 +363,11 @@ class DB():
         self.output.write(self.verbose, "INFO", "DB:GetPlayerELO", message=f"getting ELO value for player id: '{player_id}'")
         return player_elo
 
-    def GetPlayerMatchesPlayed(self, player_id):
+    def GetPlayerMatchesPlayed(self, player_id, category_id):
         self.output.write(self.verbose, "INFO", "DB:GetPlayerMatchesPlayed", message=f"getting nbr of matches palyed within the last 1 year for player ID: '{player_id}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        res = cur.execute("SELECT nbr_of_matches FROM report_EloStandings WHERE player_id = '" + player_id + "'")
+        res = cur.execute("SELECT nbr_of_matches FROM report_EloStandings WHERE player_id = '" + player_id + "' AND category_id = '"+ category_id +"'")
         nbr_of_matches = res.fetchone()
         if nbr_of_matches == None:
             con.close()

@@ -3,6 +3,7 @@
 *.db
 *.html
 *.json
+*.log
 Dockerfile
 
 # Byte-compiled / optimized / DLL files

@@ -151,8 +151,8 @@ class WebScraper():
                         team_two_scores.append(1)
 
                 #removing placement data from name
-                team_one = re.sub(r" .\d.","", team_one)
-                team_two = re.sub(r" .\d.","", team_two)
+                team_one = re.sub(r" .\d.","", team_one).lower().replace("-", " ")
+                team_two = re.sub(r" .\d.","", team_two).lower().replace("-", " ")
 
                 for i in range(len(match_results)):
                     if i % 2 == 0:

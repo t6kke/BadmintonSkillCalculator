@@ -120,15 +120,15 @@ class Handler():
     # that also handles tournaments where users participate in multple categories
     # but has more db calls compared to previous solutions
     def runHandler(self, raw_matches_list, tournament_id):
-        self.output.write(self.verbose, "INFO", None, message=f"Games Handler running for tournament ID: '{tournament_id}' and parsing: '{len(raw_matches_list)}' matches")
-        #TODO add verbose logging here
-
+        self.output.write(self.verbose, "INFO", "GameHandler:runHandler", message=f"Games Handler running for tournament ID: '{tournament_id}' and parsing: '{len(raw_matches_list)}' matches")
         def getPlayerObj(player_str, category_id):
+            self.output.write(self.verbose, "INFO", "GameHandler:runHandler:getPlayerObj", message=f"creating player object with values: '{player_str}' and category ID: '{category_id}'")
             player_db_entry = self.database_obj.GetOrAddPlayer(player_str.strip(), str(category_id), str(self.league_id))
             player_db_id = player_db_entry[0]
             player_db_name = player_db_entry[1]
             player_db_ELO = player_db_entry[2]
-            player_nbr_of_matches = int(self.database_obj.GetPlayerMatchesPlayed(str(player_db_id)))
+            player_nbr_of_matches = int(self.database_obj.GetPlayerMatchesPlayed(str(player_db_id), str(category_id)))
+            self.output.write(self.verbose, "INFO", "GameHandler:runHandler:getPlayerObj", message=f"Number of matches: '{player_nbr_of_matches}' for ELO confidence evaluation", player_id = player_db_id, category_id = category_id)
             ELO_confidence_level = 0
             if player_nbr_of_matches > 0 and player_nbr_of_matches <= 4:
                 ELO_confidence_level = 1
@@ -141,15 +141,18 @@ class Handler():
             else:
                 #TODO zero games, maybe we should assign default value of the category
                 ELO_confidence_level = 0
+            self.output.write(self.verbose, "INFO", "GameHandler:runHandler:getPlayerObj", message=f"Assigning ELO confidence level: '{ELO_confidence_level}'", player_id = player_db_id, category_id = category_id, ELO_confidence_level = ELO_confidence_level)
             player_obj = Player(player_db_id, player_db_name, category_id, player_db_ELO, ELO_confidence_level)
             return player_obj
 
         skillCalculator = SkillCalc(self.output, self.verbose)
 
-        match_counter = 1
         for raw_match_obj in raw_matches_list:
+            #self.output.write(self.verbose, "INFO", "GameHandler:runHandler", message=f"")
+            self.output.write(self.verbose, "INFO", "GameHandler:runHandler", message=f"Working on match: {raw_match_obj.GetMatchDict()}")
             category_id = self.database_obj.GetCategory(raw_match_obj.category)
             self.league_id = self.database_obj.GetLeague(raw_match_obj.league.lower())
+            self.output.write(self.verbose, "INFO", "GameHandler:runHandler", message=f"Match is in category: '{category_id}' and league: '{self.league_id}'")
 
             compeditor_nbr = None
             if "+" in raw_match_obj.team_one:
@@ -205,7 +208,9 @@ class Handler():
                     for i in range(games_count-1, -1, -1): #TODO analyze if this is a good fix for the game_id relation
                         players_games_rel_to_db.append((player_id, game_id-i, compeditor_nbr, match_id, tournament_id))
                     players_matches_rel_wELOupdate_to_db.append((player_id, match_id, team.team_members_dict.get(player_id).ELO, elo_results_dict.get(player_id)))
+            self.output.write(self.verbose, "INFO", "GameHandler:runHandler", message=f"Adding player game relations of the match to DB with data: {players_games_rel_to_db}")
             self.database_obj.AddPlayerGameRel(players_games_rel_to_db)
+            self.output.write(self.verbose, "INFO", "GameHandler:runHandler", message=f"Adding player match relations with ELO update to the DB with data: {players_matches_rel_wELOupdate_to_db}", category_id = category_id)
             self.database_obj.AddPlayerMatchRel_W_ELOUpdate(players_matches_rel_wELOupdate_to_db, category_id)
 
 

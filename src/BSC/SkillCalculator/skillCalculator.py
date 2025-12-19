@@ -6,7 +6,7 @@ K_FACTOR_MAP = {"l": [1, 8, 16, 24, 32],
 
 class SkillCalc():
     def __init__(self, output, verbose=False):
-        self.verbose = verbose #TODO extend verbose information
+        self.verbose = verbose
         self.output = output
         self.k_factor = None
 
@@ -29,21 +29,27 @@ class SkillCalc():
                     #k-factor scaling
                     #1. initally set up k-factor based on my current ELO confidence
                     self.k_factor = K_FACTOR_MAP.get("h")[my_current_ELO_confidence]
+                    self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"Initial K-Factor: '{self.k_factor}' based on my ELO confidence: '{my_current_ELO_confidence}'", player_id = player_id)
                     #2. if we have some level of confidence we want we care if there is confidence in oppoents ELO
                     if my_current_ELO_confidence > 2:
                         self.k_factor = K_FACTOR_MAP.get("l")[opponents_ELO_confidence]
+                        self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"NEW K-Factor: '{self.k_factor}' based on opponents ELO confidence: '{opponents_ELO_confidence}'")
                     #3. if the elo confidence is similar we should do scaling based on difference
                     if my_current_ELO_confidence > 2 and abs(my_current_ELO_confidence - opponents_ELO_confidence) == 1:
                         ELO_diff = my_current_ELO - opponents_ELO
                         self.__scaleKFactor(result, ELO_diff)
+                        self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"NEW K-Factor: '{self.k_factor}' since confidence values were close: '{my_current_ELO_confidence}', '{opponents_ELO_confidence}'")
 
+                    self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"Final K-Factor value used for ELO update: '{self.k_factor}'")
                     ELO_change_amount = self.k_factor*(result - expectation)
                     total_ELO_change = total_ELO_change + int(ELO_change_amount)
+                total_ELO_change = int(total_ELO_change / len(opponent_team.team_members_set))
+                self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"Starting ELO: '{my_current_ELO}' and final ammount of ELO change: '{total_ELO_change}'")
                 resut_ELO_changes_dict[player_id] = total_ELO_change
         return resut_ELO_changes_dict
 
     def __scaleKFactor(self, win_status, ELO_diff):
-        self.output.write(self.verbose, "SkillCalc:__scaleKFactor", None, message=f"ELO difference: '{ELO_diff}'")
+        self.output.write(self.verbose, "INFO", "SkillCalc:__scaleKFactor", message=f"ELO difference: '{ELO_diff}'")
         #TODO investigate can this if else logic be simplified
         if win_status == 1 and ELO_diff > 0:
             # I win and have higher ELO so k_factor has to scale down based on difference
