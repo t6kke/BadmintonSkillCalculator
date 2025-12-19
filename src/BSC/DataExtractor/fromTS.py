@@ -129,7 +129,6 @@ class WebScraper():
                 players_result = raw_match.find_all("div", class_=["match__row"])
                 match_results = raw_match.find_all("li", class_=["points__cell"])
 
-
                 team_one = players_result[0].find("div", class_=["match__row-title"]).get_text("+", strip=True)
                 team_two = players_result[1].find("div", class_=["match__row-title"]).get_text("+", strip=True)
                 team_one_status = players_result[0].find("span", class_=["tag"])
@@ -153,6 +152,9 @@ class WebScraper():
                 #removing placement data from name
                 team_one = re.sub(r" .\d.","", team_one).lower().replace("-", " ")
                 team_two = re.sub(r" .\d.","", team_two).lower().replace("-", " ")
+                if "group" in team_one or "group" in team_two or "bye" in team_one or "bye" in team_two or len(team_one) == 0 or len(team_two) == 0: #TODO make way to check for valid values
+                    #skipping this entry since we don't have good enough data quality on players
+                    continue
 
                 for i in range(len(match_results)):
                     if i % 2 == 0:
@@ -160,6 +162,11 @@ class WebScraper():
                     else:
                         team_two_scores.append(match_results[i].get_text(" ", strip=True))
 
+                validation_header = match_header.split("-")
+                if " " not in validation_header[0].strip():
+                    #TODO figure out how to handle category and league situation where not enough information is needed
+                    #in this example I'm skipping 'rahvasulka' league without clear indication of what category it's in
+                    continue
                 category = match_header.split(" ", 1)[0]
                 league = match_header.split(" ", 1)[1].split("-")[0].strip()
 
