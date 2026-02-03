@@ -26,19 +26,24 @@ class SkillCalc():
                     opponents_ELO_confidence = opponent_team.team_members_dict.get(oppoent_id).ELO_confidence_level
                     expectation = 1/(1+10**((my_current_ELO - opponents_ELO) / 400))
 
-                    #k-factor scaling
-                    #1. initally set up k-factor based on my current ELO confidence
-                    self.k_factor = K_FACTOR_MAP.get("h")[my_current_ELO_confidence]
-                    self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"Initial K-Factor: '{self.k_factor}' based on my ELO confidence: '{my_current_ELO_confidence}'", player_id = player_id)
-                    #2. if we have some level of confidence we want we care if there is confidence in oppoents ELO
-                    if my_current_ELO_confidence > 2:
-                        self.k_factor = K_FACTOR_MAP.get("l")[opponents_ELO_confidence]
-                        self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"NEW K-Factor: '{self.k_factor}' based on opponents ELO confidence: '{opponents_ELO_confidence}'")
-                    #3. if the elo confidence is similar we should do scaling based on difference
-                    if my_current_ELO_confidence > 2 and abs(my_current_ELO_confidence - opponents_ELO_confidence) == 1:
-                        ELO_diff = my_current_ELO - opponents_ELO
-                        self.__scaleKFactor(result, ELO_diff)
-                        self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"NEW K-Factor: '{self.k_factor}' since confidence values were close: '{my_current_ELO_confidence}', '{opponents_ELO_confidence}'")
+                    # default k-factor scaling based on just ELO difference
+                    ELO_diff = my_current_ELO - opponents_ELO
+                    self.__scaleKFactor(result, ELO_diff)
+
+                    #TODO confidence based scaling but has issues, seems to reward winning a lot more and sometimes not pusishing losses too much, figure out a correct solution
+                    # #k-factor scaling
+                    # #1. initally set up k-factor based on my current ELO confidence
+                    # self.k_factor = K_FACTOR_MAP.get("h")[my_current_ELO_confidence]
+                    # self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"Initial K-Factor: '{self.k_factor}' based on my ELO confidence: '{my_current_ELO_confidence}'", player_id = player_id)
+                    # #2. if we have some level of confidence we want we care if there is confidence in oppoents ELO
+                    # if my_current_ELO_confidence > 2:
+                    #     self.k_factor = K_FACTOR_MAP.get("l")[opponents_ELO_confidence]
+                    #     self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"NEW K-Factor: '{self.k_factor}' based on opponents ELO confidence: '{opponents_ELO_confidence}'")
+                    # #3. if the elo confidence is similar we should do scaling based on difference
+                    # if my_current_ELO_confidence > 2 and abs(my_current_ELO_confidence - opponents_ELO_confidence) == 1:
+                    #     ELO_diff = my_current_ELO - opponents_ELO
+                    #     self.__scaleKFactor(result, ELO_diff)
+                    #     self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"NEW K-Factor: '{self.k_factor}' since confidence values were close: '{my_current_ELO_confidence}', '{opponents_ELO_confidence}'")
 
                     self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"Final K-Factor value used for ELO update: '{self.k_factor}'")
                     ELO_change_amount = self.k_factor*(result - expectation)
