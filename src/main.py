@@ -286,6 +286,9 @@ class Main():
         test_url_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
         test_url_list = [test_url_1, test_url_2]
 
+        faulty_league = "https://www.tournamentsoftware.com/tournament/A00B514B-32A7-4D53-BFFB-4C27AFDBFACC"
+        test_url_list = [faulty_league]
+
         # gp_1 = "https://www.tournamentsoftware.com/tournament/4C2B2BAC-8BBA-4586-B842-10C444F8B13C"
         # gp_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
         # ava_voistlus = "https://www.tournamentsoftware.com/tournament/A53C2D0E-E068-4995-8D2F-8D295C535A11"
@@ -303,7 +306,7 @@ class Main():
         database_obj = DB(db_name, output, verbose=verbose, add_default_categories=True, add_default_leagues=True, clear_db=True)
         for test_url in test_url_list:
 
-            scraper = WebScraper(test_url, output, verbose=verbose)
+            scraper = WebScraper(test_url, output, database_obj, verbose=verbose)
             matches_list = scraper.rawMatchesObjects_list
             if len(matches_list) == 0:
                 print("0 matches found in the given tournament, will skip")
@@ -313,10 +316,10 @@ class Main():
             tournament_start_date = scraper.tournament_start
             tournament_end_date = scraper.tournament_end
 
-            gamesHandler = Handler(database_obj, output, verbose=verbose)
-            tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, tournament_location, test_url, False))
-            gamesHandler.runHandler(matches_list, tournament_id)
-        database_obj.ss_AllPlayersELOrank()
+            #gamesHandler = Handler(database_obj, output, verbose=verbose)
+            #tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, tournament_location, test_url, False))
+            #gamesHandler.runHandler(matches_list, tournament_id)
+        #database_obj.ss_AllPlayersELOrank()
 
         sys.exit(0)
 

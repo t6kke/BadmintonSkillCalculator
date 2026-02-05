@@ -13,9 +13,10 @@ URL_PART_SITE = "https://www.tournamentsoftware.com"
 URL_PART_MATCHES = "/matches"
 
 class WebScraper():
-    def __init__(self, url, output, verbose=False):
+    def __init__(self, url, output, database_obj, verbose=False):
         self.verbose = verbose
         self.output = output #TODO build out information printing logic
+        self.database_obj = database_obj
         self.url = url
 
         self.tournament_title = ""
@@ -92,6 +93,31 @@ class WebScraper():
             self.tounament_days_list = [self.tournament_start.replace("-","")]
 
     def __getGamesResults(self):
+
+        def are_team_names_valid(team_one, team_two):
+            if len(team_one) == 0: return False
+            if len(team_two) == 0: return False
+            if "group" in team_one: return False
+            if "group" in team_two: return False
+            if "bye" in team_one: return False
+            if "bye" in team_two: return False
+            return True
+
+        def is_category_valid(category):
+            try:
+                self.database_obj.GetCategory(category)
+            except:
+                return False
+            return True
+
+        def is_league_valid(league):
+            try:
+                self.database_obj.GetLeague(league)
+            except:
+                return False
+            return True
+
+
         for tournament_day in self.tounament_days_list:
             url = self.url + URL_PART_MATCHES + "/" + tournament_day
             soup = None
@@ -152,7 +178,8 @@ class WebScraper():
                 #removing placement data from name
                 team_one = re.sub(r" .\d.","", team_one).lower().replace("-", " ")
                 team_two = re.sub(r" .\d.","", team_two).lower().replace("-", " ")
-                if "group" in team_one or "group" in team_two or "bye" in team_one or "bye" in team_two or len(team_one) == 0 or len(team_two) == 0: #TODO make way to check for valid values
+
+                if are_team_names_valid(team_one, team_two) == False:
                     #skipping this entry since we don't have good enough data quality on players
                     continue
 
@@ -164,19 +191,25 @@ class WebScraper():
 
                 validation_header = match_header.split("-")
                 if " " not in validation_header[0].strip():
-                    #TODO figure out how to handle category and league situation where not enough information is needed
+                    #TODO figure out how to handle category and league situation where not enough information is given
                     #in this example I'm skipping 'rahvasulka' league without clear indication of what category it's in
                     continue
                 category = match_header.split(" ", 1)[0]
+                if is_category_valid(category) == False:
+                    #skipping if category name is not a valid value
+                    continue
                 league = match_header.split(" ", 1)[1].split("-")[0].strip()
+                if is_league_valid(league) == False:
+                    #skipping if league name is not a valid value
+                    continue
 
-                # print("--- DATA ---")
-                # print("header:", match_header)
-                # print("category:", category)
-                # print("league:", league)
-                # print(f"Team: '{team_one}' with result: '{team_one_status}' and game scores '{team_one_scores}'")
-                # print(f"Team: '{team_two}' with result: '{team_two_status}' and game scores '{team_two_scores}'")
-                # print("")
+                print("--- DATA ---")
+                print("header:", match_header)
+                print("category:", category)
+                print("league:", league)
+                print(f"Team: '{team_one}' with result: '{team_one_status}' and game scores '{team_one_scores}'")
+                print(f"Team: '{team_two}' with result: '{team_two_status}' and game scores '{team_two_scores}'")
+                print("")
 
                 new_raw_match = RawMatch(category, league, team_one, team_one_status, team_one_scores, team_two, team_two_status, team_two_scores)
 
