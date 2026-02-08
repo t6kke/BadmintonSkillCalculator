@@ -151,7 +151,13 @@ class Handler():
             #self.output.write(self.verbose, "INFO", "GameHandler:runHandler", message=f"")
             self.output.write(self.verbose, "INFO", "GameHandler:runHandler", message=f"Working on match: {raw_match_obj.GetMatchDict()}")
             category_id = self.database_obj.GetCategory(raw_match_obj.category)
+            if category_id == None:
+                self.output.write(self.verbose, "INFO", "GameHandler:runHandler", message=f"Failed to retreive category ID from db, skipping match parsing")
+                continue
             self.league_id = self.database_obj.GetLeague(raw_match_obj.league.lower())
+            if self.league_id == None:
+                self.output.write(self.verbose, "INFO", "GameHandler:runHandler", message=f"Failed to retreive league ID from db, skipping match parsing")
+                continue
             self.output.write(self.verbose, "INFO", "GameHandler:runHandler", message=f"Match is in category: '{category_id}' and league: '{self.league_id}'")
 
             compeditor_nbr = None

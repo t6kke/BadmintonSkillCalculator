@@ -20,16 +20,16 @@ categories_metadata = {"MS": [("short_eng", "MS"), ("short_est", "MÜ"), ("long_
 
 leagues_data = [("meistriliiga",),
                     ("esiliiga",),
-                    ("2. liiga",),
-                    ("3. liiga",),
-                    ("4. liiga",),
+                    ("2.liiga",),
+                    ("3.liiga",),
+                    ("4.liiga",),
                     ("rahvasulka",)]
 
 leagues_metadata = {"meistriliiga": [("default ELO", "6000"), ("main_name", "meistriliiga")],
                         "esiliiga": [("default ELO", "5000"), ("main_name", "esiliiga")],
-                        "2. liiga": [("default ELO", "4000"), ("main_name", "2. liiga"), ("alt_name", "ii liiga"), ("alt_name_2", "2.liiga")],
-                        "3. liiga": [("default ELO", "3000"), ("main_name", "3. liiga"), ("alt_name", "iii liiga"), ("alt_name_2", "3.liiga")],
-                        "4. liiga": [("default ELO", "2000"), ("main_name", "4. liiga"), ("alt_name", "iv liiga"), ("alt_name_2", "4.liiga")],
+                        "2.liiga": [("default ELO", "4000"), ("main_name", "2.liiga"), ("alt_name", "2-liiga"), ("alt_name", "2liiga"), ("alt_name", "ii.liiga"), ("alt_name", "ii-liiga"), ("alt_name", "iiliiga")],
+                        "3.liiga": [("default ELO", "3000"), ("main_name", "3.liiga"), ("alt_name", "3-liiga"), ("alt_name", "3liiga"), ("alt_name", "iii.liiga"), ("alt_name", "iii-liiga"), ("alt_name", "iiiliiga")],
+                        "4.liiga": [("default ELO", "2000"), ("main_name", "4.liiga"), ("alt_name", "4-liiga"), ("alt_name", "4liiga"), ("alt_name", "iv.liiga"), ("alt_name", "iv-liiga"), ("alt_name", "ivliiga")],
                         "rahvasulka": [("default ELO", "1000"), ("main_name", "rahvasulka"), ("alt_name", "rahvaliiga")]}
 
 
@@ -248,10 +248,10 @@ class DB():
                                 FROM categories c
                                 JOIN categories_metadata cm ON cm.category_id = c.id WHERE info_text = '""" + category_str + "'")
         category_id = res.fetchone()
-        if category_id is None:
-            raise Exception("No valid category found")
+        if category_id is not None:
+            category_id = category_id[0]
         con.close()
-        return category_id[0]
+        return category_id
 
     def AddCustomLeague(self, league_name, league_description): #TODO add verbose info
         con = sqlite3.connect(self.db_name)
@@ -283,10 +283,10 @@ class DB():
                                 FROM leagues l
                                 JOIN leagues_metadata lm ON lm.league_id = l.id WHERE info_text like '%""" + league_str + "%'")
         league_id = res.fetchone()
-        if league_id is None:
-            raise Exception("No valid league found")
+        if league_id is not None:
+            league_id = league_id[0]
         con.close()
-        return league_id[0]
+        return league_id
 
     def GetOrAddPlayer(self, name, category_id, league_id):
         #TODO this function is a mess and needs to be cleaned up

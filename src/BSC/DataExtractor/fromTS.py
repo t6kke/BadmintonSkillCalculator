@@ -70,15 +70,18 @@ class WebScraper():
         self.tournament_title = soup.find("h2", class_=["media__title", "media__title--large"]).get_text(strip=True)
 
         #extracting tournament location
-        module_cards = soup.find_all("div", class_=["module", "module--card"])
-        for module_card in module_cards:
-            mc_title = module_card.find("h3", class_=["module__title"])
-            if mc_title == None:
-                continue
-            if mc_title.get_text(strip=True) != "Venue":
-                continue
-            media = module_card.find("div", class_=["media"])
-            self.tournament_location = media.find("span", class_=["nav-link__value"]).get_text(strip=True)
+        try:
+            module_cards = soup.find_all("div", class_=["module", "module--card"])
+            for module_card in module_cards:
+                mc_title = module_card.find("h3", class_=["module__title"])
+                if mc_title == None:
+                    continue
+                if mc_title.get_text(strip=True) != "Venue":
+                    continue
+                media = module_card.find("div", class_=["media"])
+                self.tournament_location = media.find("span", class_=["nav-link__value"]).get_text(strip=True)
+        except:
+            self.tournament_location = "N/A"
 
         #extracting tournament start and end dates and also building list of dates for .../matches/<date> URL
         timeline_metadata = soup.find("div", class_=["tournament-meta__timeline"])
@@ -94,7 +97,23 @@ class WebScraper():
 
     def __getGamesResults(self):
 
-        def are_team_names_valid(team_one, team_two):
+        def extractFromHeader(header):
+            # special case for masters tournament where only masters league exists
+            category_str = header.split("-")[0].strip()
+            if self.database_obj.GetCategory(category_str) != None:
+                return category_str, "meistriliiga"
+            # run if it's not masters tournament and we have multiple teagues
+            p1 = header.split(" ", 1)[0].strip()
+            p2 = header.split(" ", 1)[1].split("-")[0].strip()
+            parts = [p1, p2]
+            for i in range(len(parts)):
+                if len(parts[i]) == 2:
+                    category_str = parts.pop(i)
+                    break
+            league_str = parts[0].replace(" ","").lower()
+            return category_str, league_str
+
+        def areTeamNamesValid(team_one, team_two):
             if len(team_one) == 0: return False
             if len(team_two) == 0: return False
             if "group" in team_one: return False
@@ -103,18 +122,12 @@ class WebScraper():
             if "bye" in team_two: return False
             return True
 
-        def is_category_valid(category):
-            try:
-                self.database_obj.GetCategory(category)
-            except:
-                return False
-            return True
-
-        def is_league_valid(league):
-            try:
-                self.database_obj.GetLeague(league)
-            except:
-                return False
+        def isHeaderValid(header):
+            category_str, league_str = extractFromHeader(header)
+            #if " " not in header.split("-")[0].strip(): return False              # we are missing details for both leage and category, not sure if needed anymore
+            if "+" in header.split("-")[0].strip(): return False                   # plus sign indicates that two different categories are combined into one
+            if self.database_obj.GetCategory(category_str) == None: return False   # no valid category in DB found
+            if self.database_obj.GetLeague(league_str) == None: return False       # no valid league in DB found
             return True
 
 
@@ -179,9 +192,8 @@ class WebScraper():
                 team_one = re.sub(r" .\d.","", team_one).lower().replace("-", " ")
                 team_two = re.sub(r" .\d.","", team_two).lower().replace("-", " ")
 
-                if are_team_names_valid(team_one, team_two) == False:
-                    #skipping this entry since we don't have good enough data quality on players
-                    continue
+                if isHeaderValid(match_header) == False: continue               #skipping this entry since we have a non standard header
+                if areTeamNamesValid(team_one, team_two) == False: continue     #skipping this entry since we don't have good enough data quality on players
 
                 for i in range(len(match_results)):
                     if i % 2 == 0:
@@ -189,27 +201,15 @@ class WebScraper():
                     else:
                         team_two_scores.append(match_results[i].get_text(" ", strip=True))
 
-                validation_header = match_header.split("-")
-                if " " not in validation_header[0].strip():
-                    #TODO figure out how to handle category and league situation where not enough information is given
-                    #in this example I'm skipping 'rahvasulka' league without clear indication of what category it's in
-                    continue
-                category = match_header.split(" ", 1)[0]
-                if is_category_valid(category) == False:
-                    #skipping if category name is not a valid value
-                    continue
-                league = match_header.split(" ", 1)[1].split("-")[0].strip()
-                if is_league_valid(league) == False:
-                    #skipping if league name is not a valid value
-                    continue
+                category, league = extractFromHeader(match_header)
 
-                print("--- DATA ---")
-                print("header:", match_header)
-                print("category:", category)
-                print("league:", league)
-                print(f"Team: '{team_one}' with result: '{team_one_status}' and game scores '{team_one_scores}'")
-                print(f"Team: '{team_two}' with result: '{team_two_status}' and game scores '{team_two_scores}'")
-                print("")
+                # print("--- DATA ---")
+                # print("header:", match_header)
+                # print("category:", category)
+                # print("league:", league)
+                # print(f"Team: '{team_one}' with result: '{team_one_status}' and game scores '{team_one_scores}'")
+                # print(f"Team: '{team_two}' with result: '{team_two_status}' and game scores '{team_two_scores}'")
+                # print("")
 
                 new_raw_match = RawMatch(category, league, team_one, team_one_status, team_one_scores, team_two, team_two_status, team_two_scores)
 
