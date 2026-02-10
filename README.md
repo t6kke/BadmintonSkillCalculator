@@ -30,7 +30,7 @@ This is just prototype calculation logic. Various elements can change in the fut
 - `k_factor` is main "constant" that is used to scale the final ELO change 
 - `my_current_ELO` is the current players ELO value before new ELO calculation is done
 - `opponents_ELO` is the opponent players ELO value before new ELO calculation is done
-- `expectation` variable calculation: `expectation = 1/(1+10**((my_current_ELO - opponents_ELO) / 400))`
+- `expectation` variable calculation: `expectation = 1/(1+10**((opponents_ELO - my_current_ELO) / 400))`
 - `result` variable is 1 or 0 based if player won or loss
 - Final ELO change calue calculation: `ELO_change_value = k_factor * (result - expectation)`
 
@@ -48,29 +48,29 @@ Firt we care about player own confidence, if that is low we just set the `k_fact
 If there at minimum medium level of confidence we also care about opponents confidence level and scale `k_factor` down as needed
 If there is at minimum medium level of confidence and the opponents confidence is close to ours we do `k_factor` scaling based on ELO difference
 
-- 0 matches: no confidence: `k_factor` = 72
-- 1 to 4 matches: low confidence: `k_factor` = 56
-- 5 to 10 matches: medium confidence: `k_factor` = 48
-- 11 to 20 matches: good confidence: `k_factor` = 40
-- 20 and over: great confidence and baseline: `k_factor` = 32
+- 0 matches: no confidence: `k_factor` = 96
+- 1 to 4 matches: low confidence: `k_factor` = 84
+- 5 to 10 matches: medium confidence: `k_factor` = 72
+- 11 to 20 matches: good confidence: `k_factor` = 64
+- 20 and over: great confidence and baseline: `k_factor` = 48
 
 Inverse values will be used if players ELO confidence is high and opponents ELO confidence is low, no need to lose a lot of points if we are not sure of Opponents ELO 
 
 #### scaling up
 
-- ELO difference > 200: `k_factor` = 72
-- ELO difference between 200 and 120: `k_factor` = 56
-- ELO difference between 120 and 60: `k_factor` = 48
-- ELO difference between 60 and 20: `k_factor` = 40
-- ELO difference between 20 and 0: `k_factor` = 32
+- ELO difference > 200: `k_factor` = 96
+- ELO difference between 200 and 120: `k_factor` = 84
+- ELO difference between 120 and 60: `k_factor` = 72
+- ELO difference between 60 and 20: `k_factor` = 64
+- ELO difference between 20 and 0: `k_factor` = 48
 
 #### scaling down
 
 - ELO difference > 200: `k_factor` = 1
-- ELO difference between 200 and 120: `k_factor` = 8
-- ELO difference between 120 and 60: `k_factor` = 16
-- ELO difference between 60 and 20: `k_factor` = 24
-- ELO difference between 20 and 0: `k_factor` = 32
+- ELO difference between 200 and 120: `k_factor` = 12
+- ELO difference between 120 and 60: `k_factor` = 24
+- ELO difference between 60 and 20: `k_factor` = 36
+- ELO difference between 20 and 0: `k_factor` = 48
 
 ## Completed functionality
 

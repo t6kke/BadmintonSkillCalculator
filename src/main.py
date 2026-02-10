@@ -136,6 +136,7 @@ class Main():
             gamesHandler.runHandler(matches_list, tournament_id)
             self.output.write(None, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="success")
         self.output.PrintResult()
+        database_obj.ss_AllPlayersELOrank()
 
     def argFuncParseExcel(self):
         league_name = "custom league"
