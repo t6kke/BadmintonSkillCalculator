@@ -1,8 +1,5 @@
 #TODO analyze if k-factor values should be external, configuration file or maybe even some database entry.
-K_FACTOR_DEFAULT = 32
-K_FACTOR_MAP = {"l": [1, 8, 16, 24, 32],
-                "h": [72, 56, 48, 40, 32]}
-
+K_FACTOR_DEFAULT = 48
 K_FACTOR_MAP = {"l": [1, 12, 24, 36, 48],
                 "h": [96, 84, 72, 60, 48]}
 

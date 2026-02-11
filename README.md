@@ -36,7 +36,7 @@ This is just prototype calculation logic. Various elements can change in the fut
 
 #### `k_factor` scaling
 
-- Standard base value: `32`
+- Standard base value: `48`
 - `k_factor` scaling up means that ELO change is higher, used if significantly lower ranked player wins against high ranked player. Meaning lower ranked player will gain more points and higher ranked player will also lose more points.
 - Scaling down makes ELO change lower, used when significantly higher ranked player wins against lower ranked player so the ELO change should not be significant.
 - Initial scaling is done based on ELO confidence

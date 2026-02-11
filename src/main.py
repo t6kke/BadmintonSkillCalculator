@@ -136,7 +136,7 @@ class Main():
             gamesHandler.runHandler(matches_list, tournament_id)
             self.output.write(None, "INFO", "tournaments", message=f"Tournament: '{tournament_name}' insert", status="success")
         self.output.PrintResult()
-        database_obj.ss_AllPlayersELOrank()
+        #database_obj.ss_AllPlayersELOrank()
 
     def argFuncParseExcel(self):
         league_name = "custom league"
@@ -287,7 +287,7 @@ class Main():
         test_url_2 = "https://www.tournamentsoftware.com/tournament/FA21631F-AB1E-49B0-80C3-C67CAB546CBB"
         test_url_list = [test_url_1, test_url_2]
 
-        faulty_league = "https://www.tournamentsoftware.com/tournament/882CBE46-281C-491D-8D9D-2AFE9E669B68"
+        faulty_league = "https://www.tournamentsoftware.com/tournament/63652A35-842C-4039-B958-13DE3414A323"
         test_url_list = [faulty_league]
 
         # gp_1 = "https://www.tournamentsoftware.com/tournament/4C2B2BAC-8BBA-4586-B842-10C444F8B13C"
@@ -320,7 +320,7 @@ class Main():
             gamesHandler = Handler(database_obj, output, verbose=verbose)
             tournament_id = database_obj.AddTournament((tournament_name, tournament_start_date, tournament_end_date, tournament_location, test_url, False))
             gamesHandler.runHandler(matches_list, tournament_id)
-        #database_obj.ss_AllPlayersELOrank()
+        database_obj.ss_AllPlayersELOrank()
 
         sys.exit(0)
 

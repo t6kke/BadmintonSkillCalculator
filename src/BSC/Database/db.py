@@ -522,6 +522,10 @@ FROM players p
 JOIN players_categories_elo pce ON p.id = pce.player_id
 JOIN categories c ON c.id = pce.category_id
 ORDER BY c.name, pce.elo DESC"""
+        query = """SELECT player_name, ELO, category_name
+FROM report_ELOStandings
+WHERE nbr_of_matches >= 5
+"""
         res = cur.execute(query)
         data_list = res.fetchall()
         con.close()

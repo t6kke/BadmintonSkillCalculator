@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import json
 import time
+import datetime
 import re
 import requests
 from bs4 import BeautifulSoup
@@ -11,6 +12,8 @@ from BSC.GameHandler.rawmatch import RawMatch
 
 URL_PART_SITE = "https://www.tournamentsoftware.com"
 URL_PART_MATCHES = "/matches"
+DATETIME_FORMAT = '%Y-%m-%d'
+STRING_FORMAT = '%Y%m%d'
 
 class WebScraper():
     def __init__(self, url, output, database_obj, verbose=False):
@@ -89,13 +92,26 @@ class WebScraper():
         end_element = timeline_metadata.find("li", class_=["is-finished"])
         self.tournament_start = start_element.find("time").get("datetime").split("T")[0]
         self.tournament_end = end_element.find("time").get("datetime").split("T")[0]
-        if self.tournament_start != self.tournament_end:
-            #TODO need to add all days in between start end and to support tournaments that last more than 2 days, but not currently relevant for me
-            self.tounament_days_list = [self.tournament_start.replace("-",""), self.tournament_end.replace("-","")]
-        else:
-            self.tounament_days_list = [self.tournament_start.replace("-","")]
+
+        start_date_value = datetime.datetime.strptime(self.tournament_start, DATETIME_FORMAT)
+        end_date_value = datetime.datetime.strptime(self.tournament_end, DATETIME_FORMAT)
+        self.tounament_days_list.append(start_date_value.strftime(STRING_FORMAT))
+        previous_date_value = start_date_value
+        if start_date_value != end_date_value:
+            while True:
+                print(previous_date_value)
+                next_date = previous_date_value + datetime.timedelta(days=1)
+                previous_date_value = next_date
+                self.tounament_days_list.append(next_date.strftime(STRING_FORMAT))
+                if next_date == end_date_value:
+                    break
+
 
     def __getGamesResults(self):
+
+        def cleanTeamName(team_name):
+            new_name = re.sub(r"\[(?:[A-Z/a-z]+|\d+|\d\/\d)\]","", team_name).lower().replace("-", " ").strip()
+            return new_name
 
         def extractFromHeader(header):
             # special case for masters tournament where only masters league exists
@@ -189,8 +205,10 @@ class WebScraper():
                         team_two_scores.append(1)
 
                 #removing placement data from name
-                team_one = re.sub(r" .\d.","", team_one).lower().replace("-", " ")
-                team_two = re.sub(r" .\d.","", team_two).lower().replace("-", " ")
+                #team_one = re.sub(r"\[(?:[A-Za-z]+|\d+)\]","", team_one).lower().replace("-", " ").strip()
+                #team_two = re.sub(r"\[(?:[A-Za-z]+|\d+)\]","", team_two).lower().replace("-", " ").strip()
+                team_one = cleanTeamName(team_one)
+                team_two = cleanTeamName(team_two)
 
                 if isHeaderValid(match_header) == False: continue               #skipping this entry since we have a non standard header
                 if areTeamNamesValid(team_one, team_two) == False: continue     #skipping this entry since we don't have good enough data quality on players
