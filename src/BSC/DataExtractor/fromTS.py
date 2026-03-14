@@ -99,7 +99,6 @@ class WebScraper():
         previous_date_value = start_date_value
         if start_date_value != end_date_value:
             while True:
-                print(previous_date_value)
                 next_date = previous_date_value + datetime.timedelta(days=1)
                 previous_date_value = next_date
                 self.tounament_days_list.append(next_date.strftime(STRING_FORMAT))
