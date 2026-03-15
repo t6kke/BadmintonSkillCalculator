@@ -192,7 +192,12 @@ class DB():
         self.output.write(self.verbose, "INFO", "DB:GetAvailableCategories", message=f"getting available categories")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        res = cur.execute("SELECT * FROM categories")
+        #res = cur.execute("SELECT * FROM categories")
+        query = """SELECT c.id, c.name, cm.info_text
+FROM categories c
+JOIN categories_metadata cm ON c.id = cm.category_id
+WHERE cm.info_type = 'long_eng'"""
+        res = cur.execute(query)
         categories_data = res.fetchall()
         con.close()
         self.output.write(self.verbose, "INFO", "DB:GetAvailableCategories", message=f"returing all data about categories")

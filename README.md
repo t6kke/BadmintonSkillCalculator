@@ -221,6 +221,7 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 - New separate report view in DB for only tournaments that should be used for internal results reporting
 - ELO results report provides number of matches within the last 12 months
 - ELO confidence logic added to Games Handler and Skill Calculator logic
+- Updated categoris info retreival for all required data now that details are in a different table
 
 ### Alpha 4.1.1
 
