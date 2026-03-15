@@ -446,7 +446,7 @@ WHERE cm.info_type = 'long_eng'"""
     def report_ListAllTournaments(self):
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        query = "SELECT * FROM report_ListTournaments"
+        query = "SELECT * FROM report_ListAllTournaments"
         res = cur.execute(query)
         data_list = res.fetchall()
         con.close()
