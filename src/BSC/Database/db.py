@@ -196,7 +196,7 @@ class DB():
         query = """SELECT c.id, c.name, cm.info_text
 FROM categories c
 JOIN categories_metadata cm ON c.id = cm.category_id
-WHERE cm.info_type = 'long_eng'"""
+WHERE cm.info_type = 'long_eng' or cm.info_type = 'description'"""
         res = cur.execute(query)
         categories_data = res.fetchall()
         con.close()

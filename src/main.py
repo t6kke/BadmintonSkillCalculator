@@ -154,6 +154,12 @@ class Main():
         tournament_id = None
         for tournament_name_data, raw_matches_obj_list_from_excel in raw_tournaments_from_excel.items():
             tournament_date = re.search("(\\d{2}\\.\\d{2}\\.\\d{4})", tournament_name_data).group()
+            date_parts = tournament_date.split(".")
+            new_date_parts = []
+            for i in range(len(date_parts)-1, -1, -1):
+                new_date_parts.append(date_parts[i])
+            tournament_date = "-".join(new_date_parts)
+            tournament_date = tournament_date.replace(".", "-")
             tournament_location = re.search("@([^)]+)", tournament_name_data).group().lstrip("@")
             tournament_name = tournament_name_data.split("(")[0].strip()
             self.output.write(True, "INFO", "tournaments", message=f"\nStarting handle tournament: '{tournament_name}' information...")

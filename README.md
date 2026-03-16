@@ -222,6 +222,7 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 - ELO results report provides number of matches within the last 12 months
 - ELO confidence logic added to Games Handler and Skill Calculator logic
 - Updated categoris info retreival for all required data now that details are in a different table
+- Applied date formatting when extracting info from excel, end date format should be yyyy-mm-dd
 
 ### Alpha 4.1.1
 
