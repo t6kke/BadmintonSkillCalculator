@@ -124,7 +124,6 @@ db_up = {
 	c.name AS category_name,
 	teams.team_name,
 	count(g.id) AS nbr_of_matches,
-	--SUM(IIF(CASE WHEN teams.team_nbr = 1 THEN g.compeditor_one_score ELSE g.compeditor_two_score END > CASE WHEN teams.team_nbr = 1 THEN g.compeditor_two_score ELSE g.compeditor_one_score END, 1, 0)) AS victories,
 	SUM(CASE WHEN teams.team_nbr = teams.winner_compeditor_nbr THEN 1 ELSE 0 END) as victories,
 	SUM(teams.points_for) AS points_for,
 	SUM(teams.points_against) AS points_against,
@@ -136,6 +135,7 @@ db_up = {
 		1 AS team_nbr,
 		m.winner_compeditor_nbr as winner_compeditor_nbr,
 		GROUP_CONCAT(p.name, ' + ') AS team_name,
+		MIN(p.id) as team_identifier,
 		fg.compeditor_one_score AS points_for,
 		fg.compeditor_two_score AS points_against
 		FROM (
@@ -159,6 +159,7 @@ db_up = {
 		2 AS team_nbr,
 		m.winner_compeditor_nbr as winner_compeditor_nbr,
 		GROUP_CONCAT(p.name, ' + ') AS team_name,
+		MIN(p.id) as team_identifier,
 		fg.compeditor_two_score AS points_for,
 		fg.compeditor_one_score AS points_against
 		FROM (
@@ -181,7 +182,7 @@ db_up = {
 	JOIN tournaments t ON t.id = m.tournament_id
 	JOIN categories c ON c.id = m.category_id
 	WHERE t.has_internal_result = true
-	GROUP BY teams.team_name, t.id
+	GROUP BY teams.team_identifier, t.id
 	ORDER BY victories DESC, point_difference DESC
 """
 }
