@@ -1,6 +1,6 @@
 # Badminton Skill Calculator
 
-CLI tool to parse Badminton tournament results(currently from specific excel format from specific tournament type) and calculating player head to head ELO ranking results.
+CLI tool to parse Badminton tournament results from tournamentsoftware.com matches page(and from specific excel format from specific tournament type) and calculating player head to head ELO ranking results.
 
 Project additionall provides Full ongoing players ELO ranking report, and also does the tournament results calculations. 
 
@@ -28,30 +28,49 @@ This is just prototype calculation logic. Various elements can change in the fut
 #### Formulas and calculation logic
 
 - `k_factor` is main "constant" that is used to scale the final ELO change 
-- `current_ELO` is the current players ELO value before new ELO calculation is done
-- `expectation` variable calculation: `expectation = 1/(1+10**((current_ELO - current_ELO) / 400))`
+- `my_current_ELO` is the current players ELO value before new ELO calculation is done
+- `opponents_ELO` is the opponent players ELO value before new ELO calculation is done
+- `expectation` variable calculation: `expectation = 1/(1+10**((opponents_ELO - my_current_ELO) / 400))`
 - `result` variable is 1 or 0 based if player won or loss
 - Final ELO change calue calculation: `ELO_change_value = k_factor * (result - expectation)`
 
 #### `k_factor` scaling
 
-- Standard base value: `32`
+- Standard base value: `48`
 - `k_factor` scaling up means that ELO change is higher, used if significantly lower ranked player wins against high ranked player. Meaning lower ranked player will gain more points and higher ranked player will also lose more points.
 - Scaling down makes ELO change lower, used when significantly higher ranked player wins against lower ranked player so the ELO change should not be significant.
+- Initial scaling is done based on ELO confidence
+
+#### ELO confidence
+
+ELO confidence is based on number of matches played within the last 12 months.
+Firt we care about player own confidence, if that is low we just set the `k_factor` high and go with that.
+If there at minimum medium level of confidence we also care about opponents confidence level and scale `k_factor` down as needed
+If there is at minimum medium level of confidence and the opponents confidence is close to ours we do `k_factor` scaling based on ELO difference
+
+- 0 matches: no confidence: `k_factor` = 96
+- 1 to 4 matches: low confidence: `k_factor` = 84
+- 5 to 10 matches: medium confidence: `k_factor` = 72
+- 11 to 20 matches: good confidence: `k_factor` = 64
+- 20 and over: great confidence and baseline: `k_factor` = 48
+
+Inverse values will be used if players ELO confidence is high and opponents ELO confidence is low, no need to lose a lot of points if we are not sure of Opponents ELO 
 
 #### scaling up
 
-- ELO difference > 200: `k_factor` = 70
-- ELO difference between 200 and 100: `k_factor` = 52
-- ELO difference between 100 and 20: `k_factor` = 40
-- ELO difference between 20 and 0: `k_factor` = 32
+- ELO difference > 200: `k_factor` = 96
+- ELO difference between 200 and 120: `k_factor` = 84
+- ELO difference between 120 and 60: `k_factor` = 72
+- ELO difference between 60 and 20: `k_factor` = 64
+- ELO difference between 20 and 0: `k_factor` = 48
 
 #### scaling down
 
-- ELO difference > 200: `k_factor` = 2
-- ELO difference between 200 and 100: `k_factor` = 12
-- ELO difference between 100 and 20: `k_factor` = 24
-- ELO difference between 20 and 0: `k_factor` = 32
+- ELO difference > 200: `k_factor` = 1
+- ELO difference between 200 and 120: `k_factor` = 12
+- ELO difference between 120 and 60: `k_factor` = 24
+- ELO difference between 60 and 20: `k_factor` = 36
+- ELO difference between 20 and 0: `k_factor` = 48
 
 ## Completed functionality
 
@@ -62,6 +81,7 @@ This is just prototype calculation logic. Various elements can change in the fut
 - has few status reports for output from database.
 - handles any number of players in team, regular 1v1 and 2v2 but tehnically works with 3v3 or 11v11 if other type of competition is used.
 - static site table generation for full raking on all categories
+- webscraping of tournamentsoftware.com tournament results
 
 ## Future Development
 
@@ -76,16 +96,13 @@ List is not just code improvements but also project functionalities
 - application version metadata(db logic version, skill calculator version) in database for initial validation.
 - created_at and updated_at fields into varios database tables where they make sense.
 - Add ELO confidence value and use it to handle ELO gain/loss.
-- Tournament results statistics report users games count. This change will be in the future since this has to change when matches consist of multiple games.
 - Old help information should be implemented through new output help information.
 - Verbosity logic of output package needs to be reworked.
 - Re-work how arguments handling is done after registration.
 - Consolidate output message/error/status into logical coherent structure across different commands.
-- Create additional flag for enabling default categories creation on initial DB creation.
 
 ### Far Future
 
-- Import game results(data) from Tournamentsoftare.com competition results, some webscraping probably needed.
 - Support universal team sizes.
 - Large scale testing suit to validate end to end functionality of the application
 
@@ -101,7 +118,7 @@ List is not just code improvements but also project functionalities
 
 Python version that was used to develop the application: Python 3.10
 
-Required libraries: pandas, openpyxl, sqlite3
+Required libraries: pandas, openpyxl, sqlite3, BeautifulSoup
 
 working directory includes the source data files. I provide example data both in txt file and also in excel files.
 
@@ -125,10 +142,11 @@ All options:
   
           [insert]  ::  Insert new tournament to database  
     --db_name,      ::  SQLite database name to be used, will create new one if it does not exist - MANDATORY  
-       --file,  -f  ::  Input Excel file of tournament results to parsed and injected - MANDATORY  
-      --sheet,  -s  ::  Excel sheet name to be parsed, multiple sheets can be defined in one execution - MANDATORY  
-     --c_name,      ::  Short name of the category to be used or inserted to the database - MANDATORY  
-     --c_desc,      ::  Category description - MANDATORY  
+        --url,  -u  ::  Tournamentsoftware.com tournament URL for scraping match data, multiple URL-s can be defined in one execution  
+       --file,  -f  ::  Input Excel file of tournament results to parsed and injected  
+      --sheet,  -s  ::  Excel sheet name to be parsed, multiple sheets can be defined in one execution  
+     --c_name,      ::  Short name of the category to be used or inserted to the database  
+     --c_desc,      ::  Category description  
         --out,  -o  ::  Output format, by default prints human readble results to terminal.
                         '-out=json' will output response in json format for when other applications need to parse the results  
     --verbose,  -v  ::  Enables verbose output, only works if using default output  
@@ -147,19 +165,21 @@ All options:
         [category]  ::  List or add tournament categories  
     --db_name,      ::  SQLite database name to be used, will create new one if it does not exist - MANDATORY  
        --list,  -l  ::  Lists available options from database  
-     --c_name,      ::  Short name of the category to be used or inserted to the database - MANDATORY  
-     --c_desc,      ::  Category description - MANDATORY  
+     --c_name,      ::  Short name of the category to be used or inserted to the database  
+     --c_desc,      ::  Category description  
         --out,  -o  ::  Output format, by default prints human readble results to terminal.
                         '-out=json' will output response in json format for when other applications need to parse the results  
     --verbose,  -v  ::  Enables verbose output, only works if using default output  
-       --help,  -h  ::  Provides more details on how to use the command
+       --help,  -h  ::  Provides more details on how to use the command  
 ```
 
 Following commands will work with provided excel files
 
-Example of importing tournament: `python3 main.py insert --db_name=db_excel_test.db -f=test_xlsx_d -s=Sheet1 --c_name=TDC --c_desc="test doubles category"`
+Example of importing tournament from excel: `python3 main.py insert --db_name=db_excel_test.db -f=test_xlsx_d -s=Sheet1 --c_name=TDC --c_desc="test doubles category"`
 
 Example of importing multiple tournaments from one excel: `python3 main.py insert --db_name=db_excel_test.db -f=test_xlsx_d -s=Sheet1 -s=Sheet2 -s=Sheet3 -s=Sheet4 --c_name=TDC --c_desc="test doubles category"`
+
+Example of importing tournament from URL: `python3 main.py insert --db_name=db_url_test.db -u="<tournamentsoftware_url_here>"`
 
 Example of listing available reports: `python3 main.py report --db_name=db_excel_test.db --list`
 
@@ -174,12 +194,36 @@ Example of getting whole players ELO standing ranking report in JSON frormat: `p
 ## Contributing
 
 - Minimum python version 3.10 installed
-- If you don't have pip install pandas and openpyxl
+- If you don't have pip install pandas, openpyxl, beautifulsoup4
 - Clone the repo
 - Project comes with example data that you can use to start testing
 - If you'd like to contribute, please fork the repository and open a pull request to the `main` branch
 
 ## Change Log
+
+### Alpha 5
+
+- Official badminton league tournaments data scraping and injection functionality implemented
+- Initial version of BSC/DataExtractor internal package fromTS.py created for scraping tournamentsoftware.com tournament data
+- Separate extraction for tournament metadata(name, location, start/end date) and scraping matches from each tournament day
+- Database structure modified with new tables and some additional columns in tournaments tables
+- New setup for creating default categories(standard categories setup that badminton has)
+- Leagues metadata table holds the default start ELO value for new players starting first time
+- DB creation has optional flag to create default leages based on Estonian badminton leage structure
+- Default categories and Leagues creation flags will do check if they exist and will add them if needed
+- Default ELO values are used for players first time entry in a given category
+- Initial fixes for reporting views so they would work again after DB structure modifications
+- New Games Handler functionality with different workflow that can handle multiple categories in the same tournament
+- Small modification to Teams object so it would work with new Games Handler logic
+- New Skill Calculator object to work with the modified Games Handler logic
+- Test execution and main excel data insert functionality converted to use new handler functionality
+- New launch argument --url/-u added for insert command to expose web scraping from CLI
+- New separate report view in DB for only tournaments that should be used for internal results reporting
+- ELO results report provides number of matches within the last 12 months
+- ELO confidence logic added to Games Handler and Skill Calculator logic
+- Updated categoris info retreival for all required data now that details are in a different table
+- Applied date formatting when extracting info from excel, end date format should be yyyy-mm-dd
+- Fixed tournament result SQL where sometimes players were added togheter in a team in different other within one tournament and results were split
 
 ### Alpha 4.1.1
 

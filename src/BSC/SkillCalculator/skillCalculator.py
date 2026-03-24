@@ -1,30 +1,72 @@
-class SkillCalc():
-    def __init__(self, players_obj_dict, output, verbose=False):
-        self.verbose = verbose #TODO extend verbose information to stuff that might be relevant
-        self.output = output
-        self.k_factor = 32 #TODO there should be 2 K-Factor variables, one for winner and one loser. when we have implemented ELO confidence value. example high ELO player will not lose a lot of points if new team with base/low ELO beats them
-        self.players_obj_dict = players_obj_dict
+#TODO analyze if k-factor values should be external, configuration file or maybe even some database entry.
+K_FACTOR_DEFAULT = 48
+K_FACTOR_MAP = {"l": [1, 12, 24, 36, 48],
+                "h": [96, 84, 72, 60, 48]}
 
-    def calculate(self, match):
+
+class SkillCalc():
+    def __init__(self, output, verbose=False):
+        self.verbose = verbose
+        self.output = output
+        self.k_factor = None
+
+    def calculate(self, winning_team_obj, losing_team_obj):
+
+        def scaleKFactor_ELOdiff(result, my_current_ELO, opponents_ELO):
+            ELO_diff = my_current_ELO - opponents_ELO
+            self.__scaleKFactor(result, ELO_diff)
+
+        def scaleKFactor_ELOconfAndELOdiff(my_current_ELO_confidence, opponents_ELO_confidence, result, my_current_ELO, opponents_ELO):
+            # 1. initial value based on my confidence
+            # 2. if there is at least some confidence we want to care about opponets confidence and change
+            # 3. if both confidences are high and close we should do standard scale
+
+            # 1.
+            self.k_factor = K_FACTOR_MAP.get("h")[my_current_ELO_confidence]
+            self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"Initial K-Factor: '{self.k_factor}' based on my ELO confidence: '{my_current_ELO_confidence}'", player_id = player_id)
+            # 2.
+            if my_current_ELO_confidence > 2:
+                self.k_factor = K_FACTOR_MAP.get("l")[opponents_ELO_confidence]
+                self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"NEW K-Factor: '{self.k_factor}' based on opponents ELO confidence: '{opponents_ELO_confidence}'")
+            # 3.
+            conf_diff = abs(my_current_ELO_confidence - opponents_ELO_confidence)
+            if my_current_ELO_confidence > 2 and conf_diff <= 1:
+                ELO_diff = my_current_ELO - opponents_ELO
+                self.__scaleKFactor(result, ELO_diff)
+                self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"NEW K-Factor: '{self.k_factor}' since confidence values were close: '{my_current_ELO_confidence}', '{opponents_ELO_confidence}'")
+
+
         resut_ELO_changes_dict = {}
-        for i in range(len(match)):
-            team = list(match.keys())[i]
-            result = self.__getWinStatus(match, team)
+        teams = [losing_team_obj, winning_team_obj]
+        for i in range(len(teams)):
+            result = i
+            team = teams[i]
+            opponent_team = teams[i-1]
             for player_id in team.team_members_set:
-                current_ELO = self.players_obj_dict.get(player_id).ELO
-                expectation = 1/(1+10**((current_ELO - current_ELO) / 400))
-                opposing_team = list(match.keys())[i-1]
+                my_current_ELO = team.team_members_dict.get(player_id).ELO
+                my_current_ELO_confidence = team.team_members_dict.get(player_id).ELO_confidence_level
                 total_ELO_change = 0
-                for oppoent_id in opposing_team.team_members_set:
-                    ELO_diff = current_ELO - self.players_obj_dict.get(oppoent_id).ELO
-                    self.__scaleKFactor(result, ELO_diff)
-                    ELO_change = self.k_factor*(result - expectation)
-                    total_ELO_change = total_ELO_change + int(ELO_change)
+                for oppoent_id in opponent_team.team_members_set:
+                    opponents_ELO = opponent_team.team_members_dict.get(oppoent_id).ELO
+                    opponents_ELO_confidence = opponent_team.team_members_dict.get(oppoent_id).ELO_confidence_level
+                    expectation = 1/(1+10**((opponents_ELO - my_current_ELO) / 400))
+
+                    # original: default k-factor scaling based on just ELO difference
+                    #scaleKFactor_ELOdiff(result, my_current_ELO, opponents_ELO)
+
+                    # new: confidence and difference based k-factor scaling
+                    scaleKFactor_ELOconfAndELOdiff(my_current_ELO_confidence, opponents_ELO_confidence, result, my_current_ELO, opponents_ELO)
+
+                    self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"Final K-Factor value used for ELO update: '{self.k_factor}'")
+                    ELO_change_amount = self.k_factor*(result - expectation)
+                    total_ELO_change = total_ELO_change + int(ELO_change_amount)
+                total_ELO_change = int(total_ELO_change / len(opponent_team.team_members_set))
+                self.output.write(self.verbose, "INFO", "SkillCalc:calculate", message=f"Starting ELO: '{my_current_ELO}' and final ammount of ELO change: '{total_ELO_change}'")
                 resut_ELO_changes_dict[player_id] = total_ELO_change
         return resut_ELO_changes_dict
 
     def __scaleKFactor(self, win_status, ELO_diff):
-        self.output.write(self.verbose, "SkillCalc:__scaleKFactor", None, message=f"ELO difference: '{ELO_diff}'")
+        self.output.write(self.verbose, "INFO", "SkillCalc:__scaleKFactor", message=f"ELO difference: '{ELO_diff}'")
         #TODO investigate can this if else logic be simplified
         if win_status == 1 and ELO_diff > 0:
             # I win and have higher ELO so k_factor has to scale down based on difference
@@ -40,37 +82,29 @@ class SkillCalc():
             self.__KFactorDOWN(abs(ELO_diff))
         else:
             # default just in case
-            self.k_factor = 32
+            self.k_factor = K_FACTOR_DEFAULT
 
-    #TODO analyze if k-factor scaling values should be external, configuration file or maybe even some database entry.
+
     def __KFactorUP(self, ELO_diff):
         if ELO_diff > 200:
-            self.k_factor = 70
-        elif ELO_diff <= 200 and ELO_diff > 100:
-            self.k_factor = 52
-        elif ELO_diff <= 100 and ELO_diff > 20:
-            self.k_factor = 40
+            self.k_factor = K_FACTOR_MAP.get("h")[1]
+        elif ELO_diff <= 200 and ELO_diff > 120:
+            self.k_factor = K_FACTOR_MAP.get("h")[1]
+        elif ELO_diff <= 120 and ELO_diff > 60:
+            self.k_factor = K_FACTOR_MAP.get("h")[2]
+        elif ELO_diff <= 60 and ELO_diff > 20:
+            self.k_factor = K_FACTOR_MAP.get("h")[3]
         elif ELO_diff <= 20 and ELO_diff > 0:
-            self.k_factor = 32
+            self.k_factor = K_FACTOR_MAP.get("h")[4]
 
     def __KFactorDOWN(self, ELO_diff):
         if ELO_diff > 200:
-            self.k_factor = 2
-        elif ELO_diff <= 200 and ELO_diff > 100:
-            self.k_factor = 12
-        elif ELO_diff <= 100 and ELO_diff > 20:
-            self.k_factor = 24
+            self.k_factor = K_FACTOR_MAP.get("l")[0]
+        elif ELO_diff <= 200 and ELO_diff > 120:
+            self.k_factor = K_FACTOR_MAP.get("l")[1]
+        elif ELO_diff <= 120 and ELO_diff > 60:
+            self.k_factor = K_FACTOR_MAP.get("l")[2]
+        elif ELO_diff <= 60 and ELO_diff > 20:
+            self.k_factor = K_FACTOR_MAP.get("l")[3]
         elif ELO_diff <= 20 and ELO_diff > 0:
-            self.k_factor = 32
-
-    def __getWinStatus(self, match, team):
-        result = None
-        match_copy = match.copy()
-        my_score = match_copy.pop(team)
-        opponent_score = match_copy.get(next(iter(match_copy))) #TODO find a better way to get the other teams score from dictionary
-        if int(my_score[-1]) > int(opponent_score[-1]):
-            result = 1
-        else:
-            result = 0
-        #print(my_score, opponent_score, result)
-        return result
+            self.k_factor = K_FACTOR_MAP.get("l")[4]

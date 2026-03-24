@@ -11,6 +11,7 @@ commands_info = {
 
 arguments_info = {
 "--db_name": "SQLite database name to be used, will create new one if it does not exist",
+"--url": "Tournamentsoftware.com tournament URL for scraping match data, multiple URL-s can be defined in one execution",
 "--file": "Input Excel file of tournament results to parsed and injected",
 "--sheet": "Excel sheet name to be parsed, multiple sheets can be defined in one execution",
 "--c_name": "Short name of the category to be used or inserted to the database",

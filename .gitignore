@@ -2,6 +2,9 @@
 *.xlsx
 *.db
 *.html
+*.json
+*.log
+Dockerfile
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -5,10 +5,39 @@ import sqlite3
 #from BSC.Database.sql_v01_001 import db_up
 from BSC.Database.sql_001 import db_up, db_down
 
+
+categories_data = [("MS",),
+                    ("WS",),
+                    ("MD",),
+                    ("WD",),
+                    ("XD",)]
+
+categories_metadata = {"MS": [("short_eng", "MS"), ("short_est", "MÜ"), ("long_eng", "mens singles"), ("long_est", "meesüksik")],
+                        "WS": [("short_eng", "WS"), ("short_est", "NÜ"), ("long_eng", "womens singles"), ("long_est", "naisüksik")],
+                        "MD": [("short_eng", "MD"), ("short_est", "MP"), ("long_eng", "mens doubles"), ("long_est", "meespaar")],
+                        "WD": [("short_eng", "WD"), ("short_est", "NP"), ("long_eng", "womens doubles"), ("long_est", "naispaar")],
+                        "XD": [("short_eng", "XD"), ("short_est", "SP"), ("long_eng", "mixed doubles"), ("long_est", "segapaar")]}
+
+leagues_data = [("meistriliiga",),
+                    ("esiliiga",),
+                    ("2.liiga",),
+                    ("3.liiga",),
+                    ("4.liiga",),
+                    ("rahvasulka",)]
+
+leagues_metadata = {"meistriliiga": [("default ELO", "6000"), ("main_name", "meistriliiga")],
+                        "esiliiga": [("default ELO", "5000"), ("main_name", "esiliiga")],
+                        "2.liiga": [("default ELO", "4000"), ("main_name", "2.liiga"), ("alt_name", "2-liiga"), ("alt_name", "2liiga"), ("alt_name", "ii.liiga"), ("alt_name", "ii-liiga"), ("alt_name", "iiliiga")],
+                        "3.liiga": [("default ELO", "3000"), ("main_name", "3.liiga"), ("alt_name", "3-liiga"), ("alt_name", "3liiga"), ("alt_name", "iii.liiga"), ("alt_name", "iii-liiga"), ("alt_name", "iiiliiga")],
+                        "4.liiga": [("default ELO", "2000"), ("main_name", "4.liiga"), ("alt_name", "4-liiga"), ("alt_name", "4liiga"), ("alt_name", "iv.liiga"), ("alt_name", "iv-liiga"), ("alt_name", "ivliiga")],
+                        "rahvasulka": [("default ELO", "1000"), ("main_name", "rahvasulka"), ("alt_name", "rahvaliiga")]}
+
+
 class DB():
-    def __init__(self, db_name, output, verbose=False, add_default_categories=False, clear_db=False):
+    def __init__(self, db_name, output, verbose=False, add_default_categories=False, add_default_leagues=False, clear_db=False):
         self.verbose = verbose
         self.add_default_categories = add_default_categories
+        self.add_default_leagues = add_default_leagues
         self.clear_db = clear_db
         self.db_name = db_name
         self.output = output
@@ -34,6 +63,9 @@ class DB():
             self.__DEV_ClearDB()
             self.__createTables()
 
+        if self.add_default_categories and self.__validateDefaultCategories() == False: self.__addDefaultCategories()
+        if self.add_default_leagues and self.__validateDefaultLeagues() == False: self.__addDefaultLeagues()
+
         is_ok = self.__validateDatabase()
 
     def __createDB(self):
@@ -41,22 +73,73 @@ class DB():
         con.close()
 
     def __createTables(self):
-
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
         for table, sql in db_up.items():
             self.output.write(self.verbose, "DEBUG", "DB", message=f"Creating table: '{table}'")
             cur.execute(sql)
-        if self.add_default_categories:
-            categories_data = [("MS", "men singles"),
-                           ("WS", "women singles"),
-                           ("MD", "men double"),
-                           ("WD", "women double"),
-                           ("XD", "mixed double")]
-            self.output.write(self.verbose, "DEBUG", "DB", message=f"adding default categories to db: '{categories_data}'")
-            cur.executemany("INSERT INTO categories (name, description) VALUES(?,?)", categories_data)
         con.commit()
         con.close()
+
+    def __addDefaultCategories(self): #TODO add more verbose information
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        self.output.write(self.verbose, "DEBUG", "DB", message=f"adding default categories to db: '{categories_data}'")
+        cur.executemany("INSERT INTO categories (name) VALUES(?)", categories_data)
+        for item, data_list in categories_metadata.items():
+            cur.execute("SELECT id FROM categories WHERE name = '"+ item +"'")
+            category_id = cur.fetchone()
+            updated_data_list = []
+            for data_item in data_list:
+                temp_list = list(data_item)
+                temp_list.append(category_id[0])
+                final_tuple = tuple(temp_list)
+                updated_data_list.append(final_tuple)
+            cur.executemany("INSERT INTO categories_metadata (info_type, info_text, category_id) VALUES (?,?,?)", updated_data_list)
+        con.commit()
+        con.close()
+
+    def __addDefaultLeagues(self): #TODO add more verbose information
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        self.output.write(self.verbose, "DEBUG", "DB", message=f"adding default leagues to db: '{leagues_data}'")
+        cur.executemany("INSERT INTO leagues (name) VALUES(?)", leagues_data)
+        for item, data_list in leagues_metadata.items():
+            cur.execute("SELECT id FROM leagues WHERE name = '"+ item +"'")
+            league_id = cur.fetchone()
+            updated_data_list = []
+            for data_item in data_list:
+                temp_list = list(data_item)
+                temp_list.append(league_id[0])
+                final_tuple = tuple(temp_list)
+                updated_data_list.append(final_tuple)
+            cur.executemany("INSERT INTO leagues_metadata (info_type, info_text, league_id) VALUES (?,?,?)", updated_data_list)
+        con.commit()
+        con.close()
+
+    def __validateDefaultCategories(self):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT name FROM categories")
+        category_list = res.fetchall()
+        for category in categories_data:
+            if category not in category_list:
+                con.close()
+                return False
+        con.close()
+        return True
+
+    def __validateDefaultLeagues(self):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT name FROM leagues")
+        leagues_list = res.fetchall()
+        for league in leagues_data:
+            if league not in leagues_list:
+                con.close()
+                return False
+        con.close()
+        return True
 
     def __validateDatabase(self):
         con = sqlite3.connect(self.db_name)
@@ -109,7 +192,12 @@ class DB():
         self.output.write(self.verbose, "INFO", "DB:GetAvailableCategories", message=f"getting available categories")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        res = cur.execute("SELECT * FROM categories")
+        #res = cur.execute("SELECT * FROM categories")
+        query = """SELECT c.id, c.name, cm.info_text
+FROM categories c
+JOIN categories_metadata cm ON c.id = cm.category_id
+WHERE cm.info_type = 'long_eng' or cm.info_type = 'description'"""
+        res = cur.execute(query)
         categories_data = res.fetchall()
         con.close()
         self.output.write(self.verbose, "INFO", "DB:GetAvailableCategories", message=f"returing all data about categories")
@@ -122,21 +210,21 @@ class DB():
     def FindTournament(self, tournament_name, tournament_date): #TODO add verbose info
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        res = cur.execute("SELECT * FROM tournaments WHERE name = '" + tournament_name +"' OR date = '"+tournament_date+"'")
+        res = cur.execute("SELECT * FROM tournaments WHERE name = '" + tournament_name +"' AND start_date = '"+tournament_date+"'")
         result = res.fetchall()
         return result
 
     def AddTournament(self, data_in): #TODO add verbose info
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        cur.execute("INSERT INTO tournaments (name, date, location) VALUES(?, ?, ?)", data_in) #TODO fix result fetch, cur.execute should retrun the value entered
+        cur.execute("INSERT INTO tournaments (name, start_date, end_date, location, external_url, has_internal_result) VALUES(?, ?, ?, ?, ?, ?)", data_in) #TODO fix result fetch, cur.execute should retrun the value entered
         res = cur.execute("SELECT id FROM tournaments ORDER BY id DESC LIMIT 1")
         tournament_id = res.fetchone()[0]
         con.commit()
         con.close()
         return tournament_id
 
-    def GetOrAddCategory(self, category_name, category_description): #TODO add verbose info
+    def GetOrAddCategory(self, category_name, category_description):
         category_id = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
@@ -144,20 +232,75 @@ class DB():
         category_id = res.fetchone()
         if category_id is None:
             self.output.write(self.verbose, "INFO", "DB:GetOrAddCategory", message=f"category does not exist in db, creating new one")
-            data_in = (category_name, category_description, )
-            cur.execute("INSERT INTO categories (name, description) VALUES(?,?)", data_in)
-            con.commit()
+            data_in_category = (category_name,)
+            cur.execute("INSERT INTO categories (name) VALUES(?)", data_in_category)
             res = cur.execute("SELECT id FROM categories WHERE name = '" + category_name +"'")
             category_id = res.fetchone()
+            data_in_category_meta_name = (category_id[0],"short_name",category_name,)
+            data_in_category_meta_desc = (category_id[0],"description",category_description,)
+            data_in_list = [data_in_category_meta_name, data_in_category_meta_desc]
+            cur.executemany("INSERT INTO categories_metadata (category_id, info_type, info_text) VALUES(?,?,?)", data_in_list)
+            con.commit()
         con.close()
         return category_id[0]
 
-    def GetOrAddPlayer(self, name, category_id):
+    def GetCategory(self, category_str):
+        self.output.write(self.verbose, "INFO", "DB:GetCategory", message=f"Trying to find category with string: '{category_str}'")
+        category_id = None
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("""SELECT c.id
+                                FROM categories c
+                                JOIN categories_metadata cm ON cm.category_id = c.id WHERE info_text = '""" + category_str + "'")
+        category_id = res.fetchone()
+        if category_id is not None:
+            category_id = category_id[0]
+        con.close()
+        return category_id
+
+    def AddCustomLeague(self, league_name, league_description): #TODO add verbose info
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        data_in = (league_name,)
+        try:
+            cur.execute("INSERT INTO leagues (name) VALUES(?)", data_in)
+            res = cur.execute("SELECT id FROM leagues WHERE name = '" + league_name +"'")
+            league_id = res.fetchone()
+            data_in_league_meta_name = (league_id[0],"short_name",league_name,)
+            data_in_league_meta_desc = (league_id[0],"description",league_description,)
+            data_in_league_meta_default = (league_id[0],"default ELO",1000,)
+            data_in_list = [data_in_league_meta_name, data_in_league_meta_desc, data_in_league_meta_default]
+            cur.executemany("INSERT INTO leagues_metadata (league_id, info_type, info_text) VALUES(?,?,?)", data_in_list)
+            con.commit()
+        except Exception as e:
+            print("issue inserting league data: " + str(e))
+        con.close()
+
+    def GetLeague(self, league_str):
+        if "rahva" in league_str:
+            league_str = "rahva"
+        self.output.write(self.verbose, "INFO", "DB:GetLeague", message=f"Trying to find league with string: '{league_str}'")
+        league_id = None
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        #res = cur.execute("SELECT id FROM leagues WHERE name like '%" + league_str + "%'")
+        res = cur.execute("""SELECT l.id
+                                FROM leagues l
+                                JOIN leagues_metadata lm ON lm.league_id = l.id WHERE info_text like '%""" + league_str + "%'")
+        league_id = res.fetchone()
+        if league_id is not None:
+            league_id = league_id[0]
+        con.close()
+        return league_id
+
+    def GetOrAddPlayer(self, name, category_id, league_id):
         #TODO this function is a mess and needs to be cleaned up
         self.output.write(self.verbose, "INFO", "DB:GetOrAddPlayer", message=f"getting or adding player '{name}' to DB")
         result = None
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
+        res = cur.execute("SELECT info_text FROM leagues_metadata WHERE league_id = '" + league_id + "' AND info_type = 'default ELO'")
+        default_ELO = int(res.fetchone()[0])
         res = cur.execute("SELECT * FROM players WHERE name = '" + name + "'")
         result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
         if result is None:
@@ -166,7 +309,7 @@ class DB():
             res = cur.execute("INSERT INTO players (name) VALUES (?)", player_data)
             res = cur.execute("SELECT id FROM players ORDER BY id DESC LIMIT 1")
             player_id = res.fetchone()[0]
-            elo_data = (player_id, category_id, 1000,) #TODO initial elo value of 1000 should be some configuration file, and maybe even modifiable based on what leage new player starts in.
+            elo_data = (player_id, category_id, default_ELO,)
             cur.execute("INSERT INTO players_categories_elo (player_id, category_id, elo) VALUES (?,?,?)", elo_data)
             con.commit()
             res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
@@ -179,7 +322,7 @@ class DB():
         result = res.fetchone() #note to self, fetchone removes the content form the result variable res, likely same with fetchall
         if result is None:
             self.output.write(self.verbose, "INFO", "DB:GetOrAddPlayer", message=f"player found in db but no ELO for category id {category_id}, creating a new entry")
-            elo_data = (player_id, category_id, 1000,) #TODO initial elo value of 1000 should be some configuration file, and maybe even modifiable based on what leage new player starts in.
+            elo_data = (player_id, category_id, default_ELO,)
             cur.execute("INSERT INTO players_categories_elo (player_id, category_id, elo) VALUES (?,?,?)", elo_data)
             con.commit()
             res = cur.execute("SELECT p.id, p.name, pce.elo FROM players p JOIN players_categories_elo pce ON p.id = pce.player_id WHERE pce.category_id = " + category_id + " AND p.name = '" + name + "'")
@@ -225,11 +368,23 @@ class DB():
         self.output.write(self.verbose, "INFO", "DB:GetPlayerELO", message=f"getting ELO value for player id: '{player_id}'")
         return player_elo
 
+    def GetPlayerMatchesPlayed(self, player_id, category_id):
+        self.output.write(self.verbose, "INFO", "DB:GetPlayerMatchesPlayed", message=f"getting nbr of matches palyed within the last 1 year for player ID: '{player_id}'")
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        res = cur.execute("SELECT nbr_of_matches FROM report_EloStandings WHERE player_id = '" + player_id + "' AND category_id = '"+ category_id +"'")
+        nbr_of_matches = res.fetchone()
+        if nbr_of_matches == None:
+            con.close()
+            return 0
+        con.close()
+        return nbr_of_matches[0]
+
     def AddMatch(self, data_in):
         self.output.write(self.verbose, "INFO", "DB:AddMatch", message=f"adding match to DB with data: '{data_in}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        cur.execute("INSERT INTO matches (tournament_id, category_id) VALUES(?,?)", data_in)
+        cur.execute("INSERT INTO matches (tournament_id, category_id, league_id, winner_compeditor_nbr) VALUES(?,?,?,?)", data_in)
         con.commit()
         res = cur.execute("SELECT id FROM matches ORDER BY id DESC LIMIT 1")
         match_id = res.fetchone()[0]
@@ -253,7 +408,7 @@ class DB():
         self.output.write(self.verbose, "INFO", "DB:AddPlayerGameRel", message=f"adding player game relation for the whole match for all players with data: '{data_in_list}'")
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        cur.executemany("INSERT INTO players_games (player_id, game_id, compeditor_nbr) VALUES(?,?,?)", data_in_list)
+        cur.executemany("INSERT INTO players_games (player_id, game_id, compeditor_nbr, match_id, tournament_id) VALUES(?,?,?,?,?)", data_in_list)
         con.commit()
         con.close()
 
@@ -288,10 +443,21 @@ class DB():
     # results reports printing to terminal
     #============================================
 
-    def report_ListTournaments(self):
+    def report_ListAllTournaments(self):
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        query = "SELECT * FROM report_ListTournaments"
+        query = "SELECT * FROM report_ListAllTournaments"
+        res = cur.execute(query)
+        data_list = res.fetchall()
+        con.close()
+        for item in data_list:
+            self.output.write(None, "INFO", "tournaments", id=item[0], name=item[1], date=item[2], location=item[3])
+        self.output.PrintResult()
+
+    def report_ListInternalResultTournaments(self):
+        con = sqlite3.connect(self.db_name)
+        cur = con.cursor()
+        query = "SELECT * FROM report_ListInternalResultTournaments"
         res = cur.execute(query)
         data_list = res.fetchall()
         con.close()
@@ -308,12 +474,10 @@ class DB():
         data_list = res.fetchall()
         con.close()
         category_name = ""
-        category_desc = ""
         for item in data_list:
             if item[4] != category_name:
                 category_name = item[4]
-                category_desc = item[5]
-                self.output.write(None, "INFO", "category", name=category_name, description=category_desc, ranking=[])
+                self.output.write(None, "INFO", "category", name=category_name, ranking=[])
             self.output.write(None, "INFO", "category:ranking", id=item[0], name=item[1], elo=item[2])
         self.output.PrintResult()
 
@@ -348,8 +512,7 @@ WHERE tournament_id = """ + str(tournament_id)
         position = 0
         for item in data_list:
             position += 1
-            #print(f"'Position: '{position}': '{item[4]}' played '{item[5]}' games and won: '{item[6]} games'. Points For: '{item[7]}'; Points Against: '{item[8]}'; Points Difference: '{item[9]}'")
-            self.output.write(None, "INFO", "results", position=position, team=item[4], games_total=item[5], games_won=item[6], points_for=item[7], points_against=item[8], points_diff=item[9])
+            self.output.write(None, "INFO", "results", position=position, team=item[3], games_total=item[4], games_won=item[5], points_for=item[6], points_against=item[7], points_diff=item[8])
         self.output.PrintResult()
 
     #============================================
@@ -359,11 +522,15 @@ WHERE tournament_id = """ + str(tournament_id)
     def ss_AllPlayersELOrank(self):
         con = sqlite3.connect(self.db_name)
         cur = con.cursor()
-        query = """SELECT p.name, pce.elo, c.name, c.description
+        query = """SELECT p.name, pce.elo, c.name
 FROM players p
 JOIN players_categories_elo pce ON p.id = pce.player_id
 JOIN categories c ON c.id = pce.category_id
 ORDER BY c.name, pce.elo DESC"""
+        query = """SELECT player_name, ELO, category_name
+FROM report_ELOStandings
+WHERE nbr_of_matches >= 5
+"""
         res = cur.execute(query)
         data_list = res.fetchall()
         con.close()
@@ -377,7 +544,7 @@ ORDER BY c.name, pce.elo DESC"""
                     if category_name != "":
                         out_file.write("\t</tbody>\n</table>\n")
                     category_name = item[2]
-                    category_desc = item[3]
+                    category_desc = item[2]
                     out_file.write(f"<p>Rankings for category: '{category_desc}'</p>\n")
                     out_file.write("<table class=\"table table-bordered table-striped\">\n")
                     out_file.write("\t<thead>\n\t\t<tr>\n\t\t\t<th>Player</th>\n\t\t\t<th>ELO</th>\n\t\t</tr>\n\t</thead>\n")

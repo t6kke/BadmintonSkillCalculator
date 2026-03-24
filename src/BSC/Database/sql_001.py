@@ -2,8 +2,11 @@ db_up = {
 "tournaments": """CREATE TABLE "tournaments" (
 	"id"	INTEGER NOT NULL UNIQUE,
 	"name"	TEXT NOT NULL,
-	"date"	TEXT,
+	"start_date"	TEXT,
+	"end_date"	TEXT,
 	"location"	TEXT,
+	"external_url" TEXT,
+	"has_internal_result" BOOLEAN NOT NULL,
 	PRIMARY KEY("id" AUTOINCREMENT)
 )""",
 "players": """CREATE TABLE "players" (
@@ -14,15 +17,38 @@ db_up = {
 "categories": """CREATE TABLE "categories" (
 	"id"	INTEGER NOT NULL UNIQUE,
 	"name"	TEXT NOT NULL UNIQUE,
-	"description"	TEXT NOT NULL,
+	PRIMARY KEY("id" AUTOINCREMENT)
+)""",
+"categories_metadata": """CREATE TABLE "categories_metadata" (
+	"id"	INTEGER NOT NULL UNIQUE,
+	"category_id"	INTEGER NOT NULL,
+	"info_type"	TEXT NOT NULL,
+	"info_text"	TEXT NOT NULL,
+	FOREIGN KEY("category_id") REFERENCES "categories"("id"),
+	PRIMARY KEY("id" AUTOINCREMENT)
+)""",
+"leagues": """CREATE TABLE "leagues" (
+	"id"	INTEGER NOT NULL UNIQUE,
+	"name"	TEXT NOT NULL UNIQUE,
+	PRIMARY KEY("id" AUTOINCREMENT)
+)""",
+"leagues_metadata": """CREATE TABLE "leagues_metadata" (
+	"id"	INTEGER NOT NULL UNIQUE,
+	"league_id"	INTEGER NOT NULL,
+	"info_type"	TEXT NOT NULL,
+	"info_text"	TEXT NOT NULL,
+	FOREIGN KEY("league_id") REFERENCES "leagues"("id"),
 	PRIMARY KEY("id" AUTOINCREMENT)
 )""",
 "matches": """CREATE TABLE "matches" (
 	"id"	INTEGER NOT NULL UNIQUE,
 	"tournament_id"	INTEGER NOT NULL,
 	"category_id"	INTEGER NOT NULL,
+	"league_id"	INTEGER NOT NULL,
+	"winner_compeditor_nbr" INTEGER NOT NULL,
 	FOREIGN KEY("category_id") REFERENCES "categories"("id"),
 	FOREIGN KEY("tournament_id") REFERENCES "tournaments"("id"),
+	FOREIGN KEY("league_id") REFERENCES "leagues"("id"),
 	PRIMARY KEY("id" AUTOINCREMENT)
 )""",
 "games": """CREATE TABLE "games" (
@@ -44,7 +70,13 @@ db_up = {
 	"player_id"	INTEGER NOT NULL,
 	"game_id"	INTEGER NOT NULL,
 	"compeditor_nbr"	INTEGER NOT NULL,
-	UNIQUE("player_id","game_id")
+	"match_id"	INTEGER NOT NULL,
+	"tournament_id" 	INTEGER NOT NULL,
+	FOREIGN KEY("player_id") REFERENCES "players"("id"),
+	FOREIGN KEY("game_id") REFERENCES "games"("id"),
+	FOREIGN KEY("match_id") REFERENCES "matches"("id"),
+	FOREIGN KEY("tournament_id") REFERENCES "tournaments"("id"),
+	UNIQUE("player_id","game_id", "match_id", "tournament_id")
 )""",
 "players_matches_elo_change": """CREATE TABLE "players_matches_elo_change" (
 	"player_id"	INTEGER NOT NULL,
@@ -53,11 +85,18 @@ db_up = {
 	"player_elo_change"	INTEGER NOT NULL,
 	UNIQUE("player_id","match_id")
 )""",
-"report_ListTournaments": """CREATE VIEW "report_ListTournaments" AS
+"report_ListAllTournaments": """CREATE VIEW "report_ListAllTournaments" AS
 	SELECT
 	*
 	FROM tournaments
-	ORDER BY date ASC
+	ORDER BY start_date ASC
+""",
+"report_ListInternalResultTournaments": """CREATE VIEW "report_ListInternalResultTournaments" AS
+	SELECT
+	*
+	FROM tournaments
+	WHERE has_internal_result = true
+	ORDER BY start_date ASC
 """,
 "report_ELOStandings": """CREATE VIEW "report_EloStandings" AS
 	SELECT
@@ -66,54 +105,84 @@ db_up = {
 	pce.elo AS ELO,
 	c.id AS category_id,
 	c.name AS category_name,
-	c.description AS category_description
+	COUNT(c.id) as nbr_of_matches,
+	date('now','start of month','-12 month') as date_limit_on_nbr_of_matches
 	FROM players p
-	JOIN players_categories_elo pce ON p.id = pce.player_id
-	JOIN categories c ON c.id = pce.category_id
-	ORDER BY c.name, pce.elo DESC
+	JOIN players_matches_elo_change pmec ON p.id = pmec.player_id
+	JOIN matches m ON m.id = pmec.match_id
+	JOIN tournaments t ON m.tournament_id = t.id
+	JOIN categories c ON c.id = m.category_id
+	JOIN players_categories_elo pce ON p.id = pce.player_id AND c.id = pce.category_id
+	WHERE t.start_date >= date('now','start of month','-12 month')
+	group by c.id, p.id
+	order by c.id, pce.elo DESC
 """,
 "report_TournamentResults": """CREATE VIEW "report_TournamentResults" AS
 	SELECT
 	t.id AS tournament_id,
 	t.name AS tournament_name,
 	c.name AS category_name,
-	c.description AS category_description,
 	teams.team_name,
 	count(g.id) AS nbr_of_matches,
-	SUM(IIF(CASE WHEN teams.team_nbr = 1 THEN g.compeditor_one_score ELSE g.compeditor_two_score END > CASE WHEN teams.team_nbr = 1 THEN g.compeditor_two_score ELSE g.compeditor_one_score END, 1, 0)) AS victories,
+	SUM(CASE WHEN teams.team_nbr = teams.winner_compeditor_nbr THEN 1 ELSE 0 END) as victories,
 	SUM(teams.points_for) AS points_for,
 	SUM(teams.points_against) AS points_against,
 	SUM(teams.points_for - teams.points_against) AS point_difference
 	FROM (
 		SELECT
-		g.id,
-		g.match_id,
+		fg.id,
+		fg.match_id,
 		1 AS team_nbr,
+		m.winner_compeditor_nbr as winner_compeditor_nbr,
 		GROUP_CONCAT(p.name, ' + ') AS team_name,
-		g.compeditor_one_score AS points_for,
-		g.compeditor_two_score AS points_against
-		FROM games g
-		JOIN players_games pg ON g.id = pg.game_id AND pg.compeditor_nbr = 1
+		MIN(p.id) as team_identifier,
+		fg.compeditor_one_score AS points_for,
+		fg.compeditor_two_score AS points_against
+		FROM (
+			SELECT
+			id,
+			match_id,
+			MAX(game_count),
+			sum(compeditor_one_score) as compeditor_one_score,
+			sum(compeditor_two_score) as compeditor_two_score
+			FROM
+			games
+			group by match_id) fg
+		JOIN players_games pg ON fg.id = pg.game_id AND pg.compeditor_nbr = 1
 		JOIN players p ON p.id = pg.player_id
-		GROUP BY g.id
+		JOIN matches m ON fg.match_id = m.id
+		GROUP BY fg.match_id
 		UNION ALL
 		SELECT
-		g.id,
-		g.match_id,
+		fg.id,
+		fg.match_id,
 		2 AS team_nbr,
+		m.winner_compeditor_nbr as winner_compeditor_nbr,
 		GROUP_CONCAT(p.name, ' + ') AS team_name,
-		g.compeditor_two_score AS points_for,
-		g.compeditor_one_score AS points_against
-		FROM games g
-		JOIN players_games pg ON g.id = pg.game_id AND pg.compeditor_nbr = 2
+		MIN(p.id) as team_identifier,
+		fg.compeditor_two_score AS points_for,
+		fg.compeditor_one_score AS points_against
+		FROM (
+			SELECT
+			id,
+			match_id,
+			MAX(game_count),
+			sum(compeditor_one_score) as compeditor_one_score,
+			sum(compeditor_two_score) as compeditor_two_score
+			FROM
+			games
+			group by match_id) fg
+		JOIN players_games pg ON fg.id = pg.game_id AND pg.compeditor_nbr = 2
 		JOIN players p ON p.id = pg.player_id
-		GROUP BY g.id
+		JOIN matches m ON fg.match_id = m.id
+		GROUP BY fg.match_id
 	) teams
 	JOIN games g ON g.id = teams.id
 	JOIN matches m ON m.id = teams.match_id
 	JOIN tournaments t ON t.id = m.tournament_id
 	JOIN categories c ON c.id = m.category_id
-	GROUP BY teams.team_name, t.id
+	WHERE t.has_internal_result = true
+	GROUP BY teams.team_identifier, t.id
 	ORDER BY victories DESC, point_difference DESC
 """
 }
@@ -122,12 +191,16 @@ db_down = {
 "tournaments": """DROP TABLE tournaments""",
 "players": """DROP TABLE players""",
 "categories": """DROP TABLE categories""",
+"categories_metadata": """DROP TABLE categories_metadata""",
+"leagues": """DROP TABLE leagues""",
+"leagues_metadata": """DROP TABLE leagues_metadata""",
 "matches": """DROP TABLE matches""",
 "games": """DROP TABLE games""",
 "players_categories_elo": """DROP TABLE players_categories_elo""",
 "players_games": """DROP TABLE players_games""",
 "players_matches_elo_change": """DROP TABLE players_matches_elo_change""",
-"report_ListTournaments": """DROP VIEW report_ListTournaments""",
+"report_ListAllTournaments": """DROP VIEW report_ListAllTournaments""",
+"report_ListInternalResultTournaments": """DROP VIEW report_ListInternalResultTournaments""",
 "report_ELOStandings": """DROP VIEW report_EloStandings""",
 "report_TournamentResults": """DROP VIEW report_TournamentResults"""
 }
